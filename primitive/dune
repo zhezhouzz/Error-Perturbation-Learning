@@ -1,0 +1,9 @@
+(library
+ (name primitive)
+ (libraries utils)
+ (modules
+ tp
+ value
+ operator
+ )
+)
