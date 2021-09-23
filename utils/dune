@@ -1,0 +1,10 @@
+(library
+ (name utils)
+ (wrapped false)
+ (modules
+ basic_dt
+ log
+ sugar
+ )
+ (libraries core yojson)
+)
