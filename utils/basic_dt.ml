@@ -4,8 +4,27 @@ open Printf;;
 let self_location = "utils/basic_dt/"
 let interexn self m = UInterExn (sprintf "[%s%s]:%s" self_location self m)
 
-(* module StrMap = Map.Make(String);; *)
-module IntMap = Map.Make(struct type t = int let compare = compare end);;
+module IntMap = (struct
+  include Map.Make(struct type t = int let compare = compare end);;
+  let self = "IntMap"
+  let interexn = interexn self
+  let find info m k =
+    match find_opt k m with
+    | None -> raise @@ interexn info
+    | Some v -> v
+  let find_opt m k = find_opt k m
+  let to_value_list m = fold (fun _ v l -> v :: l) m []
+  let to_key_list m = fold (fun k _ l -> k :: l) m []
+  let to_kv_list m = fold (fun k v l -> (k,v) :: l) m []
+  let from_kv_list l =
+    List.fold_left (fun m (k, v) ->
+        add k v m
+      ) empty l
+  let force_update_list m l =
+    List.fold_left (fun m (k, v) ->
+        update k (fun _ -> Some v) m
+      ) m l
+end)
 
 module StrMap = (struct
   include Map.Make(String)
@@ -43,6 +62,15 @@ module List = (struct
 
   let self = "List"
   let interexn = interexn self
+
+  let split_by_comma f l =
+    match List.fold_left (fun r x ->
+        match r with
+        | None -> Some (sprintf "%s" (f x))
+        | Some r -> Some (sprintf "%s, %s" r (f x))
+      ) None l with
+    | None -> ""
+    | Some r -> r
 
   let is_empty = function
     | [] -> true

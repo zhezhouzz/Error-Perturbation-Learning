@@ -18,7 +18,7 @@ let test = Command.basic
       let%map_open configfile = anon ("configfile" %: regular_file)
       in
       fun () -> exec_main configfile (fun () ->
-          event "test" (fun () -> Printf.printf "test!\n")
+          event "test" (fun () -> Printf.printf "test!\n"; Language.Arg_solving.test ())
         )
     )
 

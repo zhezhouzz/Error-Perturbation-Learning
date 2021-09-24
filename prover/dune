@@ -1,0 +1,8 @@
+(library
+ (name prover)
+ (libraries utils z3 primitive)
+ (modules
+ z3aux
+ reflect
+ )
+)
