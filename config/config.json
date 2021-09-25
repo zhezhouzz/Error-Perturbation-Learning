@@ -1,1 +1,3 @@
-{"exec_flag": "debug", "if_random": true}
+{"exec_flag": "debug", "if_random": true, "if_z3": true,
+"mutation_distribution": {"op_replace": 1, "op_swap": 1, "op_deny": 1, "arg_reassign": 1}
+}

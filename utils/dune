@@ -5,6 +5,7 @@
  basic_dt
  log
  sugar
+ config
  )
- (libraries core yojson)
+ (libraries core yojson z3)
 )

@@ -17,8 +17,9 @@ let test = Command.basic
     Command.Let_syntax.(
       let%map_open configfile = anon ("configfile" %: regular_file)
       in
-      fun () -> exec_main configfile (fun () ->
-          event "test" (fun () -> Printf.printf "test!\n"; Language.Arg_solving.test ())
+      fun () -> Config.exec_main configfile (fun () ->
+          (* event "test" (fun () -> Printf.printf "test!\n"; Language.Arg_solving.test ()) *)
+          event "test" (fun () -> Printf.printf "test!\n"; Synthesizer.Mutate.test ())
         )
     )
 

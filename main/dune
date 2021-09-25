@@ -4,6 +4,6 @@
 )
 (executable
  (name main)
- (libraries utils core language)
+ (libraries utils core language synthesizer)
  (preprocess (pps ppx_jane))
 )

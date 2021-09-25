@@ -9,3 +9,8 @@ let opt_fmap (f: 'a -> 'b) (x: 'a option) : 'b option =
   match x with
   | None -> None
   | Some x -> Some (f x)
+
+let opt_bind (f: 'a -> 'b option) (x: 'a option) : 'b option =
+  match x with
+  | None -> None
+  | Some x -> f x

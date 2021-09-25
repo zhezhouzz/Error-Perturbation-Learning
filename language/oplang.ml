@@ -48,9 +48,11 @@ let layout {fin; body; fout} =
 
 (*TEST*)
 
+let test_tps_ops = [Tp.IntList], ["top";"const1" ; "unused"; "replace"]
+
 let test_prog =
-  let ops = ["top"; "insert"; "replace"] in
-  initial_naming [Tp.IntList] ops
+  let tps, ops = test_tps_ops in
+  initial_naming tps ops
 
 let test () =
   let _ = Printf.printf "%s\n" (layout test_prog) in

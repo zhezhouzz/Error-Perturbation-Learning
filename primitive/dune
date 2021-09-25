@@ -1,10 +1,11 @@
 (library
  (name primitive)
- (libraries utils)
+ (libraries utils qcheck)
  (modules
  tp
  value
  operator
  imp
+ randomgen
  )
 )

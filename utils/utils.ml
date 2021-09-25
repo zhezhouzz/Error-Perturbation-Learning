@@ -1,38 +1,20 @@
-exception UInterExn of string
-open Printf;;
+exception TestFailedException of string
+exception InterExn of string
+exception UndefExn of string
 
-let self_location = "utils/basic_dt/"
-let interexn self m = UInterExn (sprintf "[%s%s]:%s" self_location self m)
+let addadd x = (x := !x + 1)
 
-module IntMap = (struct
-  include Map.Make(struct type t = int let compare = compare end);;
-  let self = "IntMap"
-  let interexn = interexn self
-  let find info m k =
-    match find_opt k m with
-    | None -> raise @@ interexn info
-    | Some v -> v
-  let find_opt m k = find_opt k m
-  let to_value_list m = fold (fun _ v l -> v :: l) m []
-  let to_key_list m = fold (fun k _ l -> k :: l) m []
-  let to_kv_list m = fold (fun k v l -> (k,v) :: l) m []
-  let from_kv_list l =
-    List.fold_left (fun m (k, v) ->
-        add k v m
-      ) empty l
-  let force_update_list m l =
-    List.fold_left (fun m (k, v) ->
-        update k (fun _ -> Some v) m
-      ) m l
-end)
+let make_dir name =
+  Core.Unix.mkdir_p name
+
+(* module StrMap = Map.Make(String);; *)
+module IntMap = Map.Make(struct type t = int let compare = compare end);;
 
 module StrMap = (struct
   include Map.Make(String)
-  let self = "StrMap"
-  let interexn = interexn self
   let find info m k =
     match find_opt k m with
-    | None -> raise @@ interexn info
+    | None -> raise @@ InterExn info
     | Some v -> v
   let find_opt m k = find_opt k m
   let to_value_list m = fold (fun _ v l -> v :: l) m []
@@ -56,45 +38,13 @@ module Renaming = (struct
     | Some n -> Hashtbl.replace name_tab name (n+1); sprintf "%s%i" name (n+1)
     | None -> Hashtbl.add name_tab name 0; sprintf "%s%i" name 0
 end)
-
+(* TODO: debug nth *)
 module List = (struct
   include List
-
-  let self = "List"
-  let interexn = interexn self
-
-  let split_by_comma f l =
-    match List.fold_left (fun r x ->
-        match r with
-        | None -> Some (sprintf "%s" (f x))
-        | Some r -> Some (sprintf "%s, %s" r (f x))
-      ) None l with
-    | None -> ""
-    | Some r -> r
 
   let is_empty = function
     | [] -> true
     | _ -> false
-
-  let replace_exn l idx elem =
-    let rec aux l n =
-      match (l, n) with
-      | [], _ -> raise @@ interexn "never happen"
-      | _ :: t, 0 -> elem :: t
-      | h :: t, n -> h :: (aux t (n - 1))
-    in
-    aux l idx
-
-  let replace_opt l idx elem =
-    if idx >= List.length l then None else Some (replace_exn l idx elem)
-
-  let swap_exn l idx idx' =
-    let v = List.nth l idx in
-    let v' = List.nth l idx' in
-    replace_exn (replace_exn l idx v') idx' v
-
-  let swap_opt l idx idx' =
-    if List.length l <= idx || List.length l <= idx' then None else Some (swap_exn l idx idx')
 
   let eq compare l1 l2 =
     let rec aux = function
@@ -106,7 +56,7 @@ module List = (struct
 
   let find info f l =
     match find_opt f l with
-    | None -> raise @@ interexn info
+    | None -> raise @@ InterExn info
     | Some v -> v
 
   let order eq l u v =
@@ -142,18 +92,18 @@ module List = (struct
 
   let find_index info f l =
     match find_index_opt f l with
-    | None -> raise @@ interexn ("List:: " ^ info)
+    | None -> raise @@ InterExn ("List:: " ^ info)
     | Some i -> i
 
   let first l =
     match l with
-    | [] -> raise @@ interexn "list_first"
+    | [] -> raise @@ InterExn "list_first"
     | h :: _ -> h
 
   let last l =
     let l = List.rev l in
     match l with
-    | [] -> raise @@ interexn "list_last"
+    | [] -> raise @@ InterExn "list_last"
     | h :: _ -> h
 
   let lastb l e =
@@ -279,7 +229,7 @@ module List = (struct
   let match_snoc l =
     let l = List.rev l in
     match l with
-    | [] -> raise @@ interexn "match_snoc: []"
+    | [] -> raise @@ InterExn "match_snoc: []"
     | h :: t -> List.rev t, h
 
   let union compare l0 l1 = remove_duplicates compare (l0 @ l1)
@@ -287,8 +237,8 @@ module List = (struct
   let shape_reverse ll =
     let nth l id =
       try (List.nth l id) with
-      | Failure _ -> raise @@ interexn "shape_reverse"
-      | Invalid_argument _ -> raise @@ interexn "shape_reverse"
+      | Failure _ -> raise @@ InterExn "shape_reverse"
+      | Invalid_argument _ -> raise @@ InterExn "shape_reverse"
     in
     List.init (List.length ll) (fun i -> List.map (fun l -> nth l i) ll)
 
@@ -356,7 +306,7 @@ module List = (struct
       if n == 0 then r else
         aux (List.flatten @@ List.map (fun e -> List.map (fun r -> e :: r) r) l) (n - 1)
     in
-    if n < 0 then raise @@ interexn "choose_n_eq: bad n"
+    if n < 0 then raise @@ InterExn "choose_n_eq: bad n"
     else if n == 0 then [[]] else
       aux (List.map (fun x -> [x]) l) (n - 1)
 
@@ -371,7 +321,7 @@ module List = (struct
     let rec aux r i l =
       if i >= e then r else
         match l with
-        | [] -> raise @@ interexn "sublist"
+        | [] -> raise @@ InterExn "sublist"
         | h :: t ->
           if i >= s then
             aux (r @ [h]) (i+1) t
@@ -389,7 +339,7 @@ module List = (struct
 
   let lookup eq x l =
     let rec aux i = function
-      | [] -> raise @@ interexn "List.lookup"
+      | [] -> raise @@ InterExn "List.lookup"
       | h :: t -> if eq x h then i else aux (i + 1) t
     in
     aux 0 l
@@ -397,7 +347,7 @@ module List = (struct
   let nth l i =
     match List.nth_opt l i with
     | Some v -> v
-    | None -> raise @@ interexn "List.nth"
+    | None -> raise @@ InterExn "List.nth"
 
   let power_set_b n =
     let rec aux (cur: bool t t) n: bool t t =
@@ -431,9 +381,6 @@ module Tree = (struct
   type 'a t =
     | Leaf
     | Node of ('a * 'a t * 'a t)
-
-  let self = "Tree"
-  let interexn = interexn self
 
   let exists f t =
     let rec aux before t =
@@ -536,9 +483,6 @@ module LabeledTree = (struct
     | Leaf
     | Node of ('b * 'a * ('a, 'b) t * ('a, 'b) t)
 
-  let self = "LabeledTree"
-  let interexn = interexn self
-
   let rec from_tree label t =
     match t with
     | Tree.Leaf -> Leaf
@@ -640,8 +584,6 @@ module LabeledTree = (struct
 end)
 
 module IntList = (struct
-  let self = "IntList"
-  let interexn = interexn self
   let exists x l = List.exists (fun a -> a == x) l
   let contain l0 l1 = List.for_all (fun x -> exists x l1) l0
   let rec keep_ord l0 l1 =
@@ -683,7 +625,7 @@ module IntList = (struct
     match min_opt l, max_opt l with
     | None, None -> (-1, 1)
     | Some s, Some e -> (s - 1, e + 1)
-    | _, _ -> raise @@ interexn "never happen"
+    | _, _ -> raise @@ InterExn "never happen"
   let of_range (s, e) =
     let len = e - s + 1 in
     List.init len (fun i -> i + s)
@@ -696,14 +638,63 @@ module StrList = (struct
     List.find errinfo (fun (k,_) -> String.equal k a) l
 end)
 
+let list_list_foldl l0 l1 default0 default1 f0 f1 =
+  List.fold_left (fun res0 a ->
+      f0 res0 (List.fold_left (fun res1 b -> f1 res1 a b) default1 l1)
+    ) default0 l0
+
+let ll_in_range_first f l0 l1 =
+  ((List.length l0) <= (List.length l1)) &&
+  List.fold_lefti (fun r i a -> r && (f a (List.nth l1 i))) true l0
+
+let boollist_to_string l =
+  List.fold_lefti (fun res i a ->
+      if i == 0 then res ^ (string_of_bool a) else res ^ ";" ^ (string_of_bool a)) "" l
+
 module BitVector = (struct
-  let self = "BitVector"
-  let interexn = interexn self
   let to_string bl = String.of_seq
       (List.to_seq (List.map (fun b -> if b then '1' else '0') bl))
   let of_string str = List.map (fun c ->
       match c with
       | '0' -> false
       | '1' -> true
-      | _ -> raise @@ interexn "BitVector") (List.of_seq @@ String.to_seq str)
+      | _ -> raise @@ InterExn "BitVector") (List.of_seq @@ String.to_seq str)
 end)
+
+let sublist l s e =
+  let rec aux i result = function
+    | [] -> result
+    | h :: t ->
+      if (i >= s) && (i < e)
+      then aux (i+1) (result @ [h]) t
+      else if i < s
+      then aux (i+1) result t
+      else result
+  in
+  aux 0 [] l
+
+let map_double f (a, b) = (f a, f b)
+let map_triple f (a, b, c) = (f a, f b, f c)
+let map4 f (a, b, c, d) = (f a, f b, f c, f d)
+let map5 f (a, b, c, d, e) = (f a, f b, f c, f d, f e)
+let map6 f (a, b, c, d, e, g) = (f a, f b, f c, f d, f e, f g)
+let map7 f (a, b, c, d, e, g, h) = (f a, f b, f c, f d, f e, f g, f h)
+
+let time f =
+  let t = Sys.time() in
+  let fx = f () in
+  let delta = (Sys.time() -. t) in
+  fx, delta
+
+type compile_tp = Debug | Opt
+let ctp = Debug
+
+let clock title f =
+  match ctp with
+  | Debug ->
+    let start_time = Sys.time () in
+    let result = f () in
+    let end_time = Sys.time () in
+    let _ = Printf.printf "delta[%s]:%f\n" title (end_time -. start_time) in
+    result
+  | Opt -> f ()
