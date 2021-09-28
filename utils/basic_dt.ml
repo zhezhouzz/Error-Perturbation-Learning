@@ -79,7 +79,7 @@ module List = (struct
   let replace_exn l idx elem =
     let rec aux l n =
       match (l, n) with
-      | [], _ -> raise @@ interexn "never happen"
+      | [], _ -> raise @@ interexn "replace_exn never happen"
       | _ :: t, 0 -> elem :: t
       | h :: t, n -> h :: (aux t (n - 1))
     in
@@ -89,11 +89,11 @@ module List = (struct
     if idx >= List.length l then None else Some (replace_exn l idx elem)
 
   let swap_exn l idx idx' =
-    let v = List.nth l idx in
-    let v' = List.nth l idx' in
+    let v, v' = try List.nth l idx, List.nth l idx' with _ -> raise @@ interexn "swap_exn never happen" in
     replace_exn (replace_exn l idx v') idx' v
 
   let swap_opt l idx idx' =
+    (* let _ = Printf.printf "len(l) = %i; idx = %i; idx' = %i\n" (List.length l) idx idx' in *)
     if List.length l <= idx || List.length l <= idx' then None else Some (swap_exn l idx idx')
 
   let eq compare l1 l2 =

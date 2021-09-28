@@ -8,24 +8,25 @@ let arg_reassign cache = Gen.oneofl @@
 let op_swap prog_len =
   Gen.map (fun (i, j) ->
       (fun (tps, ops, _, _) ->
+         (* let _ = Printf.printf "len(ops) = %i; i = %i; j = %i\n" (List.length ops) i j in *)
          let ops = List.swap_exn ops i j in
          Arg_solving.arg_assign tps ops
       )
-    ) @@ Gen.pair (Gen.int_bound prog_len) (Gen.int_bound prog_len)
+    ) @@ Gen.pair (Gen.int_bound (prog_len - 1)) (Gen.int_bound (prog_len - 1))
 
 let op_replace prog_len op_pool =
   Gen.map (fun (i, op) ->
       (fun (tps, ops, _, _) ->
          let ops = List.replace_exn ops i op in
          Arg_solving.arg_assign tps ops)
-    ) @@ Gen.pair (Gen.int_bound prog_len) (Gen.oneofl op_pool)
+    ) @@ Gen.pair (Gen.int_bound (prog_len - 1)) (Gen.oneofl op_pool)
 
 let op_deny prog_len =
   Gen.map (fun i ->
       (fun (tps, ops, _, _) ->
          let ops = List.replace_exn ops i Primitive.Operator.unused in
          Arg_solving.arg_assign tps ops)
-    ) @@ Gen.int_bound prog_len
+    ) @@ Gen.int_bound (prog_len - 1)
 
 let mutate op_pool (tps, ops, prog, cache) =
   let open Config in
