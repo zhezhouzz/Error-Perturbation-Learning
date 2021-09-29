@@ -59,3 +59,29 @@ let const_value i = function
   | [] -> Some [I i]
   | _ -> raise @@ failwith "runtime operator error"
 
+let rec merge_raw l1 l2 =
+  match l1, l2 with
+  | [], _ -> l2
+  | _, [] -> l1
+  | h1 :: t1, h2 :: t2 ->
+    if h1 < h2
+    then h1 :: h2 :: (merge_raw t1 t2)
+    else if h1 > h2
+    then h2 :: h1 :: (merge_raw t1 t2)
+    else h1 :: (merge_raw t1 t2)
+
+let prog_merge = function
+  | [L l1; L l2] -> Some [L (merge_raw l1 l2)]
+  | _ -> raise @@ failwith "runtime client program error"
+
+let sigma_merge = function
+  | [L l1; L l2] ->
+    let check = List.check_sorted (fun a b -> a < b) in
+    check l1 && check l2
+  | _ -> raise @@ failwith "runtime client sigma error"
+
+let phi_merge = function
+  | [L l1] ->
+    let check = List.check_sorted (fun a b -> a < b) in
+    check l1
+  | _ -> raise @@ failwith "runtime client phi error"

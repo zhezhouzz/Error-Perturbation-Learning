@@ -1,7 +1,12 @@
 (library
  (name synthesizer)
+ (modules_without_implementation env)
  (libraries primitive language utils qcheck)
  (modules
  mutate
+ sampling
+ cost
+ env
+ mkenv
  )
 )

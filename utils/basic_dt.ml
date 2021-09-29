@@ -57,11 +57,43 @@ module Renaming = (struct
     | None -> Hashtbl.add name_tab name 0; sprintf "%s%i" name 0
 end)
 
+module Array = (struct
+  include Array
+  let fold_lefti f default arr =
+    let _, r = fold_left (fun (idx, r) x ->
+        idx + 1, f r idx x
+      ) (0, default) arr in
+    r
+end)
+
 module List = (struct
   include List
 
   let self = "List"
   let interexn = interexn self
+
+  let compare e_compare l1 l2 =
+    let rec aux l1 l2 =
+      match l1, l2 with
+      | [], [] -> 0
+      | [], _ :: _ -> -1
+      | _ :: _, [] -> 1
+      | h1 :: t1, h2 :: t2 ->
+        let c = e_compare h1 h2 in
+        if c != 0 then c else aux t1 t2
+    in
+    aux l1 l2
+
+  let check_sorted judge l =
+    match l with
+    | [] -> true
+    | h :: t ->
+      let rec aux previous l =
+        match l with
+        | [] -> true
+        | h :: t -> if judge previous h then aux h t else false
+      in
+      aux h t
 
   let split_by_comma f l =
     match List.fold_left (fun r x ->
@@ -529,6 +561,29 @@ module Tree = (struct
   let once f tr e =
     let l = flatten tr in
     List.once f l e
+
+  let fold_left f default t =
+    let rec aux t default =
+      match t with
+      | Leaf -> default
+      | Node (a, l, r) -> aux r @@ aux l @@ f default a
+    in
+    aux t default
+
+  let compare e_compare t1 t2 =
+    let rec aux t1 t2 =
+      match t1, t2 with
+      | Leaf, Leaf -> 0
+      | Leaf, Node _ -> -1
+      | Node _, Leaf -> 1
+      | Node(a1, l1, r1), Node(a2, l2, r2) ->
+        let c = e_compare a1 a2 in
+        if c != 0 then c else
+          let c = aux l1 l2 in
+          if c != 0 then c else
+            aux r1 r2
+    in
+    aux t1 t2
 end)
 
 module LabeledTree = (struct
@@ -637,6 +692,21 @@ module LabeledTree = (struct
   let once f tr e =
     let l = flatten tr in
     List.once f l e
+
+  let compare e_compare t1 t2 =
+    let rec aux t1 t2 =
+      match t1, t2 with
+      | Leaf, Leaf -> 0
+      | Leaf, Node _ -> -1
+      | Node _, Leaf -> 1
+      | Node(_, a1, l1, r1), Node(_, a2, l2, r2) ->
+        let c = e_compare a1 a2 in
+        if c != 0 then c else
+          let c = aux l1 l2 in
+          if c != 0 then c else
+            aux r1 r2
+    in
+    aux t1 t2
 end)
 
 module IntList = (struct

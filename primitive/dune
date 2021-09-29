@@ -4,6 +4,7 @@
  (modules
  tp
  value
+ value_map
  operator
  imp
  randomgen

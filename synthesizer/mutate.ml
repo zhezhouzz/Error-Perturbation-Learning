@@ -1,6 +1,7 @@
 open QCheck;;
 open Language;;
 open Basic_dt;;
+(* TODO: readable mutation operations *)
 let arg_reassign cache = Gen.oneofl @@
   List.map (fun m -> (fun (tps, ops, prog, cache) ->
       Some (tps, ops, Oplang.subst m prog, cache))) cache.Arg_solving.solutions
@@ -28,7 +29,7 @@ let op_deny prog_len =
          Arg_solving.arg_assign tps ops)
     ) @@ Gen.int_bound (prog_len - 1)
 
-let mutate op_pool (tps, ops, prog, cache) =
+let mutate_ op_pool (tps, ops, prog, cache) = (
   let open Config in
   let md = !conf.mutation_distribution in
   let prog_len = List.length ops in
@@ -46,6 +47,13 @@ let mutate op_pool (tps, ops, prog, cache) =
       | None -> loop ()
   in
   loop ()
+)
+
+let mutate (env: Env.t) =
+  let open Env in
+  let (_, ops, prog, acache) =
+    mutate_ env.op_pool (env.tps, env.cur_p.ops, env.cur_p.prog, env.cur_p.acache) in
+  {env with cur_p = {ops = ops; prog = prog; acache = acache}}
 
 let test () =
   let tps, ops = Oplang.test_tps_ops in
@@ -53,6 +61,6 @@ let test () =
   | None -> raise @@ failwith "never happen"
   | Some (tps, ops, prog, cache) ->
     let _ = Printf.printf "prog:\n%s\n" (Oplang.layout prog) in
-    let (_, _, prog, _) = mutate Primitive.Operator.op_pool (tps, ops, prog, cache) in
+    let (_, _, prog, _) = mutate_ Primitive.Operator.op_pool (tps, ops, prog, cache) in
     let _ = Printf.printf "prog:\n%s\n" (Oplang.layout prog) in
     ();;

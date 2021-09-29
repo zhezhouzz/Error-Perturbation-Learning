@@ -113,7 +113,7 @@ let init_cache ctx test_prog =
 
 
 let solve_one ctx (total, vs, query) =
-  let _ = Printf.printf "query:\n%s\n" (Expr.to_string query) in
+  (* let _ = Printf.printf "query:\n%s\n" (Expr.to_string query) in *)
   match Reflect.check ctx query with
   | Reflect.SmtSat model ->
     Some (arg_reflect model (List.combine total vs))

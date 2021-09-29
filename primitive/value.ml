@@ -16,6 +16,8 @@ let layout = function
   | TI tr -> LabeledTree.layout string_of_int tr
   | TB tr -> LabeledTree.layout string_of_int tr
   | NotADt -> "_"
+
+let layout_l l = sprintf "[%s]" @@ List.split_by_comma layout l
 let eq x y =
   let aux = function
     | (I x, I y) -> x == y
@@ -27,6 +29,20 @@ let eq x y =
     | (_, _) -> false
   in
   aux (x, y)
+
+let compare x y =
+  let aux = function
+    | (I x, I y) -> compare x y
+    | (B x, B y) -> compare x y
+    | (L x, L y) -> List.compare compare x y
+    | (T x, T y) -> Tree.compare compare x y
+    | (TI x, TI y) -> LabeledTree.compare compare x y
+    | (TB x, TB y) -> LabeledTree.compare compare x y
+    | (NotADt, NotADt) -> 0
+    | _, _ -> raise @@ failwith "two values cannot be compared"
+  in
+  aux (x, y)
+
 let flatten_forall = function
   | I _ | B _ | NotADt -> raise @@ failwith "flatten_forall: not a datatype"
   | L il -> List.flatten_forall (fun x y -> x == y) il
