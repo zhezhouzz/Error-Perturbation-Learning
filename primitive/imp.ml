@@ -11,53 +11,53 @@ let insert = function
         | h :: t -> h :: (aux t (n - 1))
     in
     Some [L (aux l idx)]
-  | _ -> raise @@ failwith "runtime operator error"
+  | _ -> raise @@ failwith "runtime operator(insert) error"
 
 let replace = function
   | [L l; I idx; I elem] -> Sugar.opt_fmap (fun x -> [L x]) @@ List.replace_opt l idx elem
-  | _ -> raise @@ failwith "runtime operator error"
+  | _ -> raise @@ failwith "runtime operator(replace) error"
 
 let swap = function
   | [L l; I idx; I idx'] -> Sugar.opt_fmap (fun x -> [L x]) @@ List.swap_opt l idx idx'
-  | _ -> raise @@ failwith "runtime operator error"
+  | _ -> raise @@ failwith "runtime operator(swap) error"
 
 let cons = function
   | [L l; I elem] -> Some [L (elem :: l)]
-  | _ -> raise @@ failwith "runtime operator error"
+  | _ -> raise @@ failwith "runtime operator(cons) error"
 
 let append = function
   | [L l; I elem] -> Some [L (l @ [elem])]
-  | _ -> raise @@ failwith "runtime operator error"
+  | _ -> raise @@ failwith "runtime operator(append) error"
 
 let plus1 = function
   | [I elem] -> Some [I (elem + 1)]
-  | _ -> raise @@ failwith "runtime operator error"
+  | _ -> raise @@ failwith "runtime operator(plus1) error"
 
 let minus1 = function
   | [I elem] -> Some [I (elem - 1)]
-  | _ -> raise @@ failwith "runtime operator error"
+  | _ -> raise @@ failwith "runtime operator(minus1) error"
 
 let top = function
   | [L []] -> None
   | [L (h :: _)] -> Some [I h]
-  | _ -> raise @@ failwith "runtime operator error"
+  | _ -> raise @@ failwith "runtime operator(top) error"
 
 let bottom = function
   | [L []] -> None
   | [L l] -> Some [I (List.last l)]
-  | _ -> raise @@ failwith "runtime operator error"
+  | _ -> raise @@ failwith "runtime operator(bottom) error"
 
 let max = function
   | [L l] -> Sugar.opt_fmap (fun x -> [I x]) @@ IntList.max_opt l
-  | _ -> raise @@ failwith "runtime operator error"
+  | _ -> raise @@ failwith "runtime operator(max) error"
 
 let min = function
   | [L l] -> Sugar.opt_fmap (fun x -> [I x]) @@ IntList.min_opt l
-  | _ -> raise @@ failwith "runtime operator error"
+  | _ -> raise @@ failwith "runtime operator(min) error"
 
 let const_value i = function
   | [] -> Some [I i]
-  | _ -> raise @@ failwith "runtime operator error"
+  | _ -> raise @@ failwith "runtime operator(const_value) error"
 
 let rec merge_raw l1 l2 =
   match l1, l2 with

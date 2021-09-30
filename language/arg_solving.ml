@@ -19,12 +19,17 @@ type t = Tp.t * int * int
 let spf = Printf.sprintf
 let to_string (tp, place, source) = spf "h!%s!%i_%i" (Tp.layout tp) place source
 (* TODO: improve cache *)
-type cache = {total: t list;
-              total_z3: Expr.expr list;
-              v0: Expr.expr;
-              v1: Expr.expr;
-              query: Expr.expr;
-              solutions: (int IntMap.t) list}
+type cache = {
+  tps: Tp.t list;
+  ops: string list;
+  prog_with_holes: Oplang.t;
+  total: t list;
+  total_z3: Expr.expr list;
+  v0: Expr.expr;
+  v1: Expr.expr;
+  query: Expr.expr;
+  solutions: (int IntMap.t) list;
+  current_using: int option;}
 
 open Oplang;;
 let one_hole_one_arg_constraint prog =
@@ -99,17 +104,21 @@ let arg_reflect model total =
       else m
     ) IntMap.empty total
 
-let init_cache ctx test_prog =
+let init_cache ctx tps ops prog_with_holes =
   let v0 = int_to_z3 ctx 0 in
   let v1 = int_to_z3 ctx 1 in
-  let total, one_arg, must_used = make_constraint test_prog in
+  let total, one_arg, must_used = make_constraint prog_with_holes in
   if not (early_check one_arg) || not (early_check must_used) then None else
     let vs, total_z3 = must_boolean_to_z3 ctx total (v0, v1) in
     let query = mk_and ctx [
         total_z3;
         one_hole_one_arg_to_z3 ctx one_arg (v0, v1);
         must_used_to_z3 ctx must_used (v0, v1)] in
-    Some {total = total; total_z3 = vs; v0 = v0; v1 = v1; query = query; solutions = []}
+    Some {
+      tps = tps; ops = ops;
+      prog_with_holes = prog_with_holes;
+          total = total; total_z3 = vs; v0 = v0; v1 = v1; query = query; solutions = [];
+         current_using = None}
 
 
 let solve_one ctx (total, vs, query) =
@@ -135,35 +144,39 @@ let solve ctx cache =
   in
   loop [] cache
 
-let arg_assign_ ctx prog =
-  Sugar.opt_fmap (solve ctx) (init_cache ctx prog)
+let arg_assign_ ctx tps ops =
+  let prog_with_holes = initial_naming tps ops in
+  Sugar.opt_fmap (solve ctx) (init_cache ctx tps ops prog_with_holes)
+
+let shift_within_in_cache cache idx =
+  let prog = try subst (List.nth cache.solutions idx) cache.prog_with_holes with
+    | _ -> raise @@ failwith "shift_within_in_cache"
+  in
+  prog, {cache with current_using = Some idx}
 
 let arg_assign tps ops =
-  let init_prog = initial_naming tps ops in
   let ctx = match Config.(!conf.z3_ctx) with Some ctx -> ctx | None -> raise @@ failwith "wrong config z3" in
   Sugar.opt_bind (fun cache ->
       match cache.solutions with
       | [] -> None
-      | m :: _ -> Some (tps, ops, subst m init_prog, cache)
-    ) @@ arg_assign_ ctx init_prog
+      | _ -> Some (shift_within_in_cache cache 0)
+    ) @@ arg_assign_ ctx tps ops
+
+let cached_varaint_set cache =
+  let idxs = List.init (List.length cache.solutions) (fun i -> i) in
+  match cache.current_using with
+  | None -> idxs
+  | Some i -> List.filter (fun i' -> i != i') idxs
 
 (* TEST *)
 let test () =
-  let ctx = match Config.(!conf.z3_ctx) with Some ctx -> ctx | None -> raise @@ failwith "wrong config z3" in
-  let _ = Printf.printf "prog:\n%s\n" (layout test_prog) in
-  let cache = arg_assign_ ctx test_prog in
-  match cache with
-  | None -> Printf.printf "len(solutions) = %i\n" 0
-  | Some cache -> Printf.printf "len(solutions) = %i\n" (List.length cache.solutions);
-    let _ = List.iter (fun m ->
-        let prog' = subst m test_prog in
-        Printf.printf "new prog:\n%s\n" (layout prog');
-        let input = [Value.L [0]] in
-        Printf.printf "execute over:\n%s\n" (List.to_string Value.layout input);
-        match Oplang_interp.interp prog' input with
-        | None -> Printf.printf "runtime execption\n"
-        | Some values -> Printf.printf "res:\n%s\n" (List.to_string Value.layout values)
+  let tps = [T.IntList; T.IntList] in
+  let ops = ["min"; "unused"; "min"; "insert"] in
+  match arg_assign tps ops with
+  | None -> raise @@ failwith "test die"
+  | Some (_, cache) ->
+    let _ = List.iteri (fun idx m ->
+        Printf.printf "prog(%i):\n%s\n" idx (layout (subst m cache.prog_with_holes))
       ) cache.solutions in
     ();;
-
 

@@ -88,17 +88,10 @@ let test () =
   let tps, ops = Oplang.test_tps_ops in
   match Arg_solving.arg_assign tps ops with
   | None -> raise @@ failwith "never happen"
-  | Some (tps, _, prog, _) ->
+  | Some (prog, _) ->
     let _ = Printf.printf "prog:\n%s\n" (Oplang.layout prog) in
     let cache = cost_sampling_ tps [[Value.L [0]]] prog 1 in
     let _ = Printf.printf "sample cache:\n%s\n" (cache_layout cache) in
     ()
 ;;
 
-(* let test () = *)
-(*   let s = Randomgen.small_gen ~num:10 ~tps:[Tp.Int; Tp.IntList] in *)
-(*   let _ = List.iter (fun v -> *)
-(*       Printf.printf "%s\n" @@ Value.layout_l v *)
-(*     ) s in *)
-(*   () *)
-(* ;; *)

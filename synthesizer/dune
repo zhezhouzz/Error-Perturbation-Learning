@@ -8,5 +8,6 @@
  cost
  env
  mkenv
+ mcmc
  )
 )

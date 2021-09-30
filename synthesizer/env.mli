@@ -1,6 +1,6 @@
 module V = Primitive.Value;;
 module T = Primitive.Tp;;
-type pertubation = {ops: string list; prog: Language.Oplang.t; acache: Language.Arg_solving.cache}
+type pertubation = {prog: Language.Oplang.t; acache: Language.Arg_solving.cache}
 type t = {sigma: V.t list -> bool;
           client: V.t list -> (V.t list) option;
           phi: V.t list -> bool;

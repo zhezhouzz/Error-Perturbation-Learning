@@ -11,15 +11,15 @@ let mk_env sigma client phi tps i_err op_pool sampling_rounds p_size =
       let _ = counter := !counter + 1 in
       match Language.Arg_solving.arg_assign tps ops with
       | None -> loop ()
-      | Some (_, ops, prog, acache) -> (ops, prog, acache)
+      | Some (prog, acache) -> (prog, acache)
   in
-  let ops, prog, acache = loop () in
+  let prog, acache = loop () in
   {sigma = sigma;
    client = client;
    phi = phi;
    tps = tps;
-   i_err = i_err;
    op_pool = op_pool;
+   i_err = i_err;
    sampling_rounds = sampling_rounds;
-   cur_p = {ops = ops; prog = prog; acache = acache};
+   cur_p = {prog = prog; acache = acache};
   }

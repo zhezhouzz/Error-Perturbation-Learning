@@ -28,16 +28,30 @@ let cost_valid_iter (sigma: V.t list -> bool) (prog: V.t list -> (V.t list) opti
   in
   r /. float_of_int num
 
+let cost_duplicate_iter jump_entry =
+  let bound = Array.length jump_entry in
+  let r = Array.fold_left (fun r j ->
+      match j with
+      | None -> 0.0
+      | Some j ->
+        if j >= bound then r else 1.0 +. r
+    ) 0.0 jump_entry in
+  r /. float_of_int (Array.length jump_entry)
+
+let k_duplicate = 0.5
+let k_valid = 0.5
 let cal_cost (sigma: V.t list -> bool) (prog: V.t list -> (V.t list) option) (phi: V.t list -> bool) (cache: cache) =
   let sum = List.fold_left (fun sum j ->
-      sum +. (cost_valid_iter sigma prog phi cache.datam_rev j)
+      sum +.
+      k_valid *. (cost_valid_iter sigma prog phi cache.datam_rev j) +.
+      k_duplicate *. (cost_duplicate_iter j)
     ) 0.0 cache.jump_table in
   sum /. (float_of_int (List.length cache.jump_table))
 
 let cost_ (sigma: V.t list -> bool) (client: V.t list -> (V.t list) option) (phi: V.t list -> bool) init_errs tps prog num =
   let () = Printf.printf "prog:\n%s\n" (Language.Oplang.layout prog) in
   let cache = Sampling.cost_sampling_ tps init_errs prog num in
-  let () = Printf.printf "sample cache:\n%s\n" (Sampling.cache_layout cache) in
+  (* let () = Printf.printf "sample cache:\n%s\n" (Sampling.cache_layout cache) in *)
   let cost = cal_cost sigma client phi cache in
   let () = Printf.printf "cost = %f\n" cost in
   cost
@@ -46,7 +60,7 @@ let cost (env: Env.t) =
   let open Env in
   let () = Printf.printf "prog:\n%s\n" (Language.Oplang.layout env.cur_p.prog) in
   let scache = Sampling.cost_sampling env in
-  let () = Printf.printf "sample cache:\n%s\n" (Sampling.cache_layout scache) in
+  (* let () = Printf.printf "sample cache:\n%s\n" (Sampling.cache_layout scache) in *)
   let cost = cal_cost env.sigma env.client env.phi scache in
   let () = Printf.printf "cost = %f\n" cost in
   cost

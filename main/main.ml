@@ -13,10 +13,13 @@ let test () =
   let prog_size = 4 in
   let env = Synthesizer.Mkenv.mk_env Imp.sigma_merge Imp.prog_merge Imp.phi_merge
       tps i_err Operator.op_pool sampling_rounds prog_size in
-  let open Language in
-  let cost0 = Synthesizer.Cost.cost env in
-  let env = Synthesizer.Mutate.mutate env in
-  let cost0 = Synthesizer.Cost.cost env in
+  let open Synthesizer in
+  let env = Mcmc.metropolis_hastings
+      ~burn_in:10
+      ~proposal_distribution:Mutate.mutate
+      ~cost_function:Cost.cost
+      ~init_distribution: env in
+  let () = Printf.printf "prog:\n%s\n" (Language.Oplang.layout env.cur_p.prog) in
   ()
 
 let regular_file =
