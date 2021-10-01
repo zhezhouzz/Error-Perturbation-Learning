@@ -132,12 +132,16 @@ let gen_one ~chooses ~num ~tp ~bound =
 
 let small_nums = List.init 9 (fun i -> i - 5)
 
+let small_gen_one1 ~tp =
+  let gen = choose_gen small_nums 8 tp in
+  QCheck.Gen.generate1 gen
+
 let small_gen_one ~num ~tp =
   let gen = choose_gen small_nums 8 tp in
-  QCheck.Gen.generate ~rand:(Random.State.make [|Random.int 100|]) ~n:num gen
+  QCheck.Gen.generate ~n:num gen
 
 let small_gen ~num ~tps =
-  QCheck.Gen.generate ~rand:(Random.State.make [|Random.int 100|]) ~n:num @@
+  QCheck.Gen.generate ~n:num @@
   QCheck.Gen.flatten_l @@ List.map (choose_gen small_nums 4) tps
 
 let gen_tpvars ~tpvars ~num ~fv_num ~bound =

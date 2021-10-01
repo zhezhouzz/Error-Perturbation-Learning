@@ -64,6 +64,23 @@ module Array = (struct
         idx + 1, f r idx x
       ) (0, default) arr in
     r
+  let mean (f: 'a -> float) (l: 'a array) =
+    let r = fold_left (fun sum x ->
+        sum +. (f x)
+      ) 0.0 l in
+    r /. (float_of_int @@ length l)
+
+  let meani (f: int -> 'a -> float) (l: 'a array) =
+    let r = fold_lefti (fun sum i x ->
+        sum +. (f i x)
+      ) 0.0 l in
+    r /. (float_of_int @@ length l)
+
+  let set_multi (f: int -> 'a) (i: int) (j: int) (arr: 'a array) =
+    let rec aux idx =
+      if idx >= j then () else set arr idx (f i); aux (idx + 1)
+    in
+    aux i
 end)
 
 module List = (struct
@@ -111,22 +128,27 @@ module List = (struct
   let replace_exn l idx elem =
     let rec aux l n =
       match (l, n) with
-      | [], _ -> raise @@ interexn "replace_exn never happen"
+      | [], _ -> raise @@ interexn (Printf.sprintf "replace_exn(%i) within %i" n (List.length l))
       | _ :: t, 0 -> elem :: t
       | h :: t, n -> h :: (aux t (n - 1))
     in
     aux l idx
 
   let replace_opt l idx elem =
-    if idx >= List.length l then None else Some (replace_exn l idx elem)
+    if idx >= List.length l || idx < 0 then None else
+      try Some (replace_exn l idx elem) with e ->
+        Printf.printf "should not happen in replace_opt\n"; raise e
 
   let swap_exn l idx idx' =
-    let v, v' = try List.nth l idx, List.nth l idx' with _ -> raise @@ interexn "swap_exn never happen" in
+    let v, v' = try List.nth l idx, List.nth l idx' with _ -> raise @@
+      interexn (Printf.sprintf "swap_exn(%i, %i) within %i" idx idx' (List.length l)) in
     replace_exn (replace_exn l idx v') idx' v
 
   let swap_opt l idx idx' =
     (* let _ = Printf.printf "len(l) = %i; idx = %i; idx' = %i\n" (List.length l) idx idx' in *)
-    if List.length l <= idx || List.length l <= idx' then None else Some (swap_exn l idx idx')
+    if List.length l <= idx || List.length l <= idx' || idx < 0 || idx' < 0 then None else
+      try Some (swap_exn l idx idx') with e ->
+        Printf.printf "should not happen in swap_opt\n"; raise e
 
   let eq compare l1 l2 =
     let rec aux = function
@@ -164,6 +186,18 @@ module List = (struct
       | h :: t -> aux (f r i h) (i + 1) t
     in
     aux default 0 l
+
+  let mean (f: 'a -> float) (l: 'a list) =
+    let r = fold_left (fun sum x ->
+        sum +. (f x)
+      ) 0.0 l in
+    r /. (float_of_int @@ length l)
+
+  let meani (f: int -> 'a -> float) (l: 'a list) =
+    let r = fold_lefti (fun sum i x ->
+        sum +. (f i x)
+      ) 0.0 l in
+    r /. (float_of_int @@ length l)
 
   let find_index_opt f l =
     fold_lefti (fun r i x ->

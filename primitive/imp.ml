@@ -55,6 +55,10 @@ let min = function
   | [L l] -> Sugar.opt_fmap (fun x -> [I x]) @@ IntList.min_opt l
   | _ -> raise @@ failwith "runtime operator(min) error"
 
+let random_int = function
+  | [] -> Some [Randomgen.small_gen_one1 ~tp:Tp.Int]
+  | _ -> raise @@ failwith "runtime operator(random_int) error"
+
 let const_value i = function
   | [] -> Some [I i]
   | _ -> raise @@ failwith "runtime operator(const_value) error"

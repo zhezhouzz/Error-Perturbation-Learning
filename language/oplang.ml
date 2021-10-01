@@ -43,12 +43,12 @@ let layout {fin; body; fout} =
   let open Printf in
   let fin_str = sprintf "IN: %s\n" (List.split_by_comma layout_tvar fin) in
   let body_str = List.fold_left (fun r instr -> sprintf "%s%s\n" r (layout_instr instr)) "" body in
-  let fout_str = sprintf "IN: %s\n" (List.split_by_comma (fun x -> Printf.sprintf "[%s]" (layout_tvar x)) fout) in
+  let fout_str = sprintf "OUT: %s\n" (List.split_by_comma (fun x -> Printf.sprintf "[%s]" (layout_tvar x)) fout) in
   sprintf "%s%s%s" fin_str body_str fout_str
 
 (*TEST*)
 
-let test_tps_ops = [Tp.IntList], ["top";"const1" ; "unused"; "replace"]
+let test_tps_ops = [Tp.IntList], ["random_int";"random_int" ; "unused"; "replace"]
 
 let test_prog =
   let tps, ops = test_tps_ops in

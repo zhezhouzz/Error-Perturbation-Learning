@@ -41,13 +41,16 @@ let apply_mutation muation_op cache =
     match muation_op with
     | ArgReassign idx -> Some (Arg_solving.shift_within_in_cache cache idx)
     | Swap (i, j) ->
-      let ops = List.swap_exn cache.ops i j in
+      let ops = try List.swap_exn cache.ops i j
+        with _ -> raise @@ failwith (Printf.sprintf "mutate(swap %i %i)" i j) in
       Arg_solving.arg_assign cache.tps ops
     | Replace (i, op) ->
-      let ops = List.replace_exn cache.ops i op in
+      let ops = try List.replace_exn cache.ops i op
+        with _ -> raise @@ failwith (Printf.sprintf "mutate(replace %i %s)" i op) in
       Arg_solving.arg_assign cache.tps ops
     | Deny i ->
-      let ops = List.replace_exn cache.ops i Primitive.Operator.unused in
+      let ops = try List.replace_exn cache.ops i Primitive.Operator.unused
+        with _ -> raise @@ failwith (Printf.sprintf "mutate(deny %i)" i) in
       Arg_solving.arg_assign cache.tps ops
 
 let mutate_ op_pool cache = (

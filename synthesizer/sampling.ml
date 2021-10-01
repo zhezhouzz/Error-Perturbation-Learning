@@ -9,7 +9,8 @@ end
 
 type phase = {idx: int; data: (Value.t list) list}
 type cache = {tps: Tp.t list;
-              iter_num: int;
+              generation_hierarchy_rev: int list;
+              (* iter_num: int; *)
               datam: int VM.t;
               datam_rev: (int, Value.t list) Hashtbl.t;
               jump_table: ((int option) array) list;
@@ -20,7 +21,8 @@ let cache_init tps vs =
   let _ = List.iteri (fun i v -> Hashtbl.add m i v) vs in
   let datam = List.fold_lefti (fun m i v -> VM.add v i m) VM.empty vs in
   {tps = tps;
-   iter_num = 0;
+   (* iter_num = 0; *)
+   generation_hierarchy_rev = [1];
    datam = datam;
    datam_rev = m;
    jump_table = []}
@@ -51,7 +53,8 @@ let next_iteration f cache =
         m
     ) cache.datam tmp in
   {tps = cache.tps;
-   iter_num = cache.iter_num + 1;
+   (* iter_num = cache.iter_num + 1; *)
+   generation_hierarchy_rev = (VM.cardinal m') :: cache.generation_hierarchy_rev;
    datam = m';
    datam_rev = cache.datam_rev;
    jump_table = cache.jump_table @ [arr]}
