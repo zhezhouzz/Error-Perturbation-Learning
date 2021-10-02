@@ -14,11 +14,11 @@ let event eventname f =
   let open Config in
   match !conf.exec_flag with
   | Debug _ ->
-    let write x = log_write (Printf.sprintf "[%s] %s" eventname x)in
+    let _ = log_write (Printf.sprintf "------%s start-----\n" eventname) in
     let start_time = Sys.time () in
     let result = f () in
     let end_time = Sys.time () in
-    let _ = write @@ Printf.sprintf "exec time:%f\n" (end_time -. start_time) in
+    let _ = log_write (Printf.sprintf "------%s end(exec time: %f)-----\n" eventname(end_time -. start_time)) in
     result
   | Opt -> f ()
 

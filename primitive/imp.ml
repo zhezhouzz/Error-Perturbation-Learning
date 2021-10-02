@@ -14,11 +14,11 @@ let insert = function
   | _ -> raise @@ failwith "runtime operator(insert) error"
 
 let replace = function
-  | [L l; I idx; I elem] -> Sugar.opt_fmap (fun x -> [L x]) @@ List.replace_opt l idx elem
+  | [L l; I idx; I elem] -> Sugar.(let* x = List.replace_opt l idx elem in Some [L x])
   | _ -> raise @@ failwith "runtime operator(replace) error"
 
 let swap = function
-  | [L l; I idx; I idx'] -> Sugar.opt_fmap (fun x -> [L x]) @@ List.swap_opt l idx idx'
+  | [L l; I idx; I idx'] -> Sugar.(let* x = List.swap_opt l idx idx' in Some [L x])
   | _ -> raise @@ failwith "runtime operator(swap) error"
 
 let cons = function
@@ -48,11 +48,11 @@ let bottom = function
   | _ -> raise @@ failwith "runtime operator(bottom) error"
 
 let max = function
-  | [L l] -> Sugar.opt_fmap (fun x -> [I x]) @@ IntList.max_opt l
+  | [L l] -> Sugar.(let* x = IntList.max_opt l in Some [I x])
   | _ -> raise @@ failwith "runtime operator(max) error"
 
 let min = function
-  | [L l] -> Sugar.opt_fmap (fun x -> [I x]) @@ IntList.min_opt l
+  | [L l] -> Sugar.(let* x = IntList.min_opt l in Some [I x])
   | _ -> raise @@ failwith "runtime operator(min) error"
 
 let random_int = function
@@ -63,20 +63,30 @@ let const_value i = function
   | [] -> Some [I i]
   | _ -> raise @@ failwith "runtime operator(const_value) error"
 
-let rec merge_raw l1 l2 =
-  match l1, l2 with
-  | [], _ -> l2
-  | _, [] -> l1
-  | h1 :: t1, h2 :: t2 ->
-    if h1 < h2
-    then h1 :: h2 :: (merge_raw t1 t2)
-    else if h1 > h2
-    then h2 :: h1 :: (merge_raw t1 t2)
-    else h1 :: (merge_raw t1 t2)
+let is_empty = function
+  | [L []] -> Some [B true]
+  | [L _] -> Some [B false]
+  | _ -> raise @@ failwith "runtime operator(is_empty) error"
 
-let prog_merge = function
-  | [L l1; L l2] -> Some [L (merge_raw l1 l2)]
-  | _ -> raise @@ failwith "runtime client program error"
+let tail = function
+  | [L []] -> None
+  | [L (_ :: t)] -> Some [L t]
+  | _ -> raise @@ failwith "runtime operator(tail) error"
+
+(* let rec merge_raw l1 l2 = *)
+(*   match l1, l2 with *)
+(*   | [], _ -> l2 *)
+(*   | _, [] -> l1 *)
+(*   | h1 :: t1, h2 :: t2 -> *)
+(*     if h1 < h2 *)
+(*     then h1 :: h2 :: (merge_raw t1 t2) *)
+(*     else if h1 > h2 *)
+(*     then h2 :: h1 :: (merge_raw t1 t2) *)
+(*     else h1 :: (merge_raw t1 t2) *)
+
+(* let prog_merge = function *)
+(*   | [L l1; L l2] -> Some [L (merge_raw l1 l2)] *)
+(*   | _ -> raise @@ failwith "runtime client program error" *)
 
 let sigma_merge = function
   | [L l1; L l2] ->

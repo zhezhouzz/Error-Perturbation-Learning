@@ -5,12 +5,15 @@ let map5 f (a, b, c, d, e) = (f a, f b, f c, f d, f e)
 let map6 f (a, b, c, d, e, g) = (f a, f b, f c, f d, f e, f g)
 let map7 f (a, b, c, d, e, g, h) = (f a, f b, f c, f d, f e, f g, f h)
 
-let opt_fmap (f: 'a -> 'b) (x: 'a option) : 'b option =
+let opt_fmap (x: 'a option) (f: 'a -> 'b) : 'b option =
   match x with
   | None -> None
   | Some x -> Some (f x)
 
-let opt_bind (f: 'a -> 'b option) (x: 'a option) : 'b option =
+let opt_bind (x: 'a option) (f: 'a -> 'b option) : 'b option =
   match x with
   | None -> None
   | Some x -> f x
+
+let (let*) x f = opt_bind x f
+let (let+) x f = opt_fmap x f

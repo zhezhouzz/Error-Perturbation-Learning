@@ -8,5 +8,6 @@
  operator
  imp
  randomgen
+ invocation
  )
 )

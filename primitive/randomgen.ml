@@ -130,7 +130,7 @@ let gen_one ~chooses ~num ~tp ~bound =
   let gen = choose_gen chooses bound tp in
   QCheck.Gen.generate ~rand:(Random.State.make [|Random.int 100|]) ~n:num gen
 
-let small_nums = List.init 9 (fun i -> i - 5)
+let small_nums = List.init 19 (fun i -> i - 10)
 
 let small_gen_one1 ~tp =
   let gen = choose_gen small_nums 8 tp in

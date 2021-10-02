@@ -27,12 +27,12 @@ let op_swap prog_len =
 let op_replace prog_len op_pool =
   if prog_len < 1 then Gen.pure None
   else
-  Gen.opt @@ Gen.map (fun (i, op) -> Replace (i, op)) @@ Gen.pair (Gen.int_bound (prog_len - 1)) (Gen.oneofl op_pool)
+    Gen.opt @@ Gen.map (fun (i, op) -> Replace (i, op)) @@ Gen.pair (Gen.int_bound (prog_len - 1)) (Gen.oneofl op_pool)
 
 let op_deny prog_len =
   if prog_len < 2 then Gen.pure None
   else
-      Gen.opt @@ Gen.map (fun i -> Deny i) @@ Gen.int_bound (prog_len - 1)
+    Gen.opt @@ Gen.map (fun i -> Deny i) @@ Gen.int_bound (prog_len - 1)
 
 let apply_mutation muation_op cache =
   match muation_op with
@@ -69,9 +69,9 @@ let mutate_ op_pool cache = (
     if !counter > 10 then raise @@ failwith "mutate too many times" else
       let mutation = Gen.generate1 gen in
       match apply_mutation mutation cache with
-      | Some r -> Printf.printf "mutation:\n%s\n" (match mutation with
+      | Some r -> Log.log_write (Printf.sprintf "mutation:\n%s\n" (match mutation with
           | None -> raise @@ failwith "die in mutate_"
-          | Some mutation -> layout_mutation mutation); r
+          | Some mutation -> layout_mutation mutation)); r
       | None -> loop ()
   in
   loop ()

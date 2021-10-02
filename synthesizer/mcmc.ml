@@ -14,7 +14,7 @@ let metropolis_hastings
     (*initial "f" *)
     ~init_distribution:(init: 'a)
   (*Here we only need one "f", some library will return a set of "f" or distribution of "f", we dont need it. *)
-  : 'a =
+  : 'a * float =
   let counter = ref 0 in
   let best_one = ref None in
   let update_best_one (cur, cur_cost) =
@@ -26,10 +26,12 @@ let metropolis_hastings
   let rec loop (cur, cur_cost) =
     update_best_one (cur, cur_cost);
     if !counter == 0 then cur, cur_cost else
-      let _ = Printf.printf "------MCMC %i------\n" (!counter) in
+      let next, next_cost =
+        Log.event (Printf.sprintf "MCMC %i" !counter) (fun () ->
+          let next = mutate cur in
+          let next_cost = cal_cost next in
+          next, next_cost) in
       let _ = counter := !counter - 1 in
-      let next = mutate cur in
-      let next_cost = cal_cost next in
       if next_cost < cur_cost
       then loop (next, next_cost)
       else if Random.float 1.0 < (cur_cost /. next_cost)
@@ -38,13 +40,13 @@ let metropolis_hastings
   in
   (* warm up *)
   let _ = counter := burn_in in
-  let result, result_cost = loop (init, cal_cost init) in
+  let burn_in, burn_in_cost = loop (init, cal_cost init) in
   (* sampling *)
-  let _ = best_one := Some (result, result_cost) in
+  let _ = best_one := Some (burn_in, burn_in_cost) in
   let _ = counter := sampling in
-  let result = match !best_one with
-    | Some (result, _) -> result
+  let _ = loop (burn_in, burn_in_cost) in
+  let result, cost = match !best_one with
+    | Some (result, cost) -> result, cost
     | None -> raise @@ failwith "never happen in mcmc"
   in
-  let _ = Printf.printf "------MCMC End------\n" in
-  result
+  result, cost

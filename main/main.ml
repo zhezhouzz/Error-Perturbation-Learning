@@ -11,16 +11,22 @@ let test () =
   let tps = [Tp.IntList; Tp.IntList] in
   let sampling_rounds = 6 in
   let prog_size = 4 in
-  let env = Synthesizer.Mkenv.mk_env Imp.sigma_merge Imp.prog_merge Imp.phi_merge
+  let library = ["is_empty", Imp.is_empty;
+                 "cons", Imp.cons;
+                 "tail", Imp.tail;
+                 "top", Imp.top;
+                ] in
+  let env = Synthesizer.Mkenv.mk_env Imp.sigma_merge Invocation.merge library Imp.phi_merge
       tps i_err Operator.op_pool sampling_rounds prog_size in
+  (* let () = Synthesizer.Cost.test env in *)
   let open Synthesizer in
-  let env = Mcmc.metropolis_hastings
-      ~burn_in: 100
-      ~sampling_steps: 10
+  let env, cost = Mcmc.metropolis_hastings
+      ~burn_in: 300
+      ~sampling_steps: 30
       ~proposal_distribution: Mutate.mutate
       ~cost_function: Cost.cost
       ~init_distribution: env in
-  let () = Printf.printf "prog:\n%s\n" (Language.Oplang.layout env.cur_p.prog) in
+  let () = Printf.printf "prog(cost: %f):\n%s\n" cost (Language.Oplang.layout env.cur_p.prog) in
   ()
 
 let regular_file =

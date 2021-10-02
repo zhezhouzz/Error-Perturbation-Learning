@@ -146,7 +146,7 @@ let solve ctx cache =
 
 let arg_assign_ ctx tps ops =
   let prog_with_holes = initial_naming tps ops in
-  Sugar.opt_fmap (solve ctx) (init_cache ctx tps ops prog_with_holes)
+  Sugar.opt_fmap (init_cache ctx tps ops prog_with_holes) (solve ctx)
 
 let shift_within_in_cache cache idx =
   let prog = try subst (List.nth cache.solutions idx) cache.prog_with_holes with
@@ -156,11 +156,12 @@ let shift_within_in_cache cache idx =
 
 let arg_assign tps ops =
   let ctx = match Config.(!conf.z3_ctx) with Some ctx -> ctx | None -> raise @@ failwith "wrong config z3" in
-  Sugar.opt_bind (fun cache ->
-      match cache.solutions with
-      | [] -> None
-      | _ -> Some (shift_within_in_cache cache 0)
-    ) @@ arg_assign_ ctx tps ops
+  Sugar.(
+    let* cache = arg_assign_ ctx tps ops in
+    match cache.solutions with
+    | [] -> None
+    | _ -> Some (shift_within_in_cache cache 0)
+  )
 
 let cached_varaint_set cache =
   let idxs = List.init (List.length cache.solutions) (fun i -> i) in
