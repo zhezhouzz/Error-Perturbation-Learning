@@ -13,7 +13,8 @@ type cache = {tps: Tp.t list;
               (* iter_num: int; *)
               datam: int VM.t;
               datam_rev: (int, Value.t list) Hashtbl.t;
-              jump_table: ((int option) array) list;
+              (* TODO: Improve the efficiency *)
+              jump_table: ((int list) array) list;
              }
 
 let cache_init tps vs =
@@ -28,32 +29,41 @@ let cache_init tps vs =
    jump_table = []}
 
 (* If non-det, sample for multiple times *)
-let non_det_sampling_times = 1
+let non_det_sampling_times = 3
 let next_iteration f cache =
-  let tmp =
-    VM.fold (fun v idx tmp ->
-        match Oplang_interp.interp f v with
-        | None -> tmp
-        | Some v' -> (idx, v') :: tmp
+  let sampling_times = if Oplang.check_non_det f then non_det_sampling_times else 1 in
+  let sampling_result =
+    VM.fold (fun v idx sampling_result ->
+        let r =
+            List.filter_map (fun x -> x) @@
+            List.init sampling_times (fun _ -> Oplang_interp.interp f v)
+        in
+        (idx, r) :: sampling_result
       ) cache.datam []
   in
   let total = VM.cardinal cache.datam in
-  let arr = Array.make total None in
+  let arr = Array.make total [] in
   let counter = ref total in
   (* let idx' = !counter in *)
   (* (counter := idx' + 1); *)
-  let m' = List.fold_left (fun m (idx, v') ->
-      match VM.find_opt v' m with
-      | None ->
-        let idx' = !counter in
-        (counter := idx' + 1);
-        (Hashtbl.add cache.datam_rev idx' v');
-        (Array.set arr idx (Some idx'));
-        VM.add v' idx' m
-      | Some idx' ->
-        (Array.set arr idx (Some idx'));
-        m
-    ) cache.datam tmp in
+  let update_m m v' =
+    match VM.find_opt v' m with
+    | None ->
+      let idx' = !counter in
+      (counter := idx' + 1);
+      (Hashtbl.add cache.datam_rev idx' v');
+      VM.add v' idx' m, idx'
+    | Some idx' ->
+      m, idx'
+  in
+  let m' = List.fold_left (fun m (idx, vs') ->
+      let m, vidxs = List.fold_left (fun (m, vidxs) v' ->
+          let m, vidx = update_m m v' in
+          m, vidx :: vidxs
+        ) (m, []) vs' in
+      (Array.set arr idx vidxs);
+      m
+    ) cache.datam sampling_result in
   {tps = cache.tps;
    (* iter_num = cache.iter_num + 1; *)
    generation_hierarchy_rev = (VM.cardinal m') :: cache.generation_hierarchy_rev;
@@ -63,11 +73,9 @@ let next_iteration f cache =
 
 let jump_layout datam_rev arr =
   Array.fold_lefti (fun str i j ->
-      Printf.sprintf "%s; %s -> %s" str
+      Printf.sprintf "%s; %s -> |%s|" str
         (Value.layout_l @@ Hashtbl.find datam_rev i)
-        (match j with
-         | None -> "none"
-         | Some j -> Value.layout_l @@ Hashtbl.find datam_rev j)
+        (List.split_by_comma (fun idx -> Value.layout_l @@ Hashtbl.find datam_rev idx) j)
     ) "" arr
 
 let cache_layout cache =

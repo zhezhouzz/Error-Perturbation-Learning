@@ -3,7 +3,7 @@ open Sampling;;
 module V = Value;;
 open Basic_dt;;
 
-let alpha_in_pre_is_err = 0.2
+let alpha_in_pre_is_err = 0.1
 let alpha_out_pre_is_err = 0.6
 let alpha_out_pre_not_err = 0.7
 let alpha_none = 1.0
@@ -54,26 +54,29 @@ let cost_weighted_valid_iter
     gh m jump_entry =
   let f i jopt =
     match jopt with
-    | None -> alpha_none
-    | Some j ->
-      let k_dupliate = duplicate_level gh i j in
-      let v = Hashtbl.find m j in
-      let delta =
-        let invocation_record, result = prog v in
-        let k_non_trivial = non_trival i_err_non_trivial_info invocation_record in
-        let alpha =
-        match result with
-        | None -> alpha_none
-        | Some v' ->
-          if phi v'
-          then alpha_out_pre_not_err
-          else (if sigma v
-                then alpha_in_pre_is_err
-                else alpha_out_pre_is_err)
+    | [] -> alpha_none
+    | js ->
+      let one j =
+        let k_dupliate = duplicate_level gh i j in
+        let v = Hashtbl.find m j in
+        let delta =
+          let invocation_record, result = prog v in
+          let k_non_trivial = non_trival i_err_non_trivial_info invocation_record in
+          let alpha =
+            match result with
+            | None -> alpha_none
+            | Some v' ->
+              if phi v'
+              then alpha_out_pre_not_err
+              else (if sigma v
+                    then alpha_in_pre_is_err
+                    else alpha_out_pre_is_err)
+          in
+          k_non_trivial *. alpha
         in
-        k_non_trivial *. alpha
+        delta *. k_dupliate
       in
-      delta *. k_dupliate
+      List.mean one js
   in
   Array.meani f jump_entry
 
@@ -117,7 +120,7 @@ let cost (env: Env.t) =
   let open Env in
   (* let () = Printf.printf "prog:\n%s\n" (Language.Oplang.layout env.cur_p.prog) in *)
   let () = Log.log_write (Printf.sprintf "prog(non-det: %b):\n%s\n"
-                            (Language.Oplang.check_det env.cur_p.prog) (Language.Oplang.layout env.cur_p.prog)) in
+                            (Language.Oplang.check_non_det env.cur_p.prog) (Language.Oplang.layout env.cur_p.prog)) in
   let scache = Sampling.cost_sampling env in
   let () = Log.log_write (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) in
   let cost = cal_cost env.sigma (env.client env.library_inspector) env.phi env.i_err_non_trivial_info scache in
