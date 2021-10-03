@@ -2,7 +2,8 @@ type t = string
 type info = {name:string;
              poly_tp: ((Tp.t list) * (Tp.t list)) list;
              higher_order: bool;
-             imp: Value.t list -> (Value.t list) option
+             imp: Value.t list -> (Value.t list) option;
+             nondet: bool;
             }
 ;;
 open Basic_dt;;
@@ -17,14 +18,17 @@ let info_table = (
       { name = unused;
         poly_tp = [([], [])];
         higher_order = false;
+        nondet = false;
         imp = Imp.unused};
       { name = "insert";
         poly_tp = [([IntList; Int; Int], [IntList])];
         higher_order = false;
+        nondet = false;
         imp = Imp.insert};
       { name = "replace";
         poly_tp = [([IntList; Int; Int], [IntList])];
         higher_order = false;
+        nondet = false;
         imp = Imp.replace};
       (* { name = "swap"; *)
       (*   poly_tp = [([IntList; Int; Int], [IntList])]; *)
@@ -33,18 +37,22 @@ let info_table = (
       { name = "cons";
         poly_tp = [([IntList; Int;], [IntList])];
         higher_order = false;
+        nondet = false;
         imp = Imp.cons};
       { name = "append";
         poly_tp = [([IntList; Int;], [IntList])];
         higher_order = false;
+        nondet = false;
         imp = Imp.append};
       { name = "plus1";
         poly_tp = [([Int;], [Int])];
         higher_order = false;
+        nondet = false;
         imp = Imp.plus1};
       { name = "minus1";
         poly_tp = [([Int;], [Int])];
         higher_order = false;
+        nondet = false;
         imp = Imp.minus1};
       (* { name = "zip";
        *   poly_tp = [([IntList; IntList;], [IntList])];
@@ -53,35 +61,43 @@ let info_table = (
       { name = "top";
         poly_tp = [([IntList;], [Int])];
         higher_order = false;
+        nondet = false;
         imp = Imp.top};
       { name = "bottom";
         poly_tp = [([IntList;], [Int])];
         higher_order = false;
+        nondet = false;
         imp = Imp.bottom};
-      (* { name = "max"; *)
-      (*   poly_tp = [([IntList;], [Int])]; *)
-      (*   higher_order = false; *)
-      (*   imp = Imp.max}; *)
-      (* { name = "min"; *)
-      (*   poly_tp = [([IntList;], [Int])]; *)
-      (*   higher_order = false; *)
-      (*   imp = Imp.min}; *)
+      { name = "max";
+        poly_tp = [([IntList;], [Int])];
+        higher_order = false;
+        nondet = false;
+        imp = Imp.max};
+      { name = "min";
+        poly_tp = [([IntList;], [Int])];
+        higher_order = false;
+        nondet = false;
+        imp = Imp.min};
       { name = "random_int";
         poly_tp = [([], [Int])];
         higher_order = false;
+        nondet = true;
         imp = Imp.random_int};
-      (* { name = "const0"; *)
-      (*   poly_tp = [([], [Int])]; *)
-      (*   higher_order = false; *)
-      (*   imp = Imp.const_value 0}; *)
-      (* { name = "const1"; *)
-      (*   poly_tp = [([], [Int])]; *)
-      (*   higher_order = false; *)
-      (*   imp = Imp.const_value 1}; *)
-      (* { name = "const2";
-       *   poly_tp = [([], [Int])];
-       *   higher_order = false;
-       *   imp = Imp.const_value 2}; *)
+      { name = "const0";
+        poly_tp = [([], [Int])];
+        higher_order = false;
+        nondet = false;
+        imp = Imp.const_value 0};
+      { name = "const1";
+        poly_tp = [([], [Int])];
+        higher_order = false;
+        nondet = false;
+        imp = Imp.const_value 1};
+      { name = "const2";
+        poly_tp = [([], [Int])];
+        higher_order = false;
+        nondet = false;
+        imp = Imp.const_value 2};
     ]
   in
   List.fold_left (fun m info -> StrMap.add info.name info m) StrMap.empty l
@@ -96,6 +112,10 @@ let get_tp_one (op: string) =
 let get_imp (op: string) =
   let info = StrMap.find "operator::get_imp" info_table op in
   info.imp
+
+let check_non_det (op: string) =
+  let info = StrMap.find "operator::check_non_det" info_table op in
+  info.nondet
 
 let layout op = op
 

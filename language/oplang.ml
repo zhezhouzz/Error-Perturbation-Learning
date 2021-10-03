@@ -46,6 +46,25 @@ let layout {fin; body; fout} =
   let fout_str = sprintf "OUT: %s\n" (List.split_by_comma (fun x -> Printf.sprintf "[%s]" (layout_tvar x)) fout) in
   sprintf "%s%s%s" fin_str body_str fout_str
 
+let check_det {body; fout; _} =
+  let exists_non_det args m =
+    List.exists (function
+        | None -> false
+        | _ -> true) @@ List.map (fun (_, idx) -> IntMap.find_opt m idx) args
+  in
+  let rec symbolic_exec body non_det_m =
+    match body with
+    | [] -> exists_non_det fout non_det_m
+    | {op; args; res} :: body ->
+      let non_det_m =
+        if exists_non_det args non_det_m || Operator.check_non_det op
+        then List.fold_left (fun m (_, idx) -> IntMap.add idx () m) non_det_m res
+        else non_det_m
+     in
+     symbolic_exec body non_det_m
+  in
+  symbolic_exec body IntMap.empty
+
 (*TEST*)
 
 let test_tps_ops = [Tp.IntList], ["random_int";"random_int" ; "unused"; "replace"]

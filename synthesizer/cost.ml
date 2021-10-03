@@ -116,7 +116,8 @@ let cal_cost (sigma: V.t list -> bool) (prog: V.t list -> (int list * (V.t list)
 let cost (env: Env.t) =
   let open Env in
   (* let () = Printf.printf "prog:\n%s\n" (Language.Oplang.layout env.cur_p.prog) in *)
-  let () = Log.log_write (Printf.sprintf "prog:\n%s\n" (Language.Oplang.layout env.cur_p.prog)) in
+  let () = Log.log_write (Printf.sprintf "prog(non-det: %b):\n%s\n"
+                            (Language.Oplang.check_det env.cur_p.prog) (Language.Oplang.layout env.cur_p.prog)) in
   let scache = Sampling.cost_sampling env in
   let () = Log.log_write (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) in
   let cost = cal_cost env.sigma (env.client env.library_inspector) env.phi env.i_err_non_trivial_info scache in

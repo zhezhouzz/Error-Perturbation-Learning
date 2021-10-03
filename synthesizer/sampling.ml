@@ -27,6 +27,8 @@ let cache_init tps vs =
    datam_rev = m;
    jump_table = []}
 
+(* If non-det, sample for multiple times *)
+let non_det_sampling_times = 1
 let next_iteration f cache =
   let tmp =
     VM.fold (fun v idx tmp ->
