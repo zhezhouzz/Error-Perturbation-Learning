@@ -11,6 +11,12 @@ let conf = ref {if_random = true; exec_flag = Opt; z3_ctx = None;
                                          arg_reassign = 1;}
                }
 
+let logdir = ".logdir"
+let logfile = ".log"
+
+let make_dir name =
+  Core.Unix.mkdir_p name
+
 let load_json fname =
   try Yojson.Basic.from_file fname with
   | _ -> raise @@ failwith (Printf.sprintf "cannot find json file(%s)" fname)
@@ -22,7 +28,9 @@ let load_config configfile =
     | _ -> raise @@ failwith "cannot load config::exec_flag" in
   let exec_flag =
     match exec_flag with
-    | "debug" -> Debug {logc = Core.Out_channel.create ".log";}
+    | "debug" ->
+      make_dir logdir;
+      Debug {logc = Core.Out_channel.create (logdir ^ "/" ^ logfile);}
     | "opt" -> Opt
     | _ -> raise @@ failwith "config error"
   in
@@ -35,7 +43,7 @@ let load_config configfile =
     | _ -> raise @@ failwith "cannot load config::z3" in
   let _ = if if_random then Random.init 0 else () in
   let z3_ctx = if if_z3
-    then Some (Z3.mk_context [("model", "true"); ("proof", "false"); ("timeout", "1999")])
+    then Some (Z3.mk_context [("model", "true"); ("proof", "false"); ("timeout", "2999")])
     else None in
   let mutation_distribution =
     try
@@ -51,5 +59,17 @@ let release_config () =
   match !conf.exec_flag with
   | Debug {logc; _} -> Core.Out_channel.close logc
   | Opt -> ()
+
+let refresh_logfile name =
+  let new_name = logfile ^ "_" ^ name in
+  let flag' =
+    match !conf.exec_flag with
+    | Debug {logc; _} ->
+      (Core.Out_channel.close logc;
+       Core.Unix.rename ~src:(logdir ^ "/" ^ logfile) ~dst:(logdir ^ "/" ^ new_name);
+       Debug {logc = Core.Out_channel.create (logdir ^ "/" ^ logfile)})
+    | Opt -> Opt
+  in
+  conf := {!conf with exec_flag = flag'}
 
 let exec_main configfile main = load_config configfile; main (); release_config ()

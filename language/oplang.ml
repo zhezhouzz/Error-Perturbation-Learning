@@ -67,7 +67,7 @@ let check_non_det {body; fout; _} =
 
 (*TEST*)
 
-let test_tps_ops = [Tp.IntList], ["random_int";"random_int" ; "unused"; "replace"]
+let test_tps_ops = [Tp.IntList], ["random_int";"random_int" ; "random_int"; "replace"]
 
 let test_prog =
   let tps, ops = test_tps_ops in

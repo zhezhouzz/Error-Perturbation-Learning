@@ -16,8 +16,8 @@ let metropolis_hastings
   (*Here we only need one "f", some library will return a set of "f" or distribution of "f", we dont need it. *)
   : 'a * float =
   let counter = ref 0 in
-  let bound = ref 0 in
-  let best_one = ref None in
+  let bound = ref (burn_in + sampling) in
+  let best_one = ref (Some (init, cal_cost init)) in
   let update_best_one (cur, cur_cost) =
     match !best_one with
     | None -> ()
@@ -41,14 +41,15 @@ let metropolis_hastings
       else loop (cur, cur_cost)
   in
   (* warm up *)
-  let _ = bound := burn_in in
-  let _ = counter := 0 in
-  let burn_in, burn_in_cost = loop (init, cal_cost init) in
+  (* let _ = bound := burn_in in *)
+  (* let _ = counter := 0 in *)
+  (* let burn_in, burn_in_cost = loop (init, cal_cost init) in *)
   (* sampling *)
-  let _ = best_one := Some (burn_in, burn_in_cost) in
-  let _ = bound := sampling in
-  let _ = counter := 0 in
-  let _ = loop (burn_in, burn_in_cost) in
+  (* let _ = best_one := Some (burn_in, burn_in_cost) in *)
+  (* let _ = bound := sampling in *)
+  (* let _ = counter := 0 in *)
+  (* let _ = loop (burn_in, burn_in_cost) in *)
+  let _ = loop (init, cal_cost init) in
   let result, cost = match !best_one with
     | Some (result, cost) -> result, cost
     | None -> raise @@ failwith "never happen in mcmc"

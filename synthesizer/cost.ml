@@ -64,8 +64,8 @@ let non_trival_v2 r1 r2 =
   let c_b_2_num = float_of_int @@ List.length b in
   let b = max 0.3 ((List.fold_left (fun sum x -> if x then sum +. 1.0 else sum) 0.0 b) /. c_b_2_num) in
   let result = a *. b in
-  let _ = Log.log_write @@ Printf.sprintf "|<%s> - <%s>| = %f * %f = %f"
-      (List.split_by_comma string_of_int r1) (List.split_by_comma string_of_int r2) a b result in
+  (* let _ = Log.log_write @@ Printf.sprintf "|<%s> - <%s>| = %f * %f = %f" *)
+  (*     (List.split_by_comma string_of_int r1) (List.split_by_comma string_of_int r2) a b result in *)
   result
 
 let no_new_output_panalty = 4.5

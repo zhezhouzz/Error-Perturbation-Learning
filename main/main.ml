@@ -33,6 +33,27 @@ let test_mcmc () =
   let () = Printf.printf "prog(cost: %f):\n%s\n" cost (Language.Oplang.layout env.cur_p.prog) in
   ()
 
+let batched_test num_times num_burn_in num_sampling =
+  let open Synthesizer in
+  let rec aux n =
+    if n >= num_times then () else
+      let env, cost =
+        event (Printf.sprintf "test(%i)" n) (
+          fun () -> Printf.printf "test!\n";
+            Mcmc.metropolis_hastings
+              ~burn_in: num_burn_in
+              ~sampling_steps: num_sampling
+              ~proposal_distribution: Mutate.mutate
+              ~cost_function: Cost.cost
+              ~init_distribution: (mk_standard_env ())
+        )
+      in
+      let () = Log.log_write @@ Printf.sprintf "prog(cost: %f):\n%s\n" cost (Language.Oplang.layout env.cur_p.prog) in
+      let () = Config.refresh_logfile (string_of_int n) in
+      aux (n + 1)
+  in
+  aux 0
+
 let regular_file =
   Command.Arg_type.create (fun filename ->
       match Sys.is_file filename with
@@ -48,18 +69,30 @@ let test = Command.basic
       in
       fun () -> Config.exec_main configfile (fun () ->
           (* event "test" (fun () -> Printf.printf "test!\n"; Language.Arg_solving.test ()) *)
-          event "test" (fun () -> Printf.printf "test!\n";
-                         match test_name with
-                         | "cost" -> test_cost ()
-                         | "mcmc" -> test_mcmc ()
-                         | _ -> raise @@ failwith "unknown test name"
-                       )
+          match test_name with
+          | "cost" -> event "test" (fun () -> Printf.printf "test!\n"; test_cost ())
+          | "mcmc" -> event "test" (fun () -> Printf.printf "test!\n"; test_mcmc ())
+          | _ -> raise @@ failwith "unknown test name"
+        )
+    )
+
+let batched_test = Command.basic
+    ~summary:"batched test."
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and num_times = anon ("num times" %: int)
+      and num_burn_in = anon ("num burn-in" %: int)
+      and num_sampling = anon ("num sampling" %: int)
+      in
+      fun () -> Config.exec_main configfile (fun () ->
+          batched_test num_times num_burn_in num_sampling
         )
     )
 
 let command =
   Command.group ~summary:"Error Perturbation Learning"
     [ "test", test;
+      "batched-test", batched_test;
     ]
 
 let () = Command.run command

@@ -15,11 +15,11 @@ let info_table = (
   let open Tp in
   let l =
     [
-      { name = unused;
-        poly_tp = [([], [])];
-        higher_order = false;
-        nondet = false;
-        imp = Imp.unused};
+      (* { name = unused; *)
+      (*   poly_tp = [([], [])]; *)
+      (*   higher_order = false; *)
+      (*   nondet = false; *)
+      (*   imp = Imp.unused}; *)
       { name = "insert";
         poly_tp = [([IntList; Int; Int], [IntList])];
         higher_order = false;

@@ -34,5 +34,3 @@ let debug_event eventname f =
     result
   | Opt -> ()
 
-let make_dir name =
-  Core.Unix.mkdir_p name
