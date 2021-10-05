@@ -317,6 +317,15 @@ module List = (struct
     in
     aux 0 []
 
+  let c_n_2 l =
+    let rec aux l =
+      match l with
+      | [] -> []
+      | h :: t ->
+        (map (fun x -> (h, x)) t) @ (aux t)
+    in
+    aux l
+
   let permutation l =
     let insert_all_positions x l =
       let rec aux prev acc l =

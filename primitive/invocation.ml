@@ -12,10 +12,12 @@ let invocation_inspector_clear {m; _} =
   Hashtbl.filter_map_inplace (fun _ (_, imp) -> Some (0, imp)) m
 
 let invocation_inspector_call {m; _} name input =
+  (* let _ = Printf.printf "do call(%s)\n" name in *)
   match Hashtbl.find_opt m name with
   | None -> raise @@ failwith (Printf.sprintf "invocation_inspector_call: cannot find the name(%s)" name)
   | Some (i, imp) ->
     let result = imp input in
+    (* let _ = Printf.printf "i = %i\n" i in *)
     Hashtbl.replace m name (i + 1, imp); result
 
 let invocation_inspector_stat {names; m} =
@@ -61,5 +63,7 @@ let merge inspector input =
        | _ -> raise @@ failwith "runtime client program(merge) error")
     | _ -> raise @@ failwith "runtime client program(merge) error"
   in
+  let result = aux input in
   let stat = invocation_inspector_stat inspector in
-  stat, aux input
+  (* let _ = Printf.printf "stat: %s\n" (List.split_by_comma string_of_int stat) in *)
+  stat, result
