@@ -11,10 +11,10 @@ type tvar = t * string
 let layout = function
   | Bool -> "bool"
   | Int -> "int"
-  | IntList -> "int_list"
-  | IntTree -> "int_tree"
-  | IntTreeI -> "int_treei"
-  | IntTreeB -> "int_treeb"
+  | IntList -> "int list"
+  | IntTree -> "int tree"
+  | IntTreeI -> "int treei"
+  | IntTreeB -> "int treeb"
 
 let layouttvar (t, name) = (layout t) ^ ":" ^ name
 

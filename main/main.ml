@@ -33,6 +33,11 @@ let test_mcmc () =
   let () = Printf.printf "prog(cost: %f):\n%s\n" cost (Language.Oplang.layout env.cur_p.prog) in
   ()
 
+let test_oplang () =
+  let open Synthesizer in
+  let () = Language.Oplang.test () in
+  ()
+
 let batched_test num_times num_burn_in num_sampling =
   let open Synthesizer in
   let rec aux n =
@@ -72,6 +77,7 @@ let test = Command.basic
           match test_name with
           | "cost" -> event "test" (fun () -> Printf.printf "test!\n"; test_cost ())
           | "mcmc" -> event "test" (fun () -> Printf.printf "test!\n"; test_mcmc ())
+          | "oplang" -> event "test" (fun () -> Printf.printf "test!\n"; test_oplang ())
           | _ -> raise @@ failwith "unknown test name"
         )
     )
@@ -89,10 +95,23 @@ let batched_test = Command.basic
         )
     )
 
+let parse =  Command.basic
+    ~summary:"parse"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      in
+      fun () -> Config.exec_main configfile (fun () ->
+          Printf.printf "%s\n" @@
+          Language.Oplang.layout @@ Parse.parse source_file
+        )
+    )
+
 let command =
   Command.group ~summary:"Error Perturbation Learning"
     [ "test", test;
       "batched-test", batched_test;
+      "parse", parse;
     ]
 
 let () = Command.run command
