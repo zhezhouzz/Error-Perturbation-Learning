@@ -7,6 +7,16 @@ module T = Primitive.Tp
 let int_to_z3 ctx i = mk_numeral_int ctx i (Integer.mk_sort ctx)
 let bool_to_z3 ctx b = if b then mk_true ctx else mk_false ctx
 
+let tp_to_sort ctx = T.(function
+  | Int -> Integer.mk_sort ctx
+  | Bool -> Boolean.mk_sort ctx
+  | IntList | IntTree | IntTreeI | IntTreeB -> Integer.mk_sort ctx
+  )
+
+let z3func ctx funcname inptps outtp =
+  FuncDecl.mk_func_decl ctx (Symbol.mk_string ctx funcname) (List.map (tp_to_sort ctx) inptps) (tp_to_sort ctx outtp)
+
+
 let arrname_arr arrname = arrname ^ "_a"
 let arrname_length arrname = arrname ^ "_length"
 

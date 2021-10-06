@@ -1,0 +1,7 @@
+(library
+ (name classify)
+ (libraries utils primitive specification ml prover qcheck core)
+ (modules
+   feature
+ )
+)

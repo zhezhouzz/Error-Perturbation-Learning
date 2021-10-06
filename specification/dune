@@ -1,0 +1,10 @@
+(library
+ (name specification)
+ (libraries utils primitive z3 prover)
+ (modules_without_implementation specast)
+ (modules
+   specast
+   prop
+   spec
+ )
+)
