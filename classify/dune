@@ -3,5 +3,8 @@
  (libraries utils primitive specification ml prover qcheck core)
  (modules
    feature
+   feature_vector
+   dtree
+   infer
  )
 )

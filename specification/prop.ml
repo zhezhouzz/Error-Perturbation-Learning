@@ -62,3 +62,22 @@ let to_z3 ctx prop =
     | Or ps -> Boolean.mk_or ctx (List.map aux ps)
     | Iff (p1, p2) -> Boolean.mk_iff ctx (aux p1) (aux p2) in
   aux prop
+
+let sym_and = "&&"
+let sym_or = "||"
+let sym_not = "!"
+let sym_implies = "==>"
+let sym_iff = "<==>"
+
+open Printf;;
+let rec layout = function
+  | True -> "true"
+  | Bvar (_, b) -> b
+  | MethodPredicate (mp, args) -> sprintf "%s(%s)" mp (List.split_by_comma snd args)
+  | Implies (p1, p2) -> sprintf "(%s %s %s)" (layout p1) sym_implies (layout p2)
+  | And ps -> sprintf "(%s)" (List.inner_layout (List.map layout ps) sym_and "true")
+  | Or ps -> sprintf "(%s)" (List.inner_layout (List.map layout ps) sym_or "false")
+  | Not p -> sprintf "(%s)" (sym_not^(layout p))
+  | Iff (p1, p2) -> sprintf "(%s %s %s)" (layout p1) sym_iff (layout p2)
+  | Ite (p1, p2, p3) ->
+    sprintf "(ite %s %s %s)" (layout p1) (layout p2) (layout p3)

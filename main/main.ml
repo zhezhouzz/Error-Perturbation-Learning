@@ -38,6 +38,16 @@ let test_oplang () =
   let () = Language.Oplang.test () in
   ()
 
+let test_feature () =
+  let qv = [Primitive.Tp.Int, "u"; Primitive.Tp.Int, "v"] in
+  let args = [Primitive.Tp.IntList, "l1"; Primitive.Tp.IntList, "l2"] in
+  let mps = ["mem"; "hd"; "=="; "<"] in
+  let inferctx = Classify.Infer.mk_infer_ctx args qv mps in
+  let () = Printf.printf "fset: %s\n" (Classify.Feature.layout_set inferctx.Classify.Feature_vector.fset) in
+  let module V = Primitive.Value in
+  let () = Classify.Infer.pre_infer inferctx [[V.L [1;2]; V.L [3;4]]] (fun _ -> true) in
+  ()
+
 let batched_test num_times num_burn_in num_sampling =
   let open Synthesizer in
   let rec aux n =
@@ -78,6 +88,7 @@ let test = Command.basic
           | "cost" -> event "test" (fun () -> Printf.printf "test!\n"; test_cost ())
           | "mcmc" -> event "test" (fun () -> Printf.printf "test!\n"; test_mcmc ())
           | "oplang" -> event "test" (fun () -> Printf.printf "test!\n"; test_oplang ())
+          | "feature" -> event "test" (fun () -> Printf.printf "test!\n"; test_feature ())
           | _ -> raise @@ failwith "unknown test name"
         )
     )

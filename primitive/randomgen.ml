@@ -131,6 +131,8 @@ let gen_one ~chooses ~num ~tp ~bound =
   QCheck.Gen.generate ~rand:(Random.State.make [|Random.int 100|]) ~n:num gen
 
 let small_nums = List.init 19 (fun i -> i - 10)
+let paddled_small_nums = try (List.hd small_nums - 1) :: (small_nums @ [List.last small_nums + 1]) with
+  | _ -> raise @@ failwith "init error: paddle_small_nums"
 
 let small_gen_one1 ~tp =
   let gen = choose_gen small_nums 8 tp in

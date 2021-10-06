@@ -39,9 +39,28 @@ let layout = function
   | Base (op, args) ->
     sprintf "%s(%s)" op (List.split_by_comma (fun (_, x) -> x) args)
   | Bo x -> snd x
+let layout_set (set: set) =
+  List.fold_left (fun r feature -> sprintf "%s [%s]" r (layout feature)) "" set
 
 let to_prop feature =
   match feature with
   | Pr (pred, args) -> E.MethodPredicate (pred, args)
   | Base (op, args) -> E.MethodPredicate (op, args)
   | Bo (t, b) -> E.Bvar (t, b)
+
+(* TODO: make feature set *)
+let mk_set args qv mps =
+  let dtargs, elemargs = List.partition (fun (tp, _) -> T.is_dt tp) args in
+  let mk_feature mp =
+    match mp with
+    | "mem" -> List.map (fun (dt, elem) -> Pr (mp, [dt; elem])) @@ List.cross dtargs qv
+    | "hd" -> List.map (fun (dt, elem) -> Pr (mp, [dt; elem])) @@ List.cross dtargs qv
+    | "==" -> List.map (fun args -> Pr (mp, args)) @@
+      ((List.map (fun (a, b) -> [a; b]) @@ List.cross elemargs qv) @
+       (List.combination_l qv 2))
+    | "<" -> List.map (fun args -> Pr (mp, args)) @@
+      ((List.map (fun (a, b) -> [a; b]) @@ List.cross elemargs qv) @
+       (List.combination_l qv 2))
+    | _ -> raise @@ failwith "undef in feature"
+  in
+  List.flatten @@ List.map mk_feature mps
