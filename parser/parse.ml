@@ -1,7 +1,7 @@
 open Language
 open Primitive
 module T = Tp
-module L = Oplang
+module Lang = Oplang
 open Basic_dt;;
 
 let to_tp l =
@@ -18,11 +18,20 @@ let to_arg (_, name, tp) =
   | _ -> raise @@ failwith "parsing error: invalid argument name(should initial with x)"
 let to_statement (_, res, op, args) =
   let res, args = Sugar.map2 (List.map to_arg) (res, args) in
-  L.({op = op; args = args; res = res})
+  Lang.({op = op; args = args; res = res})
 
 let to_prog (inputs, body, outputs) =
   let inputs, outputs = Sugar.map2 (List.map to_arg) (inputs, outputs) in
-  L.({fin = inputs; body = List.map to_statement body; fout = outputs})
+  Lang.({fin = inputs; body = List.map to_statement body; fout = outputs})
 
 let parse filename =
-  to_prog @@ Parser.prog_eof Lexer.next_token (Lexing.from_channel (open_in filename))
+  to_prog
+  (* @@ parse_ Parser.prog_eof (Lexing.from_channel (open_in filename)) *)
+  @@ Parser.prog_eof Lexer.next_token (Lexing.from_channel (open_in filename))
+    (* (try Parser.prog_eof Lexer.next_token (Lexing.from_channel (open_in filename)) with *)
+    (*  | Lexer.LexError _ -> *)
+    (*    raise @@ failwith "lex" *)
+    (*    (\* raise @@ Lexer.failwith msg *\) *)
+    (*  | Parser.Error -> *)
+    (*    raise @@ failwith "parse" *)
+    (* ) *)

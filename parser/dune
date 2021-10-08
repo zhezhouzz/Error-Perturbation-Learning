@@ -1,6 +1,11 @@
-(env
- (dev     (flags (:standard -w +a-4-9-40-41-42-44-45-48-27-32-26-6)))
- (release (flags (:standard -w +a-4-9-40-41-42-44-45-48-27-32-26-6))))
+(ocamllex
+ (modules lexer)
+)
+
+(menhir
+ (modules parser)
+ (flags -lg 1 -la 1 -lc 2)
+)
 
 (library
  (name parser)
@@ -12,5 +17,5 @@
    parser
    past
  )
-  (libraries primitive language utils)
+ (libraries primitive language utils menhirLib)
 )

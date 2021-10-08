@@ -33,7 +33,7 @@ let initial_naming (input_tp: Tp.t list) (ops: string list) =
   let body = List.rev @@ List.fold_left f [] ops in
   {fin = fin; body = body; fout = List.map (fun tp -> (tp, newname2 ())) input_tp}
 
-let layout_tvar (tp, idx) = Printf.sprintf "(x%i: %s)" idx (Tp.layout tp)
+let layout_tvar (tp, idx) = Printf.sprintf "x%i: %s" idx (Tp.layout tp)
 
 let layout_instr {op; args; res} =
   Printf.sprintf "(%s) = %s(%s)" (List.split_by_comma layout_tvar res) op
@@ -41,9 +41,9 @@ let layout_instr {op; args; res} =
 
 let layout {fin; body; fout} =
   let open Printf in
-  let fin_str = sprintf "IN: %s" (List.split_by_comma layout_tvar fin) in
+  let fin_str = sprintf "IN: (%s)" (List.split_by_comma layout_tvar fin) in
   let body_str = List.split_by ";\n" layout_instr body in
-  let fout_str = sprintf "OUT: %s" (List.split_by_comma (fun x -> Printf.sprintf "%s" (layout_tvar x)) fout) in
+  let fout_str = sprintf "OUT: (%s)" (List.split_by_comma (fun x -> Printf.sprintf "%s" (layout_tvar x)) fout) in
   sprintf "%s {\n%s}\n%s\n" fin_str body_str fout_str
 
 let check_non_det {body; fout; _} =

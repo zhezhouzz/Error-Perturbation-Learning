@@ -17,6 +17,17 @@ type cache = {tps: Tp.t list;
               jump_table: ((int list) array) list;
              }
 
+let pure_sampled_input_output {datam_rev; jump_table; _} =
+  match jump_table with
+  | [] -> raise @@ failwith (spf "sampling empty in %s" __FUNCTION__)
+  | _ ->
+    let j = List.last jump_table in
+    let tmp_table = Hashtbl.create (Array.length j) in
+    let _ = Array.iteri (fun in_idx out_idxs ->
+        List.iter (fun out_idx -> Hashtbl.add tmp_table (in_idx, out_idx) ()) out_idxs
+      ) j in
+    datam_rev, List.of_seq @@ Hashtbl.to_seq_keys @@ tmp_table
+
 let cache_init tps vs =
   let m = Hashtbl.create 1000 in
   let _ = List.iteri (fun i v -> Hashtbl.add m i v) vs in

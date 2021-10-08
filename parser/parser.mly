@@ -1,5 +1,6 @@
 %{
     (* open Past *)
+    (* open Grammar *)
     %}
 (* tokens *)
 %token EOF LPAR RPAR LBRACK RBRACK
@@ -10,27 +11,29 @@
 
 (* start symbol *)
 %start <Past.prog> prog_eof
-
+%on_error_reduce statements
 %%
 
 prog_eof:
-  | IN COLON input=args LBRACK body=statements RBRACK OUT COLON output=args ; EOF { (input, body, output) }
+  | IN COLON input=args_tuple LBRACK body=statements RBRACK OUT COLON output=args_tuple ; EOF { (input, body, output) }
 ;
 statements:
   | s1=statement SEMICOLON s2=statements {s1 :: s2}
   | s1=statement {[s1]}
 ;
 statement:
-  | LPAR RPAR EQ op=IDENT LPAR RPAR {($startpos, [], op, [])}
-  | LPAR res=args RPAR EQ op=IDENT LPAR RPAR {($startpos, res, op, [])}
-  | LPAR res=args RPAR EQ op=IDENT LPAR a=args RPAR {($startpos, res, op, a)}
+  | at1=args_tuple EQ op=IDENT at2=args_tuple {($startpos, at1, op, at2)}
+;
+args_tuple:
+  | LPAR RPAR {[]}
+  | LPAR a=args RPAR {a}
 ;
 args:
   | a1=arg COMMA a2=args {a1 :: a2}
   | a=arg {[a]}
 ;
 arg:
-  | LPAR x=IDENT COLON t=tp RPAR {($startpos, x, t)}
+  | x=IDENT COLON t=tp {($startpos, x, t)}
 tp:
   | x=IDENT {[x]}
   | x=tp y=IDENT {x @ [y]}

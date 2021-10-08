@@ -4,6 +4,8 @@ open Printf;;
 let self_location = "utils/basic_dt/"
 let interexn self m = UInterExn (sprintf "[%s%s]:%s" self_location self m)
 
+let spf = sprintf
+
 module IntMap = (struct
   include Map.Make(struct type t = int let compare = compare end);;
   let self = "IntMap"

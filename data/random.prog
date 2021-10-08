@@ -1,6 +1,6 @@
 IN: (x0: int list) {
-((x1: int)) = random_int();
-((x2: int)) = random_int();
-((x3: int)) = random_int();
-((x4: int list)) = replace((x0: int list), (x1: int), (x2: int))}
+(x1: int) = random_int();
+(x2: int) = random_int();
+(x3: int, x7: int list) = random_int();
+(x4: int list) = replace(x0: int list, x1: int, x2: int)}
 OUT: (x3: int list)

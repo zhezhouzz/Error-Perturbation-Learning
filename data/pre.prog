@@ -1,0 +1,6 @@
+IN: (x0: int list, x1: int list) {
+(x2: int) = const0();
+(x3: int list) = cons(x0: int list, x2: int);
+(x4: int) = random_int();
+(x5: int) = random_int()}
+OUT: (x1: int list, x3: int list)

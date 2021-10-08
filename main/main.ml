@@ -56,6 +56,19 @@ let test_feature () =
   in
   ()
 
+let test_pre_infer () =
+  let prog = Parse.parse "data/pre.prog" in
+  let env = mk_standard_env () in
+  let open Synthesizer in
+  let scache = Sampling.cost_sampling_ env.tps [env.i_err] prog env.sampling_rounds in
+  let qv = [Primitive.Tp.Int, "u"; Primitive.Tp.Int, "v"] in
+  let args = prog.fin in
+  let mps = ["mem"; "hd"; "<"] in
+  let cctx = Classify.Cctx.mk_cctx [Primitive.Tp.Int, "x1"; Primitive.Tp.Int, "x2"] qv mps in
+  let () = Printf.printf "fset: %s\n" (Classify.Feature.layout_set cctx.Classify.Cctx.fset) in
+  let () = Pre.perturbation_pre_infer cctx scache Primitive.Imp.sigma_merge Primitive.Imp.phi_merge in
+  ()
+
 let batched_test num_times num_burn_in num_sampling =
   let open Synthesizer in
   let rec aux n =
@@ -97,6 +110,7 @@ let test = Command.basic
           | "mcmc" -> event "test" (fun () -> Printf.printf "test!\n"; test_mcmc ())
           | "oplang" -> event "test" (fun () -> Printf.printf "test!\n"; test_oplang ())
           | "feature" -> event "test" (fun () -> Printf.printf "test!\n"; test_feature ())
+          | "pre" -> event "test" (fun () -> Printf.printf "test!\n"; test_pre_infer ())
           | _ -> raise @@ failwith "unknown test name"
         )
     )
