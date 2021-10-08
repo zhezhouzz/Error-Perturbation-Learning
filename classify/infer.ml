@@ -4,16 +4,28 @@ module V = Value;;
 module F = Feature;;
 module FV = Feature_vector;;
 open Basic_dt;;
-let mk_infer_ctx args qv mps = FV.({args = args; qv = qv; fset = F.mk_set args qv mps; labeled_vecs = []})
 
-let pre_infer ctx values judge =
-  let _ = if List.length values == 0 then raise @@ failwith "no data in precondition inference" else () in
-  let qv_values = List.map (fun i -> V.I i) Randomgen.paddled_small_nums in
-  let qvs_values = List.choose_n qv_values (List.length ctx.FV.qv) in
-  (* let _ = List.iteri (fun i vs -> Printf.printf "qv(%i) = [%s]" i (V.layout_l vs)) qvs_values in *)
-  let data = FV.RealSample.add_to_feature_vectors ctx judge values qvs_values in
-  let _ = Printf.printf "data:\n%s\n" @@ FV.layout data in
-  let dt = Dtree.classify data in
-  let body = Dtree.to_prop dt in
-  let _ = Printf.printf "spec: %s\n" (Specification.Prop.layout body) in
+let spec_infer ctx (data: 'a list) (to_values: 'a -> V.t list) (judge: 'a -> bool) =
+  let _ = if List.length data == 0 then raise @@ failwith "no data in precondition inference" else () in
+  let pos_values, neg_values = Sugar.map2 (List.map fst) @@
+    List.partition snd @@ List.map (fun d -> to_values d, judge d) data in
+  Printf.printf "pos:\n%s\n" (List.split_by "\n" (fun x -> x) @@ List.map V.layout_l pos_values);
+  Printf.printf "neg:\n%s\n" (List.split_by "\n" (fun x -> x) @@ List.map V.layout_l neg_values);
+  let pos_data = FV.RealSample.values_to_vec ctx pos_values Label.Pos in
+  let neg_data = FV.RealSample.values_to_vec ctx neg_values Label.Neg in
+  (* Printf.printf "pos:\n%s\n" @@ FV.layout_vecs pos_data; *)
+  (* Printf.printf "neg:\n%s\n" @@ FV.layout_vecs neg_data; *)
+  (* let s = List.find_opt (fun (vec, _) -> *)
+  (*     vec.(3) && vec.(6) && not vec.(7) && not vec.(9) *)
+  (*   ) neg_data in *)
+  (* let _ = match s with *)
+  (*   | None -> Printf.printf "no such vec\n" *)
+  (*   | Some (x, label) -> Printf.printf "it is:\n%s\n" @@ FV.layout_vecs [x, label] in *)
+  FV.add_vecs_always ctx pos_data;
+  FV.add_vecs_if_new ctx neg_data;
+  let _ = Printf.printf "fvctx:\n%s\n" @@ FV.layout_fvctx ctx in
+  let dt, _ = Dtree.classify ctx in
+  let body = Specification.Simplify.simplify_ite @@ Dtree.to_prop dt in
+  let _ = Printf.printf "spec: %s\n" (Specification.Prop.pretty_layout_prop body) in
+  (* let _ = raise @@ failwith "end" in *)
   ();;

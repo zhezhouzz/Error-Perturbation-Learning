@@ -57,14 +57,14 @@ let hd_info =
    {poly_name = poly_name; name="tree_hd"; tps = [T.IntTree; T.Int]; permu=false; imp = hd_apply};]
 
 let lt_info =
-  let poly_name = "lt" in
+  let poly_name = "<" in
   [{poly_name = poly_name; name="<"; tps = [T.Int; T.Int]; permu=false; imp = lt_apply};]
 
 let eq_info =
-  let poly_name = "eq" in
+  let poly_name = "==" in
   [{poly_name = poly_name; name="=="; tps = [T.Int; T.Int]; permu=false; imp = eq_apply};]
 
-let mp_table = mem_info @ hd_info @ lt_info
+let mp_table = mem_info @ hd_info @ lt_info @ eq_info
 
 let imp_map = List.fold_left (fun m r -> StrMap.add r.name r.imp m) StrMap.empty mp_table
 
@@ -73,8 +73,19 @@ let find_info_by_polyname_tps poly_name tps =
   | Some r -> r
   | None -> raise @@ failwith
       (Printf.sprintf "cannot find method predicate(%s) with tps(%s)" poly_name (List.split_by_comma Tp.layout tps))
+
+let find_info_by_name name =
+  match List.find_opt (fun r -> String.equal name r.name) mp_table with
+  | Some r -> r
+  | None -> raise @@ failwith
+      (Printf.sprintf "cannot find method predicate(%s)" name)
+
 let instantization poly_name tps =
   let r = find_info_by_polyname_tps poly_name tps in
   r.name
+
+let poly_name name =
+  let r = find_info_by_name name in
+  r.poly_name
 
 let apply mp args = (StrMap.find "method predicate apply" imp_map mp) args

@@ -3,47 +3,55 @@ open Basic_dt;;
 
 module F = Feature;;
 module T = Tp;;
+module V = Value;;
 
-type t = {args: T.tvar list; qv: T.tvar list; fset: F.set;
-          labeled_vecs: (bool * (bool array)) list}
+open Label;;
+type vec = bool array
 ;;
 
-
+open Cctx;;
 module RealSample = struct
-  (* type value = Value.t *)
-  (* type sample = {vars: Tp.tvar list; *)
-  (*                values: (value list) list} *)
-  (* let append s1 s2 = *)
-  (*   {vars = s1.vars @ s2.vars; *)
-  (*    values = List.map (fun (a, b) -> a @ b) @@ List.cross s1.values s2.values} *)
-  let add_to_feature_vectors {args; qv; fset; labeled_vecs} judge args_values qv_values =
-    let values = List.map (fun (a, b) -> a @ b) @@ List.cross args_values qv_values in
+  let values_to_vec_ {args; qv; fset; _} values label =
     let vars = args @ qv in
     let make_env vars value = List.fold_left (fun m ((_, name), v) ->
         StrMap.add name v m
       ) StrMap.empty (List.combine vars value) in
-    let ss = List.map (fun value ->
+    List.map (fun vec -> vec, label) @@
+    List.map (fun value ->
         let m = make_env vars value in
         Array.of_list @@
-        List.map (fun feature -> F.eval feature m) fset) values in
-    let hashtbl = Hashtbl.create (List.length ss) in
-    let _ = List.iter (fun v ->
-        match Hashtbl.find_opt hashtbl v with
-        | Some _ -> ()
-        | _ -> Hashtbl.add hashtbl v ()) ss in
-    let vecs = Hashtbl.fold (fun v _ l -> (judge v, v) :: l) hashtbl [] in
-    {args; qv; fset; labeled_vecs = labeled_vecs @ vecs}
+        List.map (fun feature -> F.eval feature m) fset) values
+
+  let values_to_vec ctx args_values label =
+    let qv_values = List.map (fun i -> V.I i) Randomgen.paddled_small_nums in
+    let qvs_values = List.choose_n qv_values (List.length ctx.qv) in
+    let values = List.map (fun (a, b) -> a @ b) @@ List.cross args_values qvs_values in
+    values_to_vec_ ctx values label
 end
 ;;
-let layout {args; qv; fset; labeled_vecs} =
+
+let add_vecs_always ctx vecs =
+  List.iter (fun (v, label) -> Hashtbl.add ctx.fvtab v label) vecs
+
+let add_vecs_if_new ctx vecs =
+  List.iter (fun (v, label) ->
+      match Hashtbl.find_opt ctx.fvtab v with
+      | Some _ -> ()
+      | None -> Hashtbl.add ctx.fvtab v label) vecs
+
+let layout_bool x = if x then "✓" else "𐄂"
+
+let layout_vecs vecs =
+  List.fold_lefti (fun table i (vec, label) ->
+      let vec = List.split_by_comma layout_bool (Array.to_list vec) in
+      Printf.sprintf "%s\n%s: %s [%i]" table (layout_label label) vec i
+    ) "" vecs
+
+let layout_fvctx {args; qv; fset; fvtab} =
   let args = Printf.sprintf "args: %s\n" @@ List.split_by_comma Tp.layouttvar args in
   let qv = Printf.sprintf "qv: %s\n" @@ List.split_by_comma Tp.layouttvar qv in
   let fset = Printf.sprintf "fset: %s\n" @@ F.layout_set fset in
-  let labeled_vecs = List.fold_lefti (fun table i (label, vec) ->
-      let label = if label then "+" else "-" in
-      let vec = List.split_by_comma (fun x -> if x then "t" else "f") (Array.to_list vec) in
-      Printf.sprintf "%s\n%s: [%i] %s" table label i vec
-    ) "" labeled_vecs in
+  let labeled_vecs = layout_vecs @@ List.of_seq @@ Hashtbl.to_seq fvtab in
   Printf.sprintf "%s%s%s%s\n" args qv fset labeled_vecs
 
 (* let remove_field {fset; vecs} target = *)
@@ -72,14 +80,6 @@ let layout {args; qv; fset; labeled_vecs} =
 (* let get_field {fset; vecs} feature = *)
 (*   let i = List.lookup (fun f1 f2 -> F.eq f1 f2) feature fset in *)
 (*   List.map (fun vec -> List.nth vec i) vecs *)
-
-type label = Pos | Neg | Unclear
-
-let label_eq = function
-  | Pos, Pos -> true
-  | Neg, Neg -> true
-  | Unclear, Unclear -> true
-  | _, _ -> false
 
 (* let split feature_vectors target = *)
 (*   let y = get_field feature_vectors target in *)

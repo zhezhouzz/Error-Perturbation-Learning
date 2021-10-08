@@ -98,4 +98,4 @@ let phi_merge = function
   | [L l1] ->
     let check = List.check_sorted (fun a b -> a < b) in
     check l1
-  | _ -> raise @@ failwith "runtime client phi error"
+  | input -> raise @@ failwith (Printf.sprintf "runtime client phi error over(%s)" @@ Value.layout_l input)

@@ -2,9 +2,11 @@
  (name classify)
  (libraries utils primitive specification ml prover qcheck core)
  (modules
+   cctx
    feature
    feature_vector
    dtree
    infer
+   label
  )
 )

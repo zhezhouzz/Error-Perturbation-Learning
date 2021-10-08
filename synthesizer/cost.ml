@@ -158,22 +158,22 @@ let cost (env: Env.t) =
 let test (env: Env.t) =
   let open Language.Oplang in
   let randomcos = {fin = [Tp.IntList, 0; Tp.IntList, 1];
-                   body = [{op = "unused"; args = []; res = []};
-                           {op = "unused"; args = []; res = []};
-                           {op = "random_int"; args = []; res = [Tp.Int, 2]};
-                           {op = "cons"; args = [Tp.IntList, 0; Tp.Int, 2]; res = [Tp.IntList, 3]};];
-                   fout = [Tp.IntList, 3; Tp.IntList, 1]} in
+                   body = [{op = "random_int"; args = []; res = [Tp.Int, 2]};
+                           {op = "random_int"; args = []; res = [Tp.Int, 3]};
+                           {op = "random_int"; args = []; res = [Tp.Int, 4]};
+                           {op = "cons"; args = [Tp.IntList, 0; Tp.Int, 2]; res = [Tp.IntList, 5]};];
+                   fout = [Tp.IntList, 5; Tp.IntList, 1]} in
   let exchange = {fin = [Tp.IntList, 0; Tp.IntList, 1];
-                  body = [{op = "unused"; args = []; res = []};
-                          {op = "unused"; args = []; res = []};
-                          {op = "unused"; args = []; res = []};
-                          {op = "unused"; args = []; res = []};];
+                  body = [{op = "random_int"; args = []; res = [Tp.Int, 2]};
+                          {op = "random_int"; args = []; res = [Tp.Int, 3]};
+                          {op = "random_int"; args = []; res = [Tp.Int, 4]};
+                          {op = "random_int"; args = []; res = [Tp.Int, 5]};];
                   fout = [Tp.IntList, 1; Tp.IntList, 0]} in
   let cons0 = {fin = [Tp.IntList, 0; Tp.IntList, 1];
                   body = [{op = "const0"; args = []; res = [Tp.Int, 2]};
                           {op = "cons"; args = [Tp.IntList, 0; Tp.Int, 2]; res = [Tp.IntList, 3]};
-                          {op = "unused"; args = []; res = []};
-                          {op = "unused"; args = []; res = []};];
+                          {op = "random_int"; args = []; res = [Tp.Int, 4]};
+                          {op = "random_int"; args = []; res = [Tp.Int, 5]};];
                fout = [Tp.IntList, 1; Tp.IntList, 3]} in
   let min_minus1_cons_cons = {fin = [Tp.IntList, 0; Tp.IntList, 1];
                         body = [{op = "min"; args = [Tp.IntList, 0]; res = [Tp.Int, 2]};
@@ -185,7 +185,7 @@ let test (env: Env.t) =
                         body = [{op = "max"; args = [Tp.IntList, 1]; res = [Tp.Int, 2]};
                                 {op = "plus1"; args = [Tp.Int, 2]; res = [Tp.Int, 3]};
                                 {op = "append"; args = [Tp.Int, 1; Tp.Int, 3]; res = [Tp.IntList, 4]};
-                                {op = "unused"; args = []; res = []};];
+                                {op = "random_int"; args = []; res = [Tp.Int, 5]};];
                           fout = [Tp.IntList, 4; Tp.IntList, 0]} in
   let top_plus1_cons_cons = {fin = [Tp.IntList, 0; Tp.IntList, 1];
                           body = [{op = "top"; args = [Tp.IntList, 0]; res = [Tp.Int, 2]};
@@ -202,10 +202,15 @@ let test (env: Env.t) =
     let () = Log.log_write (Printf.sprintf "cost = %f\n" cost) in
     cost
   in
-  let _ = Printf.printf "cost randomcos: %f\n" @@ cost_ randomcos in
-  let _ = Printf.printf "cost exchange: %f\n" @@ cost_ exchange in
-  let _ = Printf.printf "cost cons0: %f\n" @@ cost_ cons0 in
-  let _ = Printf.printf "cost min_minus1_cons_cons: %f\n" @@ cost_ min_minus1_cons_cons in
-  let _ = Printf.printf "cost max_plus1_append: %f\n" @@ cost_ max_plus1_append in
-  let _ = Printf.printf "cost top_plus1_cons_cons: %f\n" @@ cost_ top_plus1_cons_cons in
+  let print name prog =
+    let _ = Printf.printf "\\begin{lstlisting}\n%s:\n%s\\end{lstlisting}\n" name @@ layout prog in
+    let _ = Printf.printf "cost %s: %f\n\n" name @@ cost_ prog in
+    ()
+  in
+  let _ = print "randomcos" randomcos in
+  let _ = print "exchange" exchange in
+  let _ = print "cons0" cons0 in
+  let _ = print "min_minus1_cons_cons" min_minus1_cons_cons in
+  let _ = print "max_plus1_append" max_plus1_append in
+  let _ = print "top_plus1_cons_cons" top_plus1_cons_cons in
   ();;

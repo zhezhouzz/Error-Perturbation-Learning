@@ -5,22 +5,19 @@ module T = Tp
 module F = Feature
 module FV = Feature_vector
 module FastDT = Ml.FastDT.FastDT
+open Cctx;;
 open Basic_dt
 open Printf
+open Label
 type value = Value.t
 type feature = Feature.t
 type feature_set = Feature.set
-type label = Pos | Neg | MayNeg
+
 type 'a t =
   | T
   | F
   | Leaf of 'a
   | Node of 'a * 'a t * 'a t
-
-let layout_label = function
-  | Pos -> "pos"
-  | Neg -> "neg"
-  | MayNeg -> "mayneg"
 
 let eval (dt: feature t) m : bool =
   let rec aux = function
@@ -44,10 +41,9 @@ let eval_vector (dt: feature t) (fl: feature list) (vec: bool list) : bool =
   in
   aux dt
 
-let eval_vector_idx (dt: int t) (vec: bool list) : bool =
-  let nth i = match List.nth_opt vec i with
-    | None -> raise @@ failwith "eval_vector_idx"
-    | Some b -> b
+let eval_vector_idx (dt: int t) (vec: bool array) : bool =
+  let nth i = try vec.(i) with
+    | _ -> raise @@ failwith "eval_vector_idx"
   in
   let rec aux = function
     | T -> true
@@ -191,14 +187,7 @@ let classify_ fset samples =
   (* let _ = Printf.printf "summary: %i|%i\n" posnum negnum in *)
   res
 
-let classify {FV.fset; FV.labeled_vecs; _} =
-  (* let samples = List.map (fun (a, b) -> a, Array.of_list b) labeled_vecs in *)
-  classify_ fset (Array.of_list labeled_vecs)
-
 let classify_hash fset htab is_pos =
-  (* let _ = Hashtbl.iter (fun vec label ->
-   *     printf "%s:%s\n" (boollist_to_string vec) (layout_label label)
-   *   ) htab in *)
   let samples = Array.init (Hashtbl.length htab)
       (fun _ -> false, Array.init (List.length fset) (fun _ -> false)) in
   let iter = ref 0 in
@@ -206,8 +195,8 @@ let classify_hash fset htab is_pos =
     Hashtbl.iter (fun f v ->
         let _ =
           if is_pos v
-          then Array.set samples !iter (true, Array.of_list f)
-          else Array.set samples !iter (false, Array.of_list f)
+          then Array.set samples !iter (true, f)
+          else Array.set samples !iter (false,f)
         in
         iter := !iter + 1
       ) htab
@@ -217,9 +206,8 @@ let classify_hash fset htab is_pos =
   let res_idx = of_fastdt_idx dt in
   res, res_idx
 
-let is_pos = function
-  | Pos -> true
-  | _ -> false
+let classify ?(is_pos = Label.is_pos) ctx =
+  classify_hash ctx.fset ctx.fvtab is_pos
 
 let two_dt f fset dt1 dt2 =
   let len = List.length fset in
@@ -234,7 +222,7 @@ let two_dt f fset dt1 dt2 =
   in
   let ftab = Hashtbl.create 10000 in
   let rec aux idx =
-    let fvec = Array.to_list fv_arr in
+    let fvec = fv_arr in
     (* let _ = Printf.printf "iter:%s\n" (boollist_to_string fvec) in *)
     let dt1_b = eval_vector_idx dt1 fvec in
     let dt2_b = eval_vector_idx dt2 fvec in

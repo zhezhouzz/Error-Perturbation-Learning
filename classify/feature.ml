@@ -48,6 +48,11 @@ let to_prop feature =
   | Base (op, args) -> E.MethodPredicate (op, args)
   | Bo (t, b) -> E.Bvar (t, b)
 
+let instantization = function
+  | Pr (pred, args) -> Pr (P.instantization pred (List.map fst args), args)
+  | Base (op, args) -> Base (P.instantization op (List.map fst args), args)
+  | Bo (t, b) -> Bo (t, b)
+
 (* TODO: make feature set *)
 let mk_set args qv mps =
   let dtargs, elemargs = List.partition (fun (tp, _) -> T.is_dt tp) args in
@@ -63,4 +68,4 @@ let mk_set args qv mps =
        (List.combination_l qv 2))
     | _ -> raise @@ failwith "undef in feature"
   in
-  List.flatten @@ List.map mk_feature mps
+  List.map instantization @@ List.flatten @@ List.map mk_feature mps

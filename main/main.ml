@@ -41,11 +41,19 @@ let test_oplang () =
 let test_feature () =
   let qv = [Primitive.Tp.Int, "u"; Primitive.Tp.Int, "v"] in
   let args = [Primitive.Tp.IntList, "l1"; Primitive.Tp.IntList, "l2"] in
-  let mps = ["mem"; "hd"; "=="; "<"] in
-  let inferctx = Classify.Infer.mk_infer_ctx args qv mps in
-  let () = Printf.printf "fset: %s\n" (Classify.Feature.layout_set inferctx.Classify.Feature_vector.fset) in
+  let mps = ["mem"; "hd"; "<"] in
+  let inferctx = Classify.Cctx.mk_cctx args qv mps in
+  let () = Printf.printf "fset: %s\n" (Classify.Feature.layout_set inferctx.Classify.Cctx.fset) in
   let module V = Primitive.Value in
-  let () = Classify.Infer.pre_infer inferctx [[V.L [1;2]; V.L [3;4]]] (fun _ -> true) in
+  let () = Classify.Infer.spec_infer inferctx
+      [[V.L [1;2]; V.L [3;4]]; [V.L [3;4]; V.L [1;2]]]
+      (fun x -> x)
+      (function
+        | [V.L [1;2]; V.L [3;4]] -> true
+        | _ -> false)
+      (* (fun v -> not (Primitive.Imp.phi_merge v)) *)
+      (* Primitive.Imp.sigma_merge *)
+  in
   ()
 
 let batched_test num_times num_burn_in num_sampling =
