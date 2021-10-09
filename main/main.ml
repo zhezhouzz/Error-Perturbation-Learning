@@ -64,9 +64,13 @@ let test_pre_infer () =
   let qv = [Primitive.Tp.Int, "u"; Primitive.Tp.Int, "v"] in
   let args = prog.fin in
   let mps = ["mem"; "hd"; "<"] in
-  let cctx = Classify.Cctx.mk_cctx [Primitive.Tp.Int, "x1"; Primitive.Tp.Int, "x2"] qv mps in
+  let cctx = Classify.Cctx.mk_cctx [Primitive.Tp.IntList, "x1"; Primitive.Tp.IntList, "x2"] qv mps in
   let () = Printf.printf "fset: %s\n" (Classify.Feature.layout_set cctx.Classify.Cctx.fset) in
-  let () = Pre.perturbation_pre_infer cctx scache Primitive.Imp.sigma_merge Primitive.Imp.phi_merge in
+  let () = Pre.perturbation_pre_infer cctx scache
+      env.Synthesizer.Env.sigma
+      (fun v -> snd @@ env.client env.library_inspector v)
+      env.Synthesizer.Env.phi
+  in
   ()
 
 let batched_test num_times num_burn_in num_sampling =

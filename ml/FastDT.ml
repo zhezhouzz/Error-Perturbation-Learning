@@ -187,7 +187,12 @@ module FastDT : FastDT = struct
       let p_t = (smooth +. c_t) /. (c_t +. c_f +. 2. *. smooth) in
       let p_f = 1. -. p_t in
       if p_t < 0. || p_f < 0. then failwith "";
-      if c_t <= 0. || c_f <= 0. || min p_t p_f < leaf_acc || depth >= max_depth then Leaf (mkfp c_t c_f) else (
+      if c_t <= 0. || c_f <= 0. || min p_t p_f < leaf_acc || depth >= max_depth then
+        (
+        (*   Printf.printf "c_t:%f; c_f:%f; leaf_acc:%f; depth: %i; max_depth %i\n" *)
+        (* c_t c_f leaf_acc depth max_depth; *)
+        Leaf (mkfp c_t c_f))
+      else (
         (* build the tree *)
         match find_split_feature c_t c_f _F _Y _W used validEx with
           None -> Leaf (mkfp c_t c_f)

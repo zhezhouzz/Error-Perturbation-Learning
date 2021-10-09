@@ -97,25 +97,27 @@ let to_epr_idx dtree vars =
 (* TODO: handle types in predicates *)
 let to_forallformula (qv: T.tvar list) (dtree: feature t) =
   qv, to_prop dtree
-  (* let dts, elems = get_vars dtree in *)
-  (* let vars = List.map (fun v -> T.Int, v) (dts @ elems) in *)
-  (* vars, to_epr dtree *)
+(* let dts, elems = get_vars dtree in *)
+(* let vars = List.map (fun v -> T.Int, v) (dts @ elems) in *)
+(* vars, to_epr dtree *)
 
 let to_spec (args:  T.tvar list) (qv: T.tvar list) (dtree: feature t) =
   Specification.Spec.({args = args; qv = qv; body = to_prop dtree})
-  (* let dts, elems = get_vars dtree in *)
-  (* let dts = List.map (fun v -> T.Int, v) dts in *)
-  (* let elems = List.map (fun v -> T.Int, v) elems in *)
-  (* dts, (elems, to_epr dtree) *)
+(* let dts, elems = get_vars dtree in *)
+(* let dts = List.map (fun v -> T.Int, v) dts in *)
+(* let elems = List.map (fun v -> T.Int, v) elems in *)
+(* dts, (elems, to_epr dtree) *)
 
 
 let of_fastdt dt feature_set =
   let rec aux = function
     | FastDT.Leaf {c_t; c_f} ->
       let res =
-        if (Float.abs c_t) < 1e-3 then F
-        else if (Float.abs c_f) < 1e-3 then T
-        else raise @@ failwith (sprintf "Bad Dt Result(%f, %f)" c_t c_f)
+        if (Float.abs c_t) < 1e-6 then F
+        else if (Float.abs c_f) < 1e-6 then T
+        else
+          (FastDT.print_tree' dt;
+               raise @@ failwith (sprintf "Bad Dt Result(%f, %f)" c_t c_f))
       in
       (* let _ = Printf.printf "leaf(%f,%f) ->(%f,%f,%f) = %s\n" c_t c_f
        *     (Float.abs c_t) (Float.abs c_f) (1e-3) (layout res) in *)
@@ -131,9 +133,11 @@ let of_fastdt_idx dt =
   let rec aux = function
     | FastDT.Leaf {c_t; c_f} ->
       let res =
-        if (Float.abs c_t) < 1e-3 then F
-        else if (Float.abs c_f) < 1e-3 then T
-        else raise @@ failwith (sprintf "Bad Dt Result(%f, %f)" c_t c_f)
+        if (Float.abs c_t) < 1e-6 then F
+        else if (Float.abs c_f) < 1e-6 then T
+        else
+          (FastDT.print_tree' dt;
+           raise @@ failwith (sprintf "Bad Dt Result(%f, %f)" c_t c_f))
       in
       (* let _ = Printf.printf "leaf(%f,%f) ->(%f,%f,%f) = %s\n" c_t c_f
        *     (Float.abs c_t) (Float.abs c_f) (1e-3) (layout res) in *)
@@ -179,7 +183,7 @@ let dt_summary dt fset =
   (aux 0; (!posnum, !negnum))
 
 let classify_ fset samples =
-  let dt = FastDT.make_dt ~samples:samples ~max_d:50 in
+  let dt = FastDT.make_dt ~samples:samples ~max_d:100 in
   (* let _ = FastDT.print_tree' dt in *)
   (* let _ = if List.length labeled_vecs >= 3 then raise @@ failwith "class" else () in *)
   let res = of_fastdt dt fset in
