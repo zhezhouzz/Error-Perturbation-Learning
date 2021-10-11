@@ -84,7 +84,7 @@ let spec_infer ctx (data: 'a list) (to_values: 'a -> V.t list) (judge: 'a -> boo
   let () =
     match rule_out Gready ctx.fvtab neg_data Label.Neg with
     | Indistinguishable ->
-      Log.log_write "Indistinguishable!"; ()
+      Zlog.log_write "Indistinguishable!"; ()
     | _ -> () in
   let _ = Printf.printf "fvctx:\n%s\n" @@ FV.layout_fvctx ctx in
   let dt, _ = Dtree.classify ctx in

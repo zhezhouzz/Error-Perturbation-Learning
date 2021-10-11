@@ -5,6 +5,28 @@ type tvar = Tp.t * int
 type instr = {op: string; args: tvar list; res: tvar list}
 type t = {fin: tvar list; body: instr list; fout: tvar list}
 
+let compare_tvar (t1, name1) (t2, name2) =
+  let c1 = Tp.compare t1 t2 in
+  if c1 == 0 then compare name1 name2 else c1
+
+let compare_tvarl l1 l2 =
+  List.compare compare_tvar l1 l2
+
+let compare_prog t1 t2 =
+  let c1 = compare_tvarl t1.fin t2.fin in
+  if c1 != 0 then c1
+  else
+    let c2 = compare_tvarl t1.fout t2.fout in
+    if c2 != 0 then c2
+    else
+      List.compare (fun instr1 instr2 ->
+          let c1 = String.compare instr1.op instr2.op in
+          if c1 != 0 then c1 else
+            let c2 =  compare_tvarl instr1.args instr2.args in
+            if c2 != 0 then c2 else
+              compare_tvarl instr1.res instr2.res
+        ) t1.body t2.body
+
 let subst_args m args =
   List.map (fun (tp, place) ->
       match IntMap.find_opt m place with

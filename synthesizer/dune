@@ -10,5 +10,6 @@
  mkenv
  mcmc
  pre
+ syn_stat
  )
 )

@@ -18,18 +18,24 @@ let metropolis_hastings
   let counter = ref 0 in
   let bound = ref (burn_in + sampling) in
   let best_one = ref (Some (init, cal_cost init)) in
-  let update_best_one (cur, cur_cost) =
+  let update_best_one (cur_id, cur, cur_cost) =
     match !best_one with
     | None -> ()
     | Some (_, prev_cost) ->
-      if cur_cost < prev_cost then best_one := Some (cur, cur_cost) else ()
+      if cur_cost < prev_cost then
+        (best_one := Some (cur, cur_cost);
+         match cur_id with
+         | None -> ()
+         | Some id -> Zlog.log_write (Printf.sprintf "\tnow the best one is %i" id))
+      else ()
   in
   let rec loop (cur, cur_cost) =
     (* (if !counter mod 20 == 0 then Printf.printf "MCMC: %i\n" !counter else ()); *)
-    update_best_one (cur, cur_cost);
+    let cur_id = Syn_stat.add cur.Env.cur_p.prog in
+    let _ = update_best_one (cur_id, cur, cur_cost) in
     if !counter >= !bound then cur, cur_cost else
       let next, next_cost =
-        Log.event (Printf.sprintf "MCMC %i" !counter) (fun () ->
+        Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ (string_of_int !counter)) (fun () ->
           let next = mutate cur in
           let next_cost = cal_cost next in
           next, next_cost) in
@@ -40,15 +46,7 @@ let metropolis_hastings
       then loop (next, next_cost)
       else loop (cur, cur_cost)
   in
-  (* warm up *)
-  (* let _ = bound := burn_in in *)
-  (* let _ = counter := 0 in *)
-  (* let burn_in, burn_in_cost = loop (init, cal_cost init) in *)
-  (* sampling *)
-  (* let _ = best_one := Some (burn_in, burn_in_cost) in *)
-  (* let _ = bound := sampling in *)
-  (* let _ = counter := 0 in *)
-  (* let _ = loop (burn_in, burn_in_cost) in *)
+  let () = Syn_stat.init () in
   let _ = loop (init, cal_cost init) in
   let result, cost = match !best_one with
     | Some (result, cost) -> result, cost

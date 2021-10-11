@@ -4,23 +4,32 @@ let time f =
   let delta = (Sys.time() -. t) in
   fx, delta
 
-let log_write message =
+type log_error =
+  | Ldebug
+  | LWarning
+
+let log_write ?log_level:(level = Ldebug) message =
   let open Config in
   match !conf.exec_flag with
-  | Debug {logc; _} -> Printf.fprintf logc "%s\n" message
+  | Debug {logc; _} ->
+    (match level with
+     | Ldebug -> Printf.fprintf logc "%s\n" message
+     | LWarning -> Printf.fprintf logc "[Warning] %s\n" message)
   | _ -> ()
 
-let event eventname f =
+let event_ message  f =
   let open Config in
   match !conf.exec_flag with
   | Debug _ ->
-    let _ = log_write (Printf.sprintf "------%s start-----\n" eventname) in
+    let _ = log_write (Printf.sprintf "------%s start-----" message) in
     let start_time = Sys.time () in
     let result = f () in
     let end_time = Sys.time () in
-    let _ = log_write (Printf.sprintf "------%s end(exec time: %f)-----\n" eventname(end_time -. start_time)) in
+    let _ = log_write (Printf.sprintf "------%s end(exec time: %f)-----" message(end_time -. start_time)) in
     result
   | Opt -> f ()
+
+let event ?msg:(message = "") f = event_ message f
 
 let debug_event eventname f =
   let open Config in

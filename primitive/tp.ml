@@ -16,6 +16,25 @@ let layout = function
   | IntTreeI -> "int treei"
   | IntTreeB -> "int treeb"
 
+let compare t1 t2 =
+  let conding = function
+    | Bool -> 0
+    | Int -> 1
+    | IntList -> 2
+    | IntTree -> 3
+    | IntTreeI -> 4
+    | IntTreeB -> 5
+  in
+  compare (conding t1) (conding t2)
+
+let compare_tvar (t1, name1) (t2, name2) =
+  let c1 = compare t1 t2 in
+  if c1 == 0 then String.compare name1 name2 else c1
+
+let compare_tvarl l1 l2 =
+  List.compare compare_tvar l1 l2
+
+
 let layouttvar (t, name) = (layout t) ^ ":" ^ name
 
 let tavrs_to_tps (l: tvar list) = List.map (fun (tp, _) -> tp) l

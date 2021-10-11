@@ -43,7 +43,7 @@ let load_config configfile =
     | _ -> raise @@ failwith "cannot load config::z3" in
   let _ = if if_random then Random.init 0 else () in
   let z3_ctx = if if_z3
-    then Some (Z3.mk_context [("model", "true"); ("proof", "false"); ("timeout", "2999")])
+    then Some (Z3.mk_context [("model", "true"); ("proof", "false"); ("timeout", "1999")])
     else None in
   let mutation_distribution =
     try

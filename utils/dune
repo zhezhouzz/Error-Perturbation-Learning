@@ -3,7 +3,7 @@
  (wrapped false)
  (modules
  basic_dt
- log
+ zlog
  sugar
  config
  )

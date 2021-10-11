@@ -13,7 +13,7 @@ let interp {fin; body; fout} (input: V.t list) =
       let imp = Operator.get_imp op in
       let argsv = List.map (fun (_, idx) -> IntMap.find "runtime error: interpret..." env idx) args in
       match imp argsv with
-      | None -> Log.log_write (Printf.sprintf "interp error with %s(%s)" op (List.split_by_comma V.layout argsv)); None
+      | None -> Zlog.log_write (Printf.sprintf "interp error with %s(%s)" op (List.split_by_comma V.layout argsv)); None
       | Some vs -> Some (IntMap.force_update_list env @@ build_env_list res vs)
   in
   let rec loop env body =

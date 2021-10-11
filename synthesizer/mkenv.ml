@@ -11,7 +11,7 @@ let mk_env sigma client library phi tps i_err op_pool sampling_rounds p_size =
       raise @@ failwith "mkenv too many init"
     else
       let ops = QCheck.Gen.generate1 gen in
-      let _ = Log.log_write (Printf.sprintf "ops: [%s]" (List.split_by_comma (fun x -> x) ops)) in
+      let _ = Zlog.log_write (Printf.sprintf "ops: [%s]" (List.split_by_comma (fun x -> x) ops)) in
       let _ = counter := !counter + 1 in
       match Language.Arg_solving.arg_assign tps ops with
       | None -> loop ()

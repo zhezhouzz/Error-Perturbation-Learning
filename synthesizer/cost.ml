@@ -37,7 +37,7 @@ let duplicate_level gh i j =
     let dup_times x = fst @@ List.fold_left (fun (dup_times, gidx) gtotal ->
         if gidx < gtotal then (dup_times + 1, gidx) else (dup_times, gidx)) (0, x) gh in
     let dup_times = dup_times j in
-    let _ = Log.log_write @@ (Printf.sprintf "dup_times:%i" dup_times) in
+    let _ = Zlog.log_write @@ (Printf.sprintf "dup_times:%i" dup_times) in
     float_of_int @@ dup_times
   else 1.0
 
@@ -48,7 +48,7 @@ let diff_invocation_record r1 r2 =
 let non_trival r1 r2 =
   let diff = float_of_int @@ diff_invocation_record r1 r2 in
   let k = delta_non_trival /. (delta_non_trival +. diff) in
-  (* let _ = Log.log_write @@ Printf.sprintf "|<%s> - <%s>| = %f\n" *)
+  (* let _ = Zlog.log_write @@ Printf.sprintf "|<%s> - <%s>| = %f\n" *)
   (*     (List.split_by_comma string_of_int r1) (List.split_by_comma string_of_int r2) k in *)
   k
 
@@ -64,7 +64,7 @@ let non_trival_v2 r1 r2 =
   let c_b_2_num = float_of_int @@ List.length b in
   let b = max 0.3 ((List.fold_left (fun sum x -> if x then sum +. 1.0 else sum) 0.0 b) /. c_b_2_num) in
   let result = a *. b in
-  (* let _ = Log.log_write @@ Printf.sprintf "|<%s> - <%s>| = %f * %f = %f" *)
+  (* let _ = Zlog.log_write @@ Printf.sprintf "|<%s> - <%s>| = %f * %f = %f" *)
   (*     (List.split_by_comma string_of_int r1) (List.split_by_comma string_of_int r2) a b result in *)
   result
 
@@ -120,8 +120,8 @@ let cal_cost (sigma: V.t list -> bool) (prog: V.t list -> (int list * (V.t list)
   let sum = List.fold_lefti (fun sum i j ->
       (* let cost_valid = cost_valid_iter sigma prog phi cache.datam_rev j in *)
       (* let cost_duplicate = cost_duplicate_iter j in *)
-      (* let () = Log.log_write (Printf.sprintf "cost_valid[%i]: %f" i cost_valid) in *)
-      (* let () = Log.log_write (Printf.sprintf "cost_duplicate[%i]: %f" i cost_duplicate) in *)
+      (* let () = Zlog.log_write (Printf.sprintf "cost_valid[%i]: %f" i cost_valid) in *)
+      (* let () = Zlog.log_write (Printf.sprintf "cost_duplicate[%i]: %f" i cost_duplicate) in *)
       let cost = cost_weighted_valid_iter sigma prog phi i_err_non_trivial_info
           cache.generation_hierarchy_rev cache.datam_rev j in
       let k_no_new gh i = if i == 0 then 1.0 else
@@ -129,31 +129,23 @@ let cal_cost (sigma: V.t list -> bool) (prog: V.t list -> (int list * (V.t list)
           | _ ->
             raise @@ failwith (Printf.sprintf "never happen in cost([%s]:%i)" (List.split_by_comma string_of_int gh) i) in
       let cost = (k_no_new cache.generation_hierarchy_rev i) *. cost in
-      let () = Log.log_write (Printf.sprintf "cost[%i]: %f" i cost) in
+      let () = Zlog.log_write (Printf.sprintf "cost[%i]: %f" i cost) in
       sum +. cost
     ) 0.0 cache.jump_table in
   sum /. (float_of_int (List.length cache.jump_table))
 
-(* let cost_ (sigma: V.t list -> bool) (client: V.t list -> (V.t list) option) (phi: V.t list -> bool) init_errs tps prog num = *)
-(*   let () = Printf.printf "prog:\n%s\n" (Language.Oplang.layout prog) in *)
-(*   let cache = Sampling.cost_sampling_ tps init_errs prog num in *)
-(*   (\* let () = Printf.printf "sample cache:\n%s\n" (Sampling.cache_layout cache) in *\) *)
-(*   let cost = cal_cost sigma client phi cache in *)
-(*   let () = Printf.printf "cost = %f\n" cost in *)
-(*   cost *)
-
 (* TODO: Try to reduce the probability of [unused;unused;unused;unused] *)
 let cost (env: Env.t) =
   let open Env in
-  (* let () = Printf.printf "prog:\n%s\n" (Language.Oplang.layout env.cur_p.prog) in *)
-  let () = Log.log_write (Printf.sprintf "prog(non-det: %b):\n%s\n"
-                            (Language.Oplang.check_non_det env.cur_p.prog) (Language.Oplang.layout env.cur_p.prog)) in
-  let scache = Sampling.cost_sampling env in
-  let () = Log.log_write (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) in
-  let cost = cal_cost env.sigma (env.client env.library_inspector) env.phi env.i_err_non_trivial_info scache in
-  (* let () = Printf.printf "cost = %f\n" cost in *)
-  let () = Log.log_write (Printf.sprintf "cost = %f\n" cost) in
-  cost
+  Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") (fun () ->
+      let () = Zlog.log_write (Printf.sprintf "prog(non-det: %b):\n%s\n"
+                                (Language.Oplang.check_non_det env.cur_p.prog) (Language.Oplang.layout env.cur_p.prog)) in
+      let scache = Sampling.cost_sampling env in
+      (* let () = Zlog.log_write (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) in *)
+      let cost = cal_cost env.sigma (env.client env.library_inspector) env.phi env.i_err_non_trivial_info scache in
+      let () = Zlog.log_write (Printf.sprintf "cost = %f\n" cost) in
+      cost
+    )
 
 let test (env: Env.t) =
   let open Language.Oplang in
@@ -170,36 +162,36 @@ let test (env: Env.t) =
                           {op = "random_int"; args = []; res = [Tp.Int, 5]};];
                   fout = [Tp.IntList, 1; Tp.IntList, 0]} in
   let cons0 = {fin = [Tp.IntList, 0; Tp.IntList, 1];
-                  body = [{op = "const0"; args = []; res = [Tp.Int, 2]};
-                          {op = "cons"; args = [Tp.IntList, 0; Tp.Int, 2]; res = [Tp.IntList, 3]};
-                          {op = "random_int"; args = []; res = [Tp.Int, 4]};
-                          {op = "random_int"; args = []; res = [Tp.Int, 5]};];
+               body = [{op = "const0"; args = []; res = [Tp.Int, 2]};
+                       {op = "cons"; args = [Tp.IntList, 0; Tp.Int, 2]; res = [Tp.IntList, 3]};
+                       {op = "random_int"; args = []; res = [Tp.Int, 4]};
+                       {op = "random_int"; args = []; res = [Tp.Int, 5]};];
                fout = [Tp.IntList, 1; Tp.IntList, 3]} in
   let min_minus1_cons_cons = {fin = [Tp.IntList, 0; Tp.IntList, 1];
-                        body = [{op = "min"; args = [Tp.IntList, 0]; res = [Tp.Int, 2]};
-                                {op = "minus1"; args = [Tp.Int, 2]; res = [Tp.Int, 3]};
-                                {op = "cons"; args = [Tp.Int, 0; Tp.Int, 3]; res = [Tp.IntList, 4]};
-                                {op = "cons"; args = [Tp.Int, 1; Tp.Int, 3]; res = [Tp.IntList, 5]};];
-                        fout = [Tp.IntList, 4; Tp.IntList, 5]} in
+                              body = [{op = "min"; args = [Tp.IntList, 0]; res = [Tp.Int, 2]};
+                                      {op = "minus1"; args = [Tp.Int, 2]; res = [Tp.Int, 3]};
+                                      {op = "cons"; args = [Tp.Int, 0; Tp.Int, 3]; res = [Tp.IntList, 4]};
+                                      {op = "cons"; args = [Tp.Int, 1; Tp.Int, 3]; res = [Tp.IntList, 5]};];
+                              fout = [Tp.IntList, 4; Tp.IntList, 5]} in
   let max_plus1_append = {fin = [Tp.IntList, 0; Tp.IntList, 1];
-                        body = [{op = "max"; args = [Tp.IntList, 1]; res = [Tp.Int, 2]};
-                                {op = "plus1"; args = [Tp.Int, 2]; res = [Tp.Int, 3]};
-                                {op = "append"; args = [Tp.Int, 1; Tp.Int, 3]; res = [Tp.IntList, 4]};
-                                {op = "random_int"; args = []; res = [Tp.Int, 5]};];
+                          body = [{op = "max"; args = [Tp.IntList, 1]; res = [Tp.Int, 2]};
+                                  {op = "plus1"; args = [Tp.Int, 2]; res = [Tp.Int, 3]};
+                                  {op = "append"; args = [Tp.Int, 1; Tp.Int, 3]; res = [Tp.IntList, 4]};
+                                  {op = "random_int"; args = []; res = [Tp.Int, 5]};];
                           fout = [Tp.IntList, 4; Tp.IntList, 0]} in
   let top_plus1_cons_cons = {fin = [Tp.IntList, 0; Tp.IntList, 1];
-                          body = [{op = "top"; args = [Tp.IntList, 0]; res = [Tp.Int, 2]};
-                                  {op = "plus1"; args = [Tp.Int, 2]; res = [Tp.Int, 3]};
-                                  {op = "cons"; args = [Tp.Int, 1; Tp.Int, 3]; res = [Tp.IntList, 4]};
-                                  {op = "cons"; args = [Tp.Int, 4; Tp.Int, 3]; res = [Tp.IntList, 5]};];
-                          fout = [Tp.IntList, 5; Tp.IntList, 5]} in
+                             body = [{op = "top"; args = [Tp.IntList, 0]; res = [Tp.Int, 2]};
+                                     {op = "plus1"; args = [Tp.Int, 2]; res = [Tp.Int, 3]};
+                                     {op = "cons"; args = [Tp.Int, 1; Tp.Int, 3]; res = [Tp.IntList, 4]};
+                                     {op = "cons"; args = [Tp.Int, 4; Tp.Int, 3]; res = [Tp.IntList, 5]};];
+                             fout = [Tp.IntList, 5; Tp.IntList, 5]} in
   let cost_ f =
-    Log.log_write (Printf.sprintf "prog(non-det: %b):\n%s\n"
+    Zlog.log_write (Printf.sprintf "prog(non-det: %b):\n%s\n"
                      (Language.Oplang.check_non_det f) (Language.Oplang.layout f));
     let scache = cost_sampling_ [Tp.IntList; Tp.IntList] [env.i_err] f env.sampling_rounds in
-    let () = Log.log_write (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) in
+    let () = Zlog.log_write (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) in
     let cost = cal_cost env.sigma (env.client env.library_inspector) env.phi env.i_err_non_trivial_info scache in
-    let () = Log.log_write (Printf.sprintf "cost = %f\n" cost) in
+    let () = Zlog.log_write (Printf.sprintf "cost = %f\n" cost) in
     cost
   in
   let print name prog =

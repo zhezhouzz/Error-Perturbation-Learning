@@ -68,8 +68,11 @@ let mutate_ op_pool cache = (
   let rec loop () =
     if !counter > 10 then raise @@ failwith "mutate too many times" else
       let mutation = Gen.generate1 gen in
-      match apply_mutation mutation cache with
-      | Some r -> Log.log_write (Printf.sprintf "mutation:\n%s\n" (match mutation with
+      let r = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ (string_of_int !counter)) (fun () ->
+          apply_mutation mutation cache
+        ) in
+      match r with
+      | Some r -> Zlog.log_write (Printf.sprintf "mutation:\n%s\n" (match mutation with
           | None -> raise @@ failwith "die in mutate_"
           | Some mutation -> layout_mutation mutation)); r
       | None -> loop ()
@@ -79,9 +82,12 @@ let mutate_ op_pool cache = (
 
 let mutate (env: Env.t) =
   let open Env in
-  let (prog, acache) =
-    mutate_ env.op_pool env.cur_p.acache in
-  {env with cur_p = {prog = prog; acache = acache}}
+  Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") (fun () ->
+      let (prog, acache) =
+        mutate_ env.op_pool env.cur_p.acache in
+      {env with cur_p = {prog = prog; acache = acache}}
+    )
+
 
 let test () =
   let tps, ops = Oplang.test_tps_ops in

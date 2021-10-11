@@ -1,4 +1,4 @@
-open Log
+open Zlog
 open Printf
 ;;
 let ppf = Format.err_formatter
@@ -24,12 +24,14 @@ let test_cost () =
 
 let test_mcmc () =
   let open Synthesizer in
+  let env = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () -> mk_standard_env ()) in
   let env, cost = Mcmc.metropolis_hastings
       ~burn_in: 300
       ~sampling_steps: 30
       ~proposal_distribution: Mutate.mutate
       ~cost_function: Cost.cost
-      ~init_distribution: (mk_standard_env ()) in
+      ~init_distribution: env in
   let () = Printf.printf "prog(cost: %f):\n%s\n" cost (Language.Oplang.layout env.cur_p.prog) in
   ()
 
@@ -77,9 +79,11 @@ let batched_test num_times num_burn_in num_sampling =
   let open Synthesizer in
   let rec aux n =
     if n >= num_times then () else
+      let env = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+          (fun () -> mk_standard_env ()) in
       let env, cost =
-        event (Printf.sprintf "test(%i)" n) (
-          fun () -> Printf.printf "test!\n";
+        Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") (
+          fun () ->
             Mcmc.metropolis_hastings
               ~burn_in: num_burn_in
               ~sampling_steps: num_sampling
@@ -88,7 +92,7 @@ let batched_test num_times num_burn_in num_sampling =
               ~init_distribution: (mk_standard_env ())
         )
       in
-      let () = Log.log_write @@ Printf.sprintf "prog(cost: %f):\n%s\n" cost (Language.Oplang.layout env.cur_p.prog) in
+      let () = Zlog.log_write @@ Printf.sprintf "prog(cost: %f):\n%s\n" cost (Language.Oplang.layout env.cur_p.prog) in
       let () = Config.refresh_logfile (string_of_int n) in
       aux (n + 1)
   in
@@ -110,11 +114,16 @@ let test = Command.basic
       fun () -> Config.exec_main configfile (fun () ->
           (* event "test" (fun () -> Printf.printf "test!\n"; Language.Arg_solving.test ()) *)
           match test_name with
-          | "cost" -> event "test" (fun () -> Printf.printf "test!\n"; test_cost ())
-          | "mcmc" -> event "test" (fun () -> Printf.printf "test!\n"; test_mcmc ())
-          | "oplang" -> event "test" (fun () -> Printf.printf "test!\n"; test_oplang ())
-          | "feature" -> event "test" (fun () -> Printf.printf "test!\n"; test_feature ())
-          | "pre" -> event "test" (fun () -> Printf.printf "test!\n"; test_pre_infer ())
+          | "cost" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+                        (fun () -> Printf.printf "test!\n"; test_cost ())
+          | "mcmc" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+                        (fun () -> Printf.printf "test!\n"; test_mcmc ())
+          | "oplang" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+                          (fun () -> Printf.printf "test!\n"; test_oplang ())
+          | "feature" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+                           (fun () -> Printf.printf "test!\n"; test_feature ())
+          | "pre" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+                       (fun () -> Printf.printf "test!\n"; test_pre_infer ())
           | _ -> raise @@ failwith "unknown test name"
         )
     )
@@ -139,8 +148,9 @@ let parse =  Command.basic
       and source_file = anon ("source file" %: regular_file)
       in
       fun () -> Config.exec_main configfile (fun () ->
-          Printf.printf "%s\n" @@
-          Language.Oplang.layout @@ Parse.parse source_file
+          let prog = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+              (fun () -> Language.Oplang.layout @@ Parse.parse source_file) in
+          Printf.printf "%s\n" prog
         )
     )
 

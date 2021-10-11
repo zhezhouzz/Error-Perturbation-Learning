@@ -127,7 +127,8 @@ let solve_one ctx (total, vs, query) =
   | Reflect.SmtSat model ->
     Some (arg_reflect model (List.combine total vs))
   | Reflect.SmtUnsat -> None
-  | Reflect.Timeout -> raise @@ failwith "argument solving timeout"
+  | Reflect.Timeout ->
+    (Zlog.log_write ~log_level:Zlog.LWarning "argument solving timeout"; None)
 
 let nodup_qeury ctx (total, vs, m, v0, v1) =
   mk_not ctx @@ mk_and ctx @@
@@ -135,11 +136,20 @@ let nodup_qeury ctx (total, vs, m, v0, v1) =
       if source == IntMap.find "nodup_qeury" m place then (mk_eq ctx v v1) else (mk_eq ctx v v0)
     ) (List.combine total vs)
 
+let max_solution = 35
 let solve ctx cache =
+  let counter = ref 0 in
   let rec loop no_dup cache =
-    match solve_one ctx (cache.total, cache.total_z3, mk_and ctx (cache.query :: no_dup)) with
-    | Some m -> loop ((nodup_qeury ctx (cache.total, cache.total_z3, m, cache.v0, cache.v1))::no_dup)
-                  {cache with solutions = m :: cache.solutions}
+    if List.length cache.solutions > max_solution then cache else
+    let r =
+      Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ (string_of_int !counter)) (fun () ->
+          solve_one ctx (cache.total, cache.total_z3, mk_and ctx (cache.query :: no_dup)))
+    in
+    match r with
+    | Some m ->
+      counter := !counter + 1;
+      loop ((nodup_qeury ctx (cache.total, cache.total_z3, m, cache.v0, cache.v1))::no_dup)
+        {cache with solutions = m :: cache.solutions}
     | None -> cache
   in
   loop [] cache
