@@ -15,5 +15,9 @@ let opt_bind (x: 'a option) (f: 'a -> 'b option) : 'b option =
   | None -> None
   | Some x -> f x
 
+let bopt_false = function
+  | Some b -> b
+  | None -> false
+
 let (let*) x f = opt_bind x f
 let (let+) x f = opt_fmap x f

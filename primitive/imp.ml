@@ -25,6 +25,20 @@ let cons = function
   | [L l; I elem] -> Some [L (elem :: l)]
   | _ -> raise @@ failwith "runtime operator(cons) error"
 
+let cons_rev = function
+  | [L []] -> None
+  | [L (h :: t)] -> Some [I h; L t]
+  | _ -> raise @@ failwith "runtime operator(cons_rev) error"
+
+let nil = function
+  | [] -> Some [L []]
+  | _ -> raise @@ failwith "runtime operator(nil) error"
+
+let nil_rev = function
+  | [L []] -> Some []
+  | [L (_ :: _)] -> None
+  | _ -> raise @@ failwith "runtime operator(nil_rev) error"
+
 let append = function
   | [L l; I elem] -> Some [L (l @ [elem])]
   | _ -> raise @@ failwith "runtime operator(append) error"

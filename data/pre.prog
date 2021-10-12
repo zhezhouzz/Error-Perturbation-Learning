@@ -1,3 +1,4 @@
+(*Test for precondition inference*)
 IN: (x0: int list, x1: int list) {
 (x2: int) = const0();
 (x3: int list) = cons(x0: int list, x2: int);

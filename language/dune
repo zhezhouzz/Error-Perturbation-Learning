@@ -1,9 +1,11 @@
 (library
  (name language)
- (libraries utils primitive z3 prover)
+ (libraries utils primitive z3 prover specification)
  (modules
  oplang
  oplang_interp
  arg_solving
+ clientlang
+ bblib
  )
 )
