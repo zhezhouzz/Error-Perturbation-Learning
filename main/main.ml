@@ -154,11 +154,39 @@ let parse =  Command.basic
         )
     )
 
+let ocaml_parse =  Command.basic
+    ~summary:"ocaml-parse"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      in
+      fun () -> Config.exec_main configfile (fun () ->
+          let prog = Ocaml_parser.Frontend.parse ~sourcefile:source_file in
+          let meta = Ocaml_parser.Frontend.parse ~sourcefile:meta_file in
+          let open Basic_dt in
+          let preds, sigma, client, libs, phi, tps, op_pool, sampling_rounds, p_size =
+            Language.Clientlang_of_ocamlast.of_ocamlast prog meta in
+          let () = Printf.printf "  preds:%s\n  sigma:%s\n  client:%s\n  libs:%s\n  phi:%s\n  tps:%s\n  op_pool:%s\n  sampling_rounds:%i\n  p_size:%i\n"
+              (List.split_by_comma (fun x -> x) preds)
+              (Specification.Spec.layout sigma)
+              (Language.Clientlang.layout client)
+              (List.split_by_comma (fun x -> x) libs)
+              (Specification.Spec.layout phi)
+              (List.split_by_comma Primitive.Tp.layout tps)
+              (List.split_by_comma (fun x -> x) op_pool)
+              sampling_rounds p_size
+          in
+          ()
+        )
+    )
+
 let command =
   Command.group ~summary:"Error Perturbation Learning"
     [ "test", test;
       "batched-test", batched_test;
       "parse", parse;
+      "ocaml-parse", ocaml_parse;
     ]
 
 let () = Command.run command

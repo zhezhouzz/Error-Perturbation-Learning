@@ -57,3 +57,9 @@ let eval {args; qv; body} argsvalue =
     | _ -> raise @@ failwith "spec' args and values are mismatched in spec::exec"
   in
   forallformula_eval (qv, body) env
+
+let layout {args; qv; body} =
+  Printf.sprintf "(%s) -> ∀ %s, %s"
+    (List.split_by_comma Tp.layouttvar args)
+    (List.split_by_comma Tp.layouttvar qv)
+    (Prop.layout body)

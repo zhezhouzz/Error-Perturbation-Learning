@@ -4,6 +4,6 @@
 )
 (executable
  (name main)
- (libraries utils core language synthesizer parser classify)
+ (libraries utils core language synthesizer parser classify ocaml_parser)
  (preprocess (pps ppx_jane))
 )

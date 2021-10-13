@@ -15,7 +15,29 @@ type t =
   | Let of Tp.tvar list * t * t
   | Match of string * (string * string list * t) list
 
-type func = {fname: string; args: Tp.tvar list; body: t; res: Tp.tvar list}
+type func = {fname: string; args: Tp.tvar list; body: t; res: Tp.t list}
+
+let layout_body =
+  let rec aux = function
+    | VarTuple vs -> spf "(%s)" (List.split_by_comma (fun x -> x) vs)
+    | LitB b -> string_of_bool b
+    | LitI i -> string_of_int i
+    | Op (op, args) -> spf "%s(%s)" op (List.split_by_comma (fun x -> x) args)
+    | App (op, args) -> spf "%s(%s)" op (List.split_by_comma (fun x -> x) args)
+    | Ift (e1, e2, e3) -> spf "if (%s) \nthen (%s)\nelse (%s)" (aux e1) (aux e2) (aux e3)
+    | Let (lfs, rhs, body) -> spf "let %s = %s in\n%s" (List.split_by_comma Tp.layouttvar lfs) (aux rhs) (aux body)
+    | Match (a, cases) ->
+      List.fold_left (fun str (constr, args, body) ->
+          spf "%s| %s(%s) ->\n%s\n" str constr (List.split_by_comma (fun x -> x) args) (aux body)
+        ) (spf "match %s with\n" a) cases
+  in
+  aux
+
+let layout {fname; args; body; res} =
+  spf "let rec %s %s: %s =\n%s\n" fname
+    (List.split_by " " (fun x -> spf "(%s)" @@ Tp.layouttvar x) args)
+    (List.split_by " * " (fun x -> spf "(%s)" @@ Tp.layout x) res)
+    (layout_body body)
 
 let type_check_vars tenv args =
   let argstp = List.filter_map (fun x -> x) @@ List.map (StrMap.find_opt tenv) args in
@@ -51,7 +73,8 @@ let type_check funcdef libdef =
     | LitI _ -> Some [Tp.Int]
     | Op (op, args) -> type_check_op tenv op args
     | App (fanme, args) when String.equal funcdef.fname fanme ->
-      let inpt, outt = map2 (List.map fst) (funcdef.args, funcdef.res) in
+      let inpt = List.map fst funcdef.args in
+      let outt = funcdef.res in
       let* argstp = type_check_vars tenv args in
       if List.equal Tp.eq inpt argstp then Some outt else None
     | App (fname, args) ->

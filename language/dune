@@ -1,11 +1,12 @@
 (library
  (name language)
- (libraries utils primitive z3 prover specification)
+ (libraries utils primitive z3 prover specification ocaml_parser)
  (modules
  oplang
  oplang_interp
  arg_solving
  clientlang
+ clientlang_of_ocamlast
  bblib
  )
 )
