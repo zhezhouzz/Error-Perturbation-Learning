@@ -1,11 +1,11 @@
 module V = Primitive.Value;;
 module T = Primitive.Tp;;
-module I = Primitive.Invocation;;
+module BB = Language.Bblib;;
 type pertubation = {prog: Language.Oplang.t; acache: Language.Arg_solving.cache}
 type non_trivial_info = int list
 type t = {sigma: V.t list -> bool;
-          client: I.inspector -> V.t list -> (non_trivial_info * (V.t list) option);
-          library_inspector: I.inspector;
+          client: BB.inspector -> V.t list -> (non_trivial_info * (V.t list) option);
+          library_inspector: BB.inspector;
           phi: V.t list -> bool;
           tps: T.t list;
           i_err: V.t list;

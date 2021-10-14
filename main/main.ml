@@ -11,12 +11,9 @@ let mk_standard_env () =
   let tps = [Tp.IntList; Tp.IntList] in
   let sampling_rounds = 6 in
   let prog_size = 4 in
-  let library = ["is_empty", Imp.is_empty;
-                 "cons", Imp.cons;
-                 "tail", Imp.tail;
-                 "top", Imp.top;
-                ] in
-  Synthesizer.Mkenv.mk_env Imp.sigma_merge Invocation.merge library Imp.phi_merge
+  let libraries = ["List"] in
+  let inspector = Language.Bblib.invocation_inspector_init libraries in
+  Synthesizer.Mkenv.mk_env_v2_ Imp.sigma_merge Language.Bblib.merge inspector Imp.phi_merge
     tps i_err Operator.op_pool sampling_rounds prog_size
 
 let test_cost () =
@@ -167,7 +164,7 @@ let ocaml_parse =  Command.basic
           let open Basic_dt in
           let preds, sigma, client, libs, phi, tps, op_pool, sampling_rounds, p_size =
             Language.Clientlang_of_ocamlast.of_ocamlast prog meta in
-          let () = Printf.printf "  preds:%s\n  sigma:%s\n  client:%s\n  libs:%s\n  phi:%s\n  tps:%s\n  op_pool:%s\n  sampling_rounds:%i\n  p_size:%i\n"
+          let () = Printf.printf "preds:%s\nsigma:%s\nclient:%s\nlibs:%s\nphi:%s\ntps:%s\nop_pool:%s\nsampling_rounds:%i\np_size:%i\n"
               (List.split_by_comma (fun x -> x) preds)
               (Specification.Spec.layout sigma)
               (Language.Clientlang.layout client)
@@ -177,6 +174,13 @@ let ocaml_parse =  Command.basic
               (List.split_by_comma (fun x -> x) op_pool)
               sampling_rounds p_size
           in
+          let env = Synthesizer.Mkenv.mk_env_v2 sigma client libs phi tps
+                    [Primitive.Value.L [1;2]; Primitive.Value.L [3;4]] op_pool sampling_rounds p_size in
+          let stat, result = Synthesizer.Env.(env.client env.library_inspector env.i_err) in
+          let () = match result with
+            | None -> Printf.printf "execption...\n"
+            | Some vs -> Printf.printf "result = [%s]\n" @@ Primitive.Value.layout_l vs in
+          let () = Printf.printf "stat: %s\n" @@ List.split_by_comma string_of_int stat in
           ()
         )
     )

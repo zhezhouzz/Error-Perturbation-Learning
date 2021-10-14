@@ -1,8 +1,6 @@
 open Primitive;;
 open Basic_dt;;
 module V = Value;;
-type lib_def = {libname: string; interfaces: ((Tp.tvar list) * string * (Tp.tvar list)) list}
-
 type assertion_def = {pre: Specification.Spec.t; post: Specification.Spec.t;}
 
 type t =
@@ -51,58 +49,79 @@ let type_check_op tenv op args =
   if List.length argstp == List.length args
   then
     match op, argstp with
-    | "==", [Tp.Int; Tp.Int;] -> Some [Tp.Int]
-    | "<", [Tp.Int; Tp.Int;] -> Some [Tp.Int]
-    | ">", [Tp.Int; Tp.Int;] -> Some [Tp.Int]
-    | _ -> raise @@ failwith (Printf.sprintf "unknown operators(%s)" op)
+    | "==", [Tp.Int; Tp.Int;] -> Some [Tp.Bool]
+    | "<", [Tp.Int; Tp.Int;] -> Some [Tp.Bool]
+    | ">", [Tp.Int; Tp.Int;] -> Some [Tp.Bool]
+    | _ -> raise @@ failwith (Printf.sprintf "unknown operators %s(%s) " op @@ List.split_by_comma Tp.layout argstp)
   else
     None
 
-let lib_get_tp_by_name {interfaces; _} name =
+let lib_get_tp_by_name inspector name =
   Sugar.(
-    let* (inpt, _, outt) = List.find_opt (fun (_, name', _) -> String.equal name name') interfaces in
-    Some (List.map fst inpt, List.map fst outt)
+    let* stat = Hashtbl.find_opt inspector.Bblib.m name in
+    Some (stat.Bblib.itps, stat.Bblib.otps)
   )
 
-let type_check funcdef libdef =
+let type_check libdef funcdef =
+  let layout_env env = Printf.sprintf "{%s}" @@
+    List.split_by_comma (fun (name, value) -> Printf.sprintf "%s->%s" name @@ Tp.layout value) @@ StrMap.to_kv_list env
+  in
+  let compare_expected tps expected = if Tp.tps_eq expected tps then
+      (* let () = Printf.printf "reached\n" in *)
+      Some expected else None in
   let open Sugar in
-  let rec aux tenv t =
+  let rec aux tenv t expected =
+    let () = Printf.printf "Env: %s\nterm: %s; expected: %s\n\n" (layout_env tenv) (layout_body t) (List.split_by_comma Tp.layout expected) in
     match t with
-    | VarTuple vars -> type_check_vars tenv vars
-    | LitB _ -> Some [Tp.Bool]
-    | LitI _ -> Some [Tp.Int]
-    | Op (op, args) -> type_check_op tenv op args
+    | VarTuple vars ->
+      let* tps = type_check_vars tenv vars in
+      compare_expected tps expected
+    | LitB _ -> compare_expected [Tp.Bool] expected
+    | LitI _ -> compare_expected [Tp.Int] expected
+    | Op (op, args) ->
+      let* tps = type_check_op tenv op args in
+      compare_expected tps expected
     | App (fanme, args) when String.equal funcdef.fname fanme ->
       let inpt = List.map fst funcdef.args in
       let outt = funcdef.res in
       let* argstp = type_check_vars tenv args in
-      if List.equal Tp.eq inpt argstp then Some outt else None
+      if List.equal Tp.eq inpt argstp then compare_expected outt expected else None
     | App (fname, args) ->
       let* inpt, outt = lib_get_tp_by_name libdef fname in
       let* argstp = type_check_vars tenv args in
-      if List.equal Tp.eq inpt argstp then Some outt else None
+      let () = Printf.printf "inpt: %s; outt: %s\n" (List.split_by_comma Tp.layout inpt)
+          (List.split_by_comma Tp.layout outt) in
+      let () = Printf.printf "args: %s; argstp: %s\n" (List.split_by_comma (fun x -> x) args)
+          (List.split_by_comma Tp.layout argstp) in
+      if List.equal Tp.eq inpt argstp then
+        let () = Printf.printf "reached\n" in
+        compare_expected outt expected
+      else None
     | Ift (cond, t1, t2) ->
-      let* condt = aux tenv cond in
+      let* condt = aux tenv cond [Tp.Bool] in
       if List.equal Tp.eq condt [Tp.Bool]
       then
-        let* tps1 = aux tenv t1 in
-        let* tps2 = aux tenv t2 in
+        let* tps1 = aux tenv t1 expected in
+        let* tps2 = aux tenv t2 expected in
         if List.equal Tp.eq tps1 tps2 then Some tps1 else None
       else
         None
     | Let (lfs, rhs, body) ->
-      let* rhstps = aux tenv rhs in
       let lfstps = List.map fst lfs in
+      let* rhstps = aux tenv rhs lfstps in
       if List.equal Tp.eq lfstps rhstps
-      then aux (StrMap.add_seq (List.to_seq @@ List.map (fun (a, b) -> b, a) lfs) tenv) body
+      then aux (StrMap.add_seq (List.to_seq @@ List.map (fun (a, b) -> b, a) lfs) tenv) body expected
       else None
     | Match (term, cases) ->
       let* termstps = type_check_vars tenv [term] in
       let tps = List.map (fun (fname, args, body) ->
           let* inpt, outt = lib_get_tp_by_name libdef fname in
+          let () = Printf.printf "\tinpt: %s; outt: %s\n"
+              (List.split_by_comma Tp.layout inpt)
+              (List.split_by_comma Tp.layout outt) in
           if List.equal Tp.eq termstps outt
           then
-            aux (StrMap.add_seq (List.to_seq @@ List.combine args inpt) tenv) body
+            aux (StrMap.add_seq (List.to_seq @@ List.combine args inpt) tenv) body expected
           else
             None
         ) cases in
@@ -115,7 +134,7 @@ let type_check funcdef libdef =
       else
         None
   in
-  aux (StrMap.from_kv_list @@ List.map (fun (a, b) -> b, a) funcdef.args) funcdef.body
+  aux (StrMap.from_kv_list @@ List.map (fun (a, b) -> b, a) funcdef.args) funcdef.body funcdef.res
 
 let eval funcdef libinsp inputs =
   let mkenv inputs =
@@ -128,29 +147,32 @@ let eval funcdef libinsp inputs =
     then Some values
     else None
   in
-  let eval_op env op args =
-    let* values = eval_args env args in
-    match op, values with
-    | "==", [V.I i1; V.I i2] -> Some [V.B (i1 == i2)]
-    | "<",  [V.I i1; V.I i2] -> Some [V.B (i1 < i2)]
-    | ">",  [V.I i1; V.I i2] -> Some [V.B (i1 > i2)]
-    | _ , _ -> raise @@ failwith (spf "unknown op %s" op)
+  let layout_env env = Printf.sprintf "{%s}" @@
+    List.split_by_comma (fun (name, value) -> Printf.sprintf "%s->%s" name @@ V.layout value) @@ StrMap.to_kv_list env
   in
   let rec aux env t =
+    let () = Printf.printf "Env:\n%s\nTerm:\n%s\n" (layout_env env) (layout_body t) in
     match t with
     | VarTuple vars -> eval_args env vars
     | LitB b -> Some [V.B b]
     | LitI i -> Some [V.I i]
-    | Op (op, args) -> eval_op env op args
+    | Op (op, args) ->
+      let () = Printf.printf "Op\n" in
+      let* values = eval_args env args in
+      let () = Printf.printf "op values: %s\n" (V.layout_l values) in
+      Some (Clientlang_op.eval op values)
     | App (fanme, args) when String.equal funcdef.fname fanme ->
       let* values = eval_args env args in
       let env' = mkenv values in
       aux env' funcdef.body
     | App (fname, args) ->
+      let () = Printf.printf "App\n" in
       let* values = eval_args env args in
+      let () = Printf.printf "func values: %s\n" (V.layout_l values) in
       Bblib.invocation_inspector_call libinsp fname values
     | Ift (cond, t1, t2) ->
       let* condt = aux env cond in
+      let () = Printf.printf "condt: %s\n" (V.layout_l condt) in
       if List.equal V.eq condt [V.B true]
       then aux env t1
       else if List.equal V.eq condt [V.B false]
@@ -175,4 +197,7 @@ let eval funcdef libinsp inputs =
       in
       loop cases
   in
-  aux (mkenv inputs) funcdef.body
+  let _ = Bblib.invocation_inspector_clear libinsp in
+  let result = aux (mkenv inputs) funcdef.body in
+  let stat = Bblib.invocation_inspector_stat libinsp in
+  stat, result

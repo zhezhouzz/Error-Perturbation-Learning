@@ -165,7 +165,9 @@ let body_of_ocamlast expr =
       let funcname = expr_to_name func in
       let args = List.map (fun (_, e) -> try expr_to_name e with _ ->
           raise @@ failwith "parsing: application can only contains variables") args in
-      L.App(funcname, args)
+      if Clientlang_op.known_op funcname
+      then L.Op (funcname, args)
+      else L.App(funcname, args)
     | Pexp_ifthenelse (e1, e2, Some e3) -> L.Ift (aux e1, aux e2, aux e3)
     | Pexp_ifthenelse (_, _, None) -> raise @@ failwith "no else branch in ite"
     | Pexp_match (case_target, cases) ->
@@ -327,7 +329,7 @@ let parse_assertion client_name inputargs restps asts =
           raise @@ failwith "unmatched assertion variables"
         else ()
       in
-      let body = parse_propositional_term tenv body in
+      let body = Specification.Prop.desugar @@ parse_propositional_term tenv body in
       let spec = Spec.({args; qv; body}) in
       spec
     | _ -> raise @@ failwith "translate not an assertion"
@@ -376,5 +378,6 @@ let of_ocamlast source_client source_assertions =
       | HasPre (_, sigma, _, phi) -> sigma, phi
     in
     let tps = List.map fst args in
-    preds, sigma, Clientlang.({fname = client_name; args = args; body = client; res = outt}), libs, phi, tps, op_pool, sampling_rounds, p_size
+    let client_func = Clientlang.({fname = client_name; args = args; body = client; res = outt}) in
+    preds, sigma, client_func, libs, phi, tps, op_pool, sampling_rounds, p_size
 

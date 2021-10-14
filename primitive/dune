@@ -8,7 +8,6 @@
  operator
  imp
  randomgen
- invocation
  method_predicate
  )
 )

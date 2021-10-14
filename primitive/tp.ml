@@ -57,7 +57,7 @@ let eq_tp_ = function
   | _ -> false
 let eq a b = eq_tp_ (a, b)
 
-let tps_eq a b = List.for_all2 eq a b
+let tps_eq a b = try List.for_all2 eq a b with _ -> false
 
 let tvar_eq (tp1, name1) (tp2, name2) =
   (eq tp1 tp2) && (String.equal name1 name2)

@@ -84,25 +84,25 @@ let hd_info =
 
 let ord_info =
   let poly_name = "ord" in
-  [{poly_name = poly_name; name="list_ord"; tps = [T.IntList; T.Int]; permu=false; imp = ord_apply};]
+  [{poly_name = poly_name; name="list_ord"; tps = [T.IntList; T.Int; T.Int]; permu=false; imp = ord_apply};]
 
 let left_info =
   let poly_name = "left" in
-  [{poly_name = poly_name; name="tree_left"; tps = [T.IntTree; T.Int]; permu=false; imp = left_apply};
-   {poly_name = poly_name; name="treei_left"; tps = [T.IntTreeI; T.Int]; permu=false; imp = left_apply};
-   {poly_name = poly_name; name="treeb_left"; tps = [T.IntTreeB; T.Int]; permu=false; imp = left_apply};]
+  [{poly_name = poly_name; name="tree_left"; tps = [T.IntTree; T.Int; T.Int]; permu=false; imp = left_apply};
+   {poly_name = poly_name; name="treei_left"; tps = [T.IntTreeI; T.Int; T.Int]; permu=false; imp = left_apply};
+   {poly_name = poly_name; name="treeb_left"; tps = [T.IntTreeB; T.Int; T.Int]; permu=false; imp = left_apply};]
 
 let right_info =
   let poly_name = "right" in
-  [{poly_name = poly_name; name="tree_right"; tps = [T.IntTree; T.Int]; permu=false; imp = right_apply};
-   {poly_name = poly_name; name="treei_right"; tps = [T.IntTreeI; T.Int]; permu=false; imp = right_apply};
-   {poly_name = poly_name; name="treeb_right"; tps = [T.IntTreeB; T.Int]; permu=false; imp = right_apply};]
+  [{poly_name = poly_name; name="tree_right"; tps = [T.IntTree; T.Int; T.Int]; permu=false; imp = right_apply};
+   {poly_name = poly_name; name="treei_right"; tps = [T.IntTreeI; T.Int; T.Int]; permu=false; imp = right_apply};
+   {poly_name = poly_name; name="treeb_right"; tps = [T.IntTreeB; T.Int; T.Int]; permu=false; imp = right_apply};]
 
 let para_info =
   let poly_name = "para" in
-  [{poly_name = poly_name; name="tree_para"; tps = [T.IntTree; T.Int]; permu=false; imp = parallel_apply};
-   {poly_name = poly_name; name="treei_para"; tps = [T.IntTreeI; T.Int]; permu=false; imp = parallel_apply};
-   {poly_name = poly_name; name="treeb_para"; tps = [T.IntTreeB; T.Int]; permu=false; imp = parallel_apply};]
+  [{poly_name = poly_name; name="tree_para"; tps = [T.IntTree; T.Int; T.Int]; permu=false; imp = parallel_apply};
+   {poly_name = poly_name; name="treei_para"; tps = [T.IntTreeI; T.Int; T.Int]; permu=false; imp = parallel_apply};
+   {poly_name = poly_name; name="treeb_para"; tps = [T.IntTreeB; T.Int; T.Int]; permu=false; imp = parallel_apply};]
 
 let lt_info =
   let poly_name = "<" in
@@ -118,7 +118,8 @@ let mp_table =
 let imp_map = List.fold_left (fun m r -> StrMap.add r.name r.imp m) StrMap.empty mp_table
 
 let find_info_by_polyname_tps poly_name tps =
-  match List.find_opt (fun r -> Tp.tps_eq r.tps tps && String.equal r.poly_name poly_name) mp_table with
+  (* let () = Printf.printf "poly_name: %s; tps: %s\n" poly_name @@ List.split_by_comma Tp.layout tps in *)
+  match List.find_opt (fun r -> String.equal r.poly_name poly_name && Tp.tps_eq r.tps tps) mp_table with
   | Some r -> r
   | None -> raise @@ failwith
       (Printf.sprintf "cannot find method predicate(%s) with tps(%s)" poly_name (List.split_by_comma Tp.layout tps))
@@ -137,4 +138,4 @@ let poly_name name =
   let r = find_info_by_name name in
   r.poly_name
 
-let apply mp args = (StrMap.find "method predicate apply" imp_map mp) args
+let apply mp args = (StrMap.find (Printf.sprintf "cannot find method predicate(%s)when applying" mp) imp_map mp) args
