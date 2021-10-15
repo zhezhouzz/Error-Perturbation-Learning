@@ -153,7 +153,7 @@ let test (env: Env.t) =
                    body = [{op = "random_int"; args = []; res = [Tp.Int, 2]};
                            {op = "random_int"; args = []; res = [Tp.Int, 3]};
                            {op = "random_int"; args = []; res = [Tp.Int, 4]};
-                           {op = "cons"; args = [Tp.IntList, 0; Tp.Int, 2]; res = [Tp.IntList, 5]};];
+                           {op = "cons"; args = [Tp.Int, 2; Tp.IntList, 0;]; res = [Tp.IntList, 5]};];
                    fout = [Tp.IntList, 5; Tp.IntList, 1]} in
   let exchange = {fin = [Tp.IntList, 0; Tp.IntList, 1];
                   body = [{op = "random_int"; args = []; res = [Tp.Int, 2]};
@@ -163,15 +163,15 @@ let test (env: Env.t) =
                   fout = [Tp.IntList, 1; Tp.IntList, 0]} in
   let cons0 = {fin = [Tp.IntList, 0; Tp.IntList, 1];
                body = [{op = "const0"; args = []; res = [Tp.Int, 2]};
-                       {op = "cons"; args = [Tp.IntList, 0; Tp.Int, 2]; res = [Tp.IntList, 3]};
+                       {op = "cons"; args = [Tp.Int, 2; Tp.IntList, 0;]; res = [Tp.IntList, 3]};
                        {op = "random_int"; args = []; res = [Tp.Int, 4]};
                        {op = "random_int"; args = []; res = [Tp.Int, 5]};];
                fout = [Tp.IntList, 1; Tp.IntList, 3]} in
   let min_minus1_cons_cons = {fin = [Tp.IntList, 0; Tp.IntList, 1];
                               body = [{op = "min"; args = [Tp.IntList, 0]; res = [Tp.Int, 2]};
                                       {op = "minus1"; args = [Tp.Int, 2]; res = [Tp.Int, 3]};
-                                      {op = "cons"; args = [Tp.Int, 0; Tp.Int, 3]; res = [Tp.IntList, 4]};
-                                      {op = "cons"; args = [Tp.Int, 1; Tp.Int, 3]; res = [Tp.IntList, 5]};];
+                                      {op = "cons"; args = [Tp.Int, 3; Tp.Int, 0;]; res = [Tp.IntList, 4]};
+                                      {op = "cons"; args = [Tp.Int, 3; Tp.Int, 1;]; res = [Tp.IntList, 5]};];
                               fout = [Tp.IntList, 4; Tp.IntList, 5]} in
   let max_plus1_append = {fin = [Tp.IntList, 0; Tp.IntList, 1];
                           body = [{op = "max"; args = [Tp.IntList, 1]; res = [Tp.Int, 2]};
@@ -182,8 +182,8 @@ let test (env: Env.t) =
   let top_plus1_cons_cons = {fin = [Tp.IntList, 0; Tp.IntList, 1];
                              body = [{op = "top"; args = [Tp.IntList, 0]; res = [Tp.Int, 2]};
                                      {op = "plus1"; args = [Tp.Int, 2]; res = [Tp.Int, 3]};
-                                     {op = "cons"; args = [Tp.Int, 1; Tp.Int, 3]; res = [Tp.IntList, 4]};
-                                     {op = "cons"; args = [Tp.Int, 4; Tp.Int, 3]; res = [Tp.IntList, 5]};];
+                                     {op = "cons"; args = [Tp.Int, 3; Tp.Int, 1;]; res = [Tp.IntList, 4]};
+                                     {op = "cons"; args = [Tp.Int, 3; Tp.Int, 4;]; res = [Tp.IntList, 5]};];
                              fout = [Tp.IntList, 5; Tp.IntList, 5]} in
   let cost_ f =
     Zlog.log_write (Printf.sprintf "prog(non-det: %b):\n%s\n"

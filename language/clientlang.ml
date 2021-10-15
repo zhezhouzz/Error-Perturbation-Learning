@@ -82,13 +82,13 @@ let type_check_op tenv op args expected =
     compare_expected [Tp.Bool] expected
   | _ -> TyErr (spf "unknown op(%s)" op)
 
+let layout_env env = Printf.sprintf "{%s}" @@
+  List.split_by_comma (fun (name, value) -> Printf.sprintf "%s->%s" name @@ Tp.layout value) @@ StrMap.to_kv_list env
+
 let type_check libdef funcdef =
-  let layout_env env = Printf.sprintf "{%s}" @@
-    List.split_by_comma (fun (name, value) -> Printf.sprintf "%s->%s" name @@ Tp.layout value) @@ StrMap.to_kv_list env
-  in
   let (let*) x f = tc_bind x f in
   let rec aux tenv t expected =
-    let () = Printf.printf "Env: %s\nterm: %s; expected: %s\n\n" (layout_env tenv) (layout_body t) (List.split_by_comma Tp.layout expected) in
+    (* let () = Printf.printf "Env: %s\nterm: %s; expected: %s\n\n" (layout_env tenv) (layout_body t) (List.split_by_comma Tp.layout expected) in *)
     match t with
     | VarTuple vars -> type_check_vars tenv vars expected
     | Lit lit -> compare_expected (List.map V.get_tp lit) expected
@@ -138,31 +138,28 @@ let eval funcdef libinsp inputs =
     then Some values
     else None
   in
-  let layout_env env = Printf.sprintf "{%s}" @@
-    List.split_by_comma (fun (name, value) -> Printf.sprintf "%s->%s" name @@ V.layout value) @@ StrMap.to_kv_list env
-  in
   let rec aux env t =
-    let () = Printf.printf "Env:\n%s\nTerm:\n%s\n" (layout_env env) (layout_body t) in
+    (* let () = Printf.printf "Env:\n%s\nTerm:\n%s\n" (layout_env env) (layout_body t) in *)
     match t with
     | VarTuple vars -> eval_args env vars
     | Lit lit -> Some lit
     | Op (op, args) ->
-      let () = Printf.printf "Op\n" in
+      (* let () = Printf.printf "Op\n" in *)
       let* values = eval_args env args in
-      let () = Printf.printf "op values: %s\n" (V.layout_l values) in
+      (* let () = Printf.printf "op values: %s\n" (V.layout_l values) in *)
       Some (Clientlang_op.eval op values)
     | App (fanme, args) when String.equal funcdef.fname fanme ->
       let* values = eval_args env args in
       let env' = mkenv values in
       aux env' funcdef.body
     | App (fname, args) ->
-      let () = Printf.printf "App\n" in
+      (* let () = Printf.printf "App\n" in *)
       let* values = eval_args env args in
-      let () = Printf.printf "func values: %s\n" (V.layout_l values) in
+      (* let () = Printf.printf "func values: %s\n" (V.layout_l values) in *)
       Bblib.invocation_inspector_call libinsp fname values
     | Ift (cond, t1, t2) ->
       let* condt = aux env cond in
-      let () = Printf.printf "condt: %s\n" (V.layout_l condt) in
+      (* let () = Printf.printf "condt: %s\n" (V.layout_l condt) in *)
       if List.equal V.eq condt [V.B true]
       then aux env t1
       else if List.equal V.eq condt [V.B false]

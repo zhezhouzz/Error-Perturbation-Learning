@@ -16,13 +16,19 @@ let mk_standard_env () =
   Synthesizer.Mkenv.mk_env_v2_ Imp.sigma_merge Language.Bblib.merge inspector Imp.phi_merge
     tps i_err Operator.op_pool sampling_rounds prog_size
 
-let test_cost () =
-  Synthesizer.Cost.test (mk_standard_env ())
+let mk_env_from_files source_file meta_file =
+  let prog = Ocaml_parser.Frontend.parse ~sourcefile:source_file in
+  let meta = Ocaml_parser.Frontend.parse ~sourcefile:meta_file in
+  let open Basic_dt in
+  let preds, sigma, client, libs, i_err, phi, tps, op_pool, sampling_rounds, p_size =
+    Language.Clientlang_of_ocamlast.of_ocamlast prog meta in
+  Synthesizer.Mkenv.mk_env_v2 sigma client libs phi tps i_err op_pool sampling_rounds p_size
 
-let test_mcmc () =
+let test_cost env =
+  Synthesizer.Cost.test env
+
+let test_mcmc env =
   let open Synthesizer in
-  let env = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-      (fun () -> mk_standard_env ()) in
   let env, cost = Mcmc.metropolis_hastings
       ~burn_in: 300
       ~sampling_steps: 30
@@ -55,11 +61,10 @@ let test_feature () =
   in
   ()
 
-let test_pre_infer () =
+let test_pre_infer env =
   let prog = Parse.parse "data/pre.prog" in
-  let env = mk_standard_env () in
   let open Synthesizer in
-  let scache = Sampling.cost_sampling_ env.tps [env.i_err] prog env.sampling_rounds in
+  let scache = Sampling.cost_sampling_ env.Env.tps [env.Env.i_err] prog env.sampling_rounds in
   let qv = [Primitive.Tp.Int, "u"; Primitive.Tp.Int, "v"] in
   let args = prog.fin in
   let mps = ["mem"; "hd"; "<"] in
@@ -72,12 +77,12 @@ let test_pre_infer () =
   in
   ()
 
-let batched_test num_times num_burn_in num_sampling =
+let batched_test source_file meta_file num_times num_burn_in num_sampling =
   let open Synthesizer in
   let rec aux n =
     if n >= num_times then () else
       let env = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-          (fun () -> mk_standard_env ()) in
+          (fun () -> mk_env_from_files source_file meta_file) in
       let env, cost =
         Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") (
           fun () ->
@@ -86,7 +91,7 @@ let batched_test num_times num_burn_in num_sampling =
               ~sampling_steps: num_sampling
               ~proposal_distribution: Mutate.mutate
               ~cost_function: Cost.cost
-              ~init_distribution: (mk_standard_env ())
+              ~init_distribution: env
         )
       in
       let () = Zlog.log_write @@ Printf.sprintf "prog(cost: %f):\n%s\n" cost (Language.Oplang.layout env.cur_p.prog) in
@@ -112,15 +117,24 @@ let test = Command.basic
           (* event "test" (fun () -> Printf.printf "test!\n"; Language.Arg_solving.test ()) *)
           match test_name with
           | "cost" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-                        (fun () -> Printf.printf "test!\n"; test_cost ())
+                        (fun () -> Printf.printf "test!\n";
+                          let env = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+                              (fun () -> mk_standard_env ()) in
+                          test_cost env)
           | "mcmc" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-                        (fun () -> Printf.printf "test!\n"; test_mcmc ())
+                        (fun () -> Printf.printf "test!\n";
+                          let env = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+                              (fun () -> mk_standard_env ()) in
+                          test_mcmc env)
           | "oplang" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
                           (fun () -> Printf.printf "test!\n"; test_oplang ())
           | "feature" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
                            (fun () -> Printf.printf "test!\n"; test_feature ())
           | "pre" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-                       (fun () -> Printf.printf "test!\n"; test_pre_infer ())
+                       (fun () -> Printf.printf "test!\n";
+                         let env = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+                             (fun () -> mk_standard_env ()) in
+                         test_pre_infer env)
           | _ -> raise @@ failwith "unknown test name"
         )
     )
@@ -129,12 +143,14 @@ let batched_test = Command.basic
     ~summary:"batched test."
     Command.Let_syntax.(
       let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
       and num_times = anon ("num times" %: int)
       and num_burn_in = anon ("num burn-in" %: int)
       and num_sampling = anon ("num sampling" %: int)
       in
       fun () -> Config.exec_main configfile (fun () ->
-          batched_test num_times num_burn_in num_sampling
+          batched_test source_file meta_file num_times num_burn_in num_sampling
         )
     )
 
@@ -187,6 +203,10 @@ let ocaml_parse =  Command.basic
                 (Primitive.Value.layout_l vs)
                 in_phi in
           let () = Printf.printf "stat: %s\n" @@ List.split_by_comma string_of_int stat in
+          (* let () = test_cost env in *)
+          let () = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") (
+              fun () ->
+                test_mcmc env) in
           ()
         )
     )
