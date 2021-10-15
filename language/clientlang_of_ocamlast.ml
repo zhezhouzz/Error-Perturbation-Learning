@@ -130,6 +130,26 @@ let expr_to_vname expr =
     let _ = Pprintast.expression Format.std_formatter expr in
     raise @@ failwith "expr_to_vname"
 
+  let rec solve_lits e =
+    match e.pexp_desc with
+    | Pexp_tuple es -> List.flatten @@ List.map solve_lits es
+    | Pexp_construct (id, e) ->
+      (match longident_to_string id.txt, e with
+       | "true", None -> [Value.B true]
+       | "false", None -> [Value.B false]
+       | "[]", None -> [Value.L []]
+       | "::", Some e ->
+         (match solve_lits e with
+          | [Value.I hd; Value.L tl] -> [Value.L (hd::tl)]
+          | _ -> raise @@ failwith (spf "do not support complicate literal(%s) --" (Pprintast.string_of_expression e)))
+       | x, None -> raise @@ failwith (spf "do not support complicate literal(%s) --" x)
+       | x, Some es -> raise @@ failwith (spf "do not support complicate literal %s with %s --" x @@
+                                          Pprintast.string_of_expression es))
+    | Pexp_constant (Pconst_integer (istr, None)) -> [Value.I (int_of_string istr)]
+    | Pexp_constant _ -> raise @@ failwith (spf "do not support complicate constant(%s) --"
+                                            @@ Pprintast.string_of_expression e)
+    | _ -> raise @@ failwith (spf "do not support impure literal(%s) --" (Pprintast.string_of_expression e))
+
 let body_of_ocamlast expr =
   let rec aux expr =
     match expr.pexp_desc with
@@ -142,15 +162,7 @@ let body_of_ocamlast expr =
     | Pexp_ident _ ->
       (* let _ = Printf.printf "ident: %s\n" (Pprintast.string_of_expression expr) in *)
       L.VarTuple ([expr_to_name expr])
-    | Pexp_construct (id, None) ->
-      let lit =
-        match longident_to_string id.txt with
-        | "true" -> L.LitB true
-        | "false" -> L.LitB false
-        | _ -> raise @@ failwith "do not support complicate literal"
-      in
-      lit
-    | Pexp_constant (Pconst_integer (istr, None)) -> L.LitI (int_of_string istr)
+    | Pexp_construct (_, _) | Pexp_constant _ -> Lit (solve_lits expr)
     | Pexp_let (_, vbs, e) ->
       List.fold_right (fun vb body ->
           let leftvars = List.map (fun (topt, name) ->
@@ -195,7 +207,7 @@ let body_of_ocamlast expr =
           | _ -> failwith "parser: wrong format in match"
         ) cases in
       L.Match (case_target, cs)
-    | _ -> raise @@ failwith (spf "not imp client parsing:\n%s" @@ Pprintast.string_of_expression expr )
+    | _ -> raise @@ failwith (spf "not imp client parsing:%s" @@ Pprintast.string_of_expression expr )
   in
   aux expr
 
@@ -292,9 +304,12 @@ let parse_propositional_term tenv expr =
 
 let parse_assertion client_name inputargs restps asts =
   (* let ppf = Format.std_formatter in *)
-  let get_meta p =
+  let get_meta name p =
     match p.pstr_desc with
-    | Pstr_value (_, [value_binding]) -> value_binding.pvb_expr
+    | Pstr_value (_, [value_binding]) ->
+      let name' = pattern_to_string value_binding.pvb_pat in
+      if String.equal name name' then value_binding.pvb_expr else
+        failwith "parse_assertion::get_meta"
     | _ -> raise @@ failwith "parse_assertion::get_meta"
   in
   let get_strings expr =
@@ -312,6 +327,7 @@ let parse_assertion client_name inputargs restps asts =
      | Pexp_constant (Pconst_integer (istr, None)) -> int_of_string istr
      | _ -> raise @@ failwith "parse_assertion::get_int")
   in
+  let get_lits expr = solve_lits expr in
   let get_assertion argtps p =
     match p.pstr_desc with
     | Pstr_value (_, [value_binding]) ->
@@ -334,23 +350,24 @@ let parse_assertion client_name inputargs restps asts =
       spec
     | _ -> raise @@ failwith "translate not an assertion"
   in
-  let preds = get_strings @@ get_meta @@ List.nth asts 0 in
-  let op_pool = get_strings @@ get_meta @@ List.nth asts 1 in
-  let libs = get_strings @@ get_meta @@ List.nth asts 2 in
-  let sampling_rounds = get_int @@ get_meta @@ List.nth asts 3 in
-  let p_size  = get_int @@ get_meta @@ List.nth asts 4 in
+  let preds = get_strings @@ get_meta "preds" @@ List.nth asts 0 in
+  let op_pool = get_strings @@ get_meta "op_pool" @@ List.nth asts 1 in
+  let libs = get_strings @@ get_meta "libs" @@ List.nth asts 2 in
+  let i_err = get_lits @@ get_meta "i_err" @@ List.nth asts 3 in
+  let sampling_rounds = get_int @@ get_meta "sampling_rounds" @@ List.nth asts 4 in
+  let p_size  = get_int @@ get_meta "p_size" @@ List.nth asts 5 in
   let asst =
-    if List.length asts == 7 then
-      let pre = get_assertion (List.map fst inputargs) @@ List.nth asts 5 in
-      let post = get_assertion restps @@ List.nth asts 6 in
+    if List.length asts == 8 then
+      let pre = get_assertion (List.map fst inputargs) @@ List.nth asts 6 in
+      let post = get_assertion restps @@ List.nth asts 7 in
        HasPre (client_pre client_name, pre, client_post client_name, post)
-    else if List.length asts == 6 then
-      let post = get_assertion restps @@ List.nth asts 5 in
+    else if List.length asts == 7 then
+      let post = get_assertion restps @@ List.nth asts 6 in
       NoPre (client_post client_name, post)
     else
       raise @@ failwith "assertions wrong format"
   in
-  preds, op_pool, libs, sampling_rounds, p_size, asst
+  preds, op_pool, libs, i_err, sampling_rounds, p_size, asst
 
 let parse_client client =
   match client.pstr_desc with
@@ -370,7 +387,7 @@ let of_ocamlast source_client source_assertions =
     let client_name, (_, outt) = vd_to_tpedvars @@ structure_to_vd clienttp in
     let outt = List.map type_reduction outt in
     let args, client = parse_client client in
-    let preds, op_pool, libs, sampling_rounds, p_size, asst = parse_assertion client_name args outt source_assertions in
+    let preds, op_pool, libs, i_err, sampling_rounds, p_size, asst = parse_assertion client_name args outt source_assertions in
     let sigma, phi = match asst with
       | NoPre (_, phi) ->
         let sigma = Spec.({args; qv = []; body = SpecAst.True}) in
@@ -379,5 +396,5 @@ let of_ocamlast source_client source_assertions =
     in
     let tps = List.map fst args in
     let client_func = Clientlang.({fname = client_name; args = args; body = client; res = outt}) in
-    preds, sigma, client_func, libs, phi, tps, op_pool, sampling_rounds, p_size
+    preds, sigma, client_func, libs, i_err, phi, tps, op_pool, sampling_rounds, p_size
 

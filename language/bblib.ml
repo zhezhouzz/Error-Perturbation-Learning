@@ -20,6 +20,7 @@ let modules =
       "cons", "cons";
       "top", "top";
       "tail", "tail";
+      "nil", "nil";
       "nil_rev", "nil_rev";
       "cons_rev", "cons_rev"]
     ) in

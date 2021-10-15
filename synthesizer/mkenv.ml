@@ -83,7 +83,7 @@ let mk_env_v2 (sigma: Spec.t) (client: Language.Clientlang.func) (libraries: str
   let phi = Spec.eval phi in
   let inspector = Language.Bblib.invocation_inspector_init libraries in
   let _ = match Language.Clientlang.type_check inspector client with
-    | Some _ -> ()
-    | _ -> raise @@ failwith "Type error!"
+    | Language.Clientlang.TySafe _ -> ()
+    | Language.Clientlang.TyErr msg -> raise @@ failwith msg
   in
   mk_env_v2_ sigma (Language.Clientlang.eval client) inspector phi tps i_err op_pool sampling_rounds p_size

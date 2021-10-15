@@ -162,7 +162,7 @@ let ocaml_parse =  Command.basic
           let prog = Ocaml_parser.Frontend.parse ~sourcefile:source_file in
           let meta = Ocaml_parser.Frontend.parse ~sourcefile:meta_file in
           let open Basic_dt in
-          let preds, sigma, client, libs, phi, tps, op_pool, sampling_rounds, p_size =
+          let preds, sigma, client, libs, i_err, phi, tps, op_pool, sampling_rounds, p_size =
             Language.Clientlang_of_ocamlast.of_ocamlast prog meta in
           let () = Printf.printf "preds:%s\nsigma:%s\nclient:%s\nlibs:%s\nphi:%s\ntps:%s\nop_pool:%s\nsampling_rounds:%i\np_size:%i\n"
               (List.split_by_comma (fun x -> x) preds)
@@ -174,12 +174,18 @@ let ocaml_parse =  Command.basic
               (List.split_by_comma (fun x -> x) op_pool)
               sampling_rounds p_size
           in
-          let env = Synthesizer.Mkenv.mk_env_v2 sigma client libs phi tps
-                    [Primitive.Value.L [1;2]; Primitive.Value.L [3;4]] op_pool sampling_rounds p_size in
+          let env = Synthesizer.Mkenv.mk_env_v2 sigma client libs phi tps i_err op_pool sampling_rounds p_size in
           let stat, result = Synthesizer.Env.(env.client env.library_inspector env.i_err) in
           let () = match result with
             | None -> Printf.printf "execption...\n"
-            | Some vs -> Printf.printf "result = [%s]\n" @@ Primitive.Value.layout_l vs in
+            | Some vs ->
+              let in_sigma = env.sigma env.i_err in
+              let in_phi = env.phi vs in
+              Printf.printf "[%s](in_sigma:%b) ==> [%s](in_phi:%b)\n"
+                (Primitive.Value.layout_l env.i_err)
+                in_sigma
+                (Primitive.Value.layout_l vs)
+                in_phi in
           let () = Printf.printf "stat: %s\n" @@ List.split_by_comma string_of_int stat in
           ()
         )
