@@ -137,11 +137,22 @@ let expr_to_vname expr =
       (match longident_to_string id.txt, e with
        | "true", None -> [Value.B true]
        | "false", None -> [Value.B false]
+       | "()", None -> [Value.U]
        | "[]", None -> [Value.L []]
        | "::", Some e ->
          (match solve_lits e with
+          | [Value.U; Value.L []] -> [Value.T Tree.Leaf]
+          | [Value.I x; Value.T Tree.Leaf] ->
+            [Value.T (Tree.Node (x, Tree.Leaf, Tree.Leaf))]
+          | [Value.T x; Value.L []] -> [Value.T x;]
+          | [Value.T x; Value.T y] -> [Value.T x; Value.T y]
+          | [Value.I x; Value.T a; Value.T b;] ->
+            [Value.T (Tree.Node (x, a, b))]
           | [Value.I hd; Value.L tl] -> [Value.L (hd::tl)]
-          | _ -> raise @@ failwith (spf "do not support complicate literal(%s) --" (Pprintast.string_of_expression e)))
+          | k -> raise @@ failwith (spf "do not support complicate literal %s --> [%s] --"
+                                      (Pprintast.string_of_expression e)
+                                      (List.split_by_comma Value.layout k)
+                                   ))
        | x, None -> raise @@ failwith (spf "do not support complicate literal(%s) --" x)
        | x, Some es -> raise @@ failwith (spf "do not support complicate literal %s with %s --" x @@
                                           Pprintast.string_of_expression es))
@@ -334,6 +345,7 @@ let parse_assertion client_name inputargs restps asts =
       let expr = value_binding.pvb_expr in
       let args_, body = parse_func_args expr in
       (* let _ = Printf.printf "args: %s\n" (List.split_by_comma Tp.layouttvar args_) in *)
+      (* let _ = Printf.printf "argtps: %s\n" (List.split_by_comma Tp.layout argtps) in *)
       let tenv = List.fold_left (fun tenv (tp, name) ->
           StrMap.add name tp tenv
         ) StrMap.empty args_ in
@@ -342,7 +354,10 @@ let parse_assertion client_name inputargs restps asts =
       let _ = if List.exists (fun ((tp, _), tp') -> not (Tp.eq tp tp'))
           @@ List.combine args argtps
         then
-          raise @@ failwith "unmatched assertion variables"
+          raise @@ failwith (sprintf "unmatched assertion variables [%s] vs. [%s]"
+                               (List.split_by_comma Tp.layouttvar args)
+                               (List.split_by_comma Tp.layout argtps)
+                            )
         else ()
       in
       let body = Specification.Prop.desugar @@ parse_propositional_term tenv body in
@@ -356,17 +371,20 @@ let parse_assertion client_name inputargs restps asts =
   let i_err = get_lits @@ get_meta "i_err" @@ List.nth asts 3 in
   let sampling_rounds = get_int @@ get_meta "sampling_rounds" @@ List.nth asts 4 in
   let p_size  = get_int @@ get_meta "p_size" @@ List.nth asts 5 in
+  let pre_tps = List.map fst inputargs in
+  let post_tps = pre_tps @ restps in
   let asst =
     if List.length asts == 8 then
-      let pre = get_assertion (List.map fst inputargs) @@ List.nth asts 6 in
-      let post = get_assertion restps @@ List.nth asts 7 in
+      let pre = get_assertion pre_tps @@ List.nth asts 6 in
+      let post = get_assertion post_tps @@ List.nth asts 7 in
        HasPre (client_pre client_name, pre, client_post client_name, post)
     else if List.length asts == 7 then
-      let post = get_assertion restps @@ List.nth asts 6 in
+      let post = get_assertion post_tps @@ List.nth asts 6 in
       NoPre (client_post client_name, post)
     else
       raise @@ failwith "assertions wrong format"
   in
+  (* let _ = raise @@ failwith "end" in *)
   preds, op_pool, libs, i_err, sampling_rounds, p_size, asst
 
 let parse_client client =

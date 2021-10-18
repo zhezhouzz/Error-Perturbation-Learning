@@ -7,6 +7,7 @@ type t = {args: Tp.tvar list; qv: Tp.tvar list; body: Specast.t}
 let get_ints env =
   let c = StrMap.fold (fun _ v c ->
       match v with
+      | V.U -> []
       | V.I i -> i :: c
       | V.B _ -> c
       | V.L il -> il @ c

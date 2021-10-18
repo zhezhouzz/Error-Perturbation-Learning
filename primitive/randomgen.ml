@@ -105,6 +105,7 @@ let randomgen_labeled_treeb chooses bound num =
 
 let gen ~chooses ~num ~tp ~bound =
   match tp with
+  | T.Unit -> [V.U]
   | T.Int -> List.map (fun i -> V.I i) chooses
   | T.IntList -> randomgen_list chooses num bound
   | T.IntTree -> List.map (fun l -> V.T l) @@ randomgen_tree chooses num bound
@@ -114,6 +115,7 @@ let gen ~chooses ~num ~tp ~bound =
 
 let choose_gen chooses bound tp =
   match tp with
+  | T.Unit -> QCheck.Gen.pure V.U
   | T.Int -> QCheck.Gen.map (fun x -> V.I x) (int_gen chooses)
   | T.IntList -> QCheck.Gen.map (fun x -> V.L x) (list_gen chooses bound)
   | T.IntTree -> QCheck.Gen.map (fun x -> V.T x) (tree_gen chooses bound)

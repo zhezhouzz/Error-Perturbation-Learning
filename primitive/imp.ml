@@ -103,6 +103,31 @@ let table = [
      | [L (_ :: t)] -> Some [L t]
      | _ -> raise @@ failwith "runtime operator(tail) error"
   };
+  (* tree lib *)
+  {imp_name = "tree_leaf"; imp_itps = []; imp_otps = [IntTree]; nondet = false;
+   imp_exec = function
+     | [] -> Some [T Tree.Leaf]
+     | _ -> raise @@ failwith "runtime operator(tree_e) error"
+  };
+  {imp_name = "tree_node"; imp_itps = [IntTree; Int; IntTree];
+   imp_otps = [IntTree]; nondet = false;
+   imp_exec = function
+     | [I a; T b; T c] -> Some [T (Tree.Node (a, b, c))]
+     | _ -> raise @@ failwith "runtime operator(tree_n) error"
+  };
+  {imp_name = "tree_leaf_rev"; imp_itps = [IntTree]; imp_otps = []; nondet = false;
+   imp_exec = function
+     | [T Tree.Leaf] -> Some []
+     | [T _] -> None
+     | _ -> raise @@ failwith "runtime operator(tree_e_rev) error"
+  };
+  {imp_name = "tree_node_rev"; imp_itps = [IntTree];
+   imp_otps = [IntTree; Int; IntTree]; nondet = false;
+   imp_exec = function
+     | [T (Tree.Node (a, b, c))] -> Some [I a; T b; T c]
+     | [T _] -> None
+     | _ -> raise @@ failwith "runtime operator(tree_n_rev) error"
+  };
 ] @ List.init 4 (fun i ->
     {imp_name = spf "const%i" i; imp_itps = []; imp_otps = [Int]; nondet = false;
      imp_exec = function

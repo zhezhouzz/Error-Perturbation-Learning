@@ -1,6 +1,7 @@
 open Basic_dt
 open Printf
 type t =
+  | U
   | L of int list
   | T of int Tree.t
   | I of int
@@ -9,6 +10,7 @@ type t =
   | TB of (int, bool) LabeledTree.t
   | NotADt
 let layout = function
+  | U -> "tt"
   | L l -> sprintf "[%s]" (IntList.to_string l)
   | T tr -> Tree.layout string_of_int tr
   | I i -> string_of_int i
@@ -20,6 +22,7 @@ let layout = function
 let layout_l l = sprintf "[%s]" @@ List.split_by_comma layout l
 let eq x y =
   let aux = function
+    | (U, U) -> true
     | (I x, I y) -> x == y
     | (B x, B y) -> x == y
     | (L x, L y) -> List.eq (fun x y -> x == y) x y
@@ -32,6 +35,7 @@ let eq x y =
 
 let compare x y =
   let aux = function
+    | (U, U) -> 0
     | (I x, I y) -> compare x y
     | (B x, B y) -> compare x y
     | (L x, L y) -> List.compare compare x y
@@ -44,7 +48,7 @@ let compare x y =
   aux (x, y)
 
 let flatten_forall = function
-  | I _ | B _ | NotADt -> raise @@ failwith "flatten_forall: not a datatype"
+  | U | I _ | B _ | NotADt -> raise @@ failwith "flatten_forall: not a datatype"
   | L il -> List.flatten_forall (fun x y -> x == y) il
   | T it -> Tree.flatten_forall (fun x y -> x == y) it
   | TI iti -> LabeledTree.flatten_forall (fun x y -> x == y) iti
@@ -52,6 +56,7 @@ let flatten_forall = function
 let flatten_forall_l l =
   List.fold_left (fun r v ->
       match v with
+      | U -> []
       | I i -> i :: r
       | B _ -> r
       | L il -> (List.flatten_forall (fun x y -> x == y) il) @ r
@@ -62,6 +67,7 @@ let flatten_forall_l l =
     ) [] l
 let get_tp v =
   match v with
+  | U -> Tp.Unit
   | I _ -> Tp.Int
   | B _ -> Tp.Bool
   | L _ -> Tp.IntList

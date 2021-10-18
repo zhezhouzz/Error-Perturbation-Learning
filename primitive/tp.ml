@@ -1,4 +1,5 @@
 type t =
+  | Unit
   | Bool
   | Int
   | IntList
@@ -9,6 +10,7 @@ type t =
 type tvar = t * string
 
 let layout = function
+  | Unit -> "unit"
   | Bool -> "bool"
   | Int -> "int"
   | IntList -> "int list"
@@ -18,12 +20,13 @@ let layout = function
 
 let compare t1 t2 =
   let conding = function
-    | Bool -> 0
-    | Int -> 1
-    | IntList -> 2
-    | IntTree -> 3
-    | IntTreeI -> 4
-    | IntTreeB -> 5
+    | Unit -> 0
+    | Bool -> 1
+    | Int -> 2
+    | IntList -> 3
+    | IntTree -> 4
+    | IntTreeI -> 5
+    | IntTreeB -> 6
   in
   compare (conding t1) (conding t2)
 
@@ -40,6 +43,7 @@ let layouttvar (t, name) = (layout t) ^ ":" ^ name
 let tavrs_to_tps (l: tvar list) = List.map (fun (tp, _) -> tp) l
 
 let is_dt = function
+  | Unit -> false
   | Int -> false
   | Bool -> false
   | IntList -> true
@@ -48,6 +52,7 @@ let is_dt = function
   | IntTreeB -> true
 
 let eq_tp_ = function
+  | (Unit, Unit) -> true
   | (Int, Int) -> true
   | (Bool, Bool) -> true
   | (IntList, IntList) -> true
@@ -67,6 +72,7 @@ open Basic_dt
 let make_name tp =
   let name =
     match tp with
+    | Unit -> Renaming.unique "u"
     | Int -> Renaming.unique "x"
     | IntList -> Renaming.unique "l"
     | IntTree | IntTreeI | IntTreeB -> Renaming.unique "tr"
@@ -75,6 +81,7 @@ let make_name tp =
   tp, name
 
 type tp_counter = {
+  unitnum: int;
   boolnum: int;
   intnum: int;
   ilistnum: int;
@@ -83,11 +90,12 @@ type tp_counter = {
   itreebnum: int;
 }
 let make_counter () =
-  {boolnum = 0; intnum = 0; ilistnum = 0;
+  {unitnum = 0; boolnum = 0; intnum = 0; ilistnum = 0;
    itreenum = 0; itreeinum = 0; itreebnum = 0;}
 let counter_set counter tp =
   let name s i = Printf.sprintf "%s_%i" s i in
   match tp with
+  | Unit -> name "u" counter.unitnum, {counter with unitnum = counter.unitnum + 1}
   | Bool -> name "b" counter.boolnum, {counter with boolnum = counter.boolnum + 1}
   | Int -> name "i" counter.intnum, {counter with intnum = counter.intnum + 1}
   | IntList -> name "il" counter.ilistnum, {counter with ilistnum = counter.ilistnum + 1}

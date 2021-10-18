@@ -9,6 +9,6 @@ let p_size = 4
 let pre (l1: List.t) (l2: List.t) =
   fun (u: int) (v: int) ->
   (implies (ord l1 u v) (u < v)) && (implies (ord l2 u v) (u < v))
-let post (l3: List.t) =
+let post (l1: List.t) (l2: List.t) (l3: List.t) =
   fun (u: int) (v: int) ->
   (implies (ord l3 u v) (u < v))
