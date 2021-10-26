@@ -12,17 +12,31 @@ let mk_standard_env () =
   let sampling_rounds = 6 in
   let prog_size = 4 in
   let libraries = ["List"] in
+  let op_pool = ["insert"; "replace"; "cons"; "append"; "plus1";
+                 "minus1"; "top"; "bottom"; "max"; "min"; "random_int";
+                 "const0"; "const1"] in
+  let preds = ["hd"; "mem"] in
   let inspector = Language.Bblib.invocation_inspector_init libraries in
-  Synthesizer.Mkenv.mk_env_v2_ Imp.sigma_merge Language.Bblib.merge inspector Imp.phi_merge
-    tps i_err Operator.op_pool sampling_rounds prog_size
+    Synthesizer.Mkenv.mk_env_v2_ Imp.sigma_merge Language.Bblib.merge inspector Imp.phi_merge
+      tps i_err op_pool preds sampling_rounds prog_size
 
 let mk_env_from_files source_file meta_file =
   let prog = Ocaml_parser.Frontend.parse ~sourcefile:source_file in
   let meta = Ocaml_parser.Frontend.parse ~sourcefile:meta_file in
-  let open Basic_dt in
-  let preds, sigma, client, libs, i_err, phi, tps, op_pool, sampling_rounds, p_size =
+  (* let open Basic_dt in *)
+  (* let () = Printf.printf "preds:%s\nsigma:%s\nclient:%s\nlibs:%s\nphi:%s\ntps:%s\nop_pool:%s\nsampling_rounds:%i\np_size:%i\n" *)
+  (*     (List.split_by_comma (fun x -> x) preds) *)
+  (*     (Specification.Spec.layout sigma) *)
+  (*     (Language.Clientlang.layout client) *)
+  (*     (List.split_by_comma (fun x -> x) libs) *)
+  (*     (Specification.Spec.layout phi) *)
+  (*     (List.split_by_comma Primitive.Tp.layout tps) *)
+  (*     (List.split_by_comma (fun x -> x) op_pool) *)
+  (*     sampling_rounds p_size *)
+  (* in *)
+  let sigma, client, libs, i_err, phi, tps, op_pool, preds, sampling_rounds, p_size =
     Language.Clientlang_of_ocamlast.of_ocamlast prog meta in
-  Synthesizer.Mkenv.mk_env_v2 sigma client libs phi tps i_err op_pool sampling_rounds p_size
+  Synthesizer.Mkenv.mk_env_v2 sigma client libs phi tps i_err op_pool preds sampling_rounds p_size
 
 let test_cost env =
   Synthesizer.Cost.test env
@@ -35,7 +49,13 @@ let test_mcmc env =
       ~proposal_distribution: Mutate.mutate
       ~cost_function: Cost.cost
       ~init_distribution: env in
-  let () = Printf.printf "prog(cost: %f):\n%s\n" cost (Language.Oplang.layout env.cur_p.prog) in
+  let () =
+    match env.cur_p with
+   | Some cur_p ->
+     Printf.printf "prog(cost: %f):\n%s\n" cost (Language.Oplang.layout cur_p.prog)
+   | None ->
+     Printf.printf "No result; prog(cost: ??):\n/?\n"
+  in
   ()
 
 let test_oplang () =
@@ -94,7 +114,14 @@ let batched_test source_file meta_file num_times num_burn_in num_sampling =
               ~init_distribution: env
         )
       in
-      let () = Zlog.log_write @@ Printf.sprintf "prog(cost: %f):\n%s\n" cost (Language.Oplang.layout env.cur_p.prog) in
+      let () =
+        match env.cur_p with
+        | Some cur_p ->
+          Zlog.log_write @@ Printf.sprintf "prog(cost: %f):\n%s\n" cost (Language.Oplang.layout cur_p.prog)
+        | None ->
+          Zlog.log_write @@ Printf.sprintf "No result; prog(cost: ??):\n/?\n"
+      in
+      (* let () = Zlog.log_write @@ Printf.sprintf "prog(cost: %f):\n%s\n" cost (Language.Oplang.layout env.cur_p.prog) in *)
       let () = Config.refresh_logfile (string_of_int n) in
       aux (n + 1)
   in
@@ -119,12 +146,14 @@ let test = Command.basic
           | "cost" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
                         (fun () -> Printf.printf "test!\n";
                           let env = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-                              (fun () -> mk_standard_env ()) in
+                              (fun () ->
+                                 Synthesizer.Mkenv.random_init_prog @@ mk_standard_env ()) in
                           test_cost env)
           | "mcmc" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
                         (fun () -> Printf.printf "test!\n";
                           let env = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-                              (fun () -> mk_standard_env ()) in
+                              (fun () -> Synthesizer.Mkenv.random_init_prog @@
+                                mk_standard_env ()) in
                           test_mcmc env)
           | "oplang" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
                           (fun () -> Printf.printf "test!\n"; test_oplang ())
@@ -133,7 +162,8 @@ let test = Command.basic
           | "pre" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
                        (fun () -> Printf.printf "test!\n";
                          let env = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-                             (fun () -> mk_standard_env ()) in
+                             (fun () -> Synthesizer.Mkenv.random_init_prog @@
+                               mk_standard_env ()) in
                          test_pre_infer env)
           | _ -> raise @@ failwith "unknown test name"
         )
@@ -175,38 +205,60 @@ let ocaml_parse =  Command.basic
       and meta_file = anon ("meta file" %: regular_file)
       in
       fun () -> Config.exec_main configfile (fun () ->
-          let prog = Ocaml_parser.Frontend.parse ~sourcefile:source_file in
-          let meta = Ocaml_parser.Frontend.parse ~sourcefile:meta_file in
-          let open Basic_dt in
-          let preds, sigma, client, libs, i_err, phi, tps, op_pool, sampling_rounds, p_size =
-            Language.Clientlang_of_ocamlast.of_ocamlast prog meta in
-          let () = Printf.printf "preds:%s\nsigma:%s\nclient:%s\nlibs:%s\nphi:%s\ntps:%s\nop_pool:%s\nsampling_rounds:%i\np_size:%i\n"
-              (List.split_by_comma (fun x -> x) preds)
-              (Specification.Spec.layout sigma)
-              (Language.Clientlang.layout client)
-              (List.split_by_comma (fun x -> x) libs)
-              (Specification.Spec.layout phi)
-              (List.split_by_comma Primitive.Tp.layout tps)
-              (List.split_by_comma (fun x -> x) op_pool)
-              sampling_rounds p_size
-          in
-          let env = Synthesizer.Mkenv.mk_env_v2 sigma client libs phi tps i_err op_pool sampling_rounds p_size in
+          let env = Synthesizer.Mkenv.random_init_prog @@
+            mk_env_from_files source_file meta_file in
           let stat, result = Synthesizer.Env.(env.client env.library_inspector env.i_err) in
           let () = match result with
             | None -> Printf.printf "execption...\n"
             | Some vs ->
               let in_sigma = env.sigma env.i_err in
-              let in_phi = env.phi vs in
+              let in_phi = env.phi (env.i_err @ vs) in
               Printf.printf "[%s](in_sigma:%b) ==> [%s](in_phi:%b)\n"
                 (Primitive.Value.layout_l env.i_err)
                 in_sigma
                 (Primitive.Value.layout_l vs)
                 in_phi in
-          let () = Printf.printf "stat: %s\n" @@ List.split_by_comma string_of_int stat in
+          let () = Printf.printf "stat: %s\n" @@ Basic_dt.List.split_by_comma string_of_int stat in
           (* let () = test_cost env in *)
-          let () = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") (
-              fun () ->
-                test_mcmc env) in
+          (* let () = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") ( *)
+          (*     fun () -> *)
+          (*       test_mcmc env) in *)
+          ()
+        )
+    )
+
+(* let ocaml_tycheck =  Command.basic *)
+(*     ~summary:"ocaml-tycheck" *)
+(*     Command.Let_syntax.( *)
+(*       let%map_open configfile = anon ("configfile" %: regular_file) *)
+(*       and source_file = anon ("source file" %: regular_file) *)
+(*       and meta_file = anon ("meta file" %: regular_file) *)
+(*       in *)
+(*       fun () -> Config.exec_main configfile (fun () -> *)
+(*           let env = mk_env_from_files source_file meta_file in *)
+(*           let () = Printf.printf "stat: %s\n" @@ Basic_dt.List.split_by_comma string_of_int stat in *)
+(*           (\* let () = test_cost env in *\) *)
+(*           let () = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") ( *)
+(*               fun () -> *)
+(*                 test_mcmc env) in *)
+(*           () *)
+(*         ) *)
+(*     ) *)
+
+let sampling = Command.basic
+    ~summary:"sampling"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and prog_file = anon ("prog file" %: regular_file)
+      in
+      fun () -> Config.exec_main configfile (fun () ->
+          let env = mk_env_from_files source_file meta_file in
+          let prog = Parse.parse prog_file in
+          let env = Synthesizer.Mkenv.update_prog env prog in
+          let scache = Synthesizer.Sampling.cost_sampling env in
+          let () = Printf.printf "%s\n" @@ Synthesizer.Sampling.cache_layout scache in
           ()
         )
     )
@@ -216,6 +268,7 @@ let command =
     [ "test", test;
       "batched-test", batched_test;
       "parse", parse;
+      "sampling", sampling;
       "ocaml-parse", ocaml_parse;
     ]
 

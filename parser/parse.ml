@@ -8,6 +8,7 @@ let to_tp l =
   match l with
   | ["int"] -> T.Int
   | ["int"; "list"] -> T.IntList
+  | ["int"; "tree"] -> T.IntTree
   | _ -> raise @@ failwith (Printf.sprintf "parsing error: unknonw tp(%s)" (List.split_by_comma (fun x -> x) l))
 
 let to_arg (_, name, tp) =

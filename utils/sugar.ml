@@ -19,5 +19,13 @@ let bopt_false = function
   | Some b -> b
   | None -> false
 
+let opt_list_to_list_opt l =
+  List.fold_right (fun x l ->
+      match x, l with
+      | None, _ -> None
+      | _, None -> None
+      | Some x, Some l -> Some (x :: l)
+    ) l (Some [])
+
 let (let*) x f = opt_bind x f
 let (let+) x f = opt_fmap x f

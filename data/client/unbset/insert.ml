@@ -5,10 +5,8 @@ let rec insert (x: int) (s: Unbset.t) =
   |_ when Unbset.leaf -> Unbset.node x Unbset.leaf Unbset.leaf
   |_ when Unbset.node y a b ->
     if x < y then
-      let tmp0: Unbset.t = insert y b in
-      Unbset.node x a tmp0
+      Unbset.node x a (insert y b)
     else if y < x then
-      let tmp0: Unbset.t = insert x b in
-      Unbset.node y a tmp0
+      Unbset.node y a (insert x b)
     else s
 

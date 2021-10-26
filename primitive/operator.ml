@@ -19,11 +19,20 @@ let is_unused op = String.equal unused op
 (*     Imp.table in *)
 (*   impinfo.imp_exec *)
 let info_table = (
-  let known_operators = ["insert"; "replace"; "cons"; "append";
-                         "plus1"; "minus1"; "top"; "bottom";
-                         "max"; "min"; "random_int";
-                         "const0"; "const1"; "const2";
-                        ] in
+  let known_operators = [
+    (* int *)
+    "plus1"; "minus1"; "random_int"; "const0"; "const1"; "const2";
+    (* list *)
+    "insert"; "replace"; "cons"; "append";
+    "top"; "bottom";
+    "max"; "min";
+    (* tree *)
+    "tree_node"; "tree_left_right_subtree"; "tree_root";
+    "tree_flip"; "tree_rec_flip";
+    "tree_rotation_left"; "tree_rotation_right";
+    "tree_append_to_left_most"; "tree_append_to_right_most";
+    "tree_max"; "tree_min";
+  ] in
   let make_info name =
     let imps = List.filter (fun imp -> String.equal name imp.Imp.imp_name) Imp.table in
     match imps with

@@ -11,5 +11,7 @@ type t = {sigma: V.t list -> bool;
           i_err: V.t list;
           i_err_non_trivial_info: non_trivial_info;
           op_pool: string list;
+          preds: string list;
           sampling_rounds: int;
-          cur_p: pertubation}
+          p_size: int;
+          cur_p: pertubation option}

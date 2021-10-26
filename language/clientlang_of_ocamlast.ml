@@ -12,7 +12,7 @@ let client_post client_name = spf "%s_post" client_name
 open Ocaml_parser;;
 open Parsetree;;
 open Printf;;
-module L = Clientlang;;
+module L = Tinyocaml;;
 let longident_to_string ld =
   let x =
     List.fold_left (fun res x ->
@@ -161,18 +161,21 @@ let expr_to_vname expr =
                                             @@ Pprintast.string_of_expression e)
     | _ -> raise @@ failwith (spf "do not support impure literal(%s) --" (Pprintast.string_of_expression e))
 
+let name_counter = ref 0
+let new_name () =
+  let res = spf "_tmp_%i" (!name_counter) in
+  name_counter := !name_counter + 1; res
+
+type app_arg =
+  | AppVar of string
+  | AppExpr of Tp.tvar * L.t
+
 let body_of_ocamlast expr =
   let rec aux expr =
     match expr.pexp_desc with
-    | Pexp_tuple es -> L.VarTuple (
-        List.map (fun e -> try expr_to_name e with _ -> raise @@ failwith "parsing: tuple can only contains variables") es
-      )
+    | Pexp_tuple es -> L.Tuple (List.map aux es)
     | Pexp_constraint (expr, _) -> aux expr
-      (* let _ = Printf.printf "constr: %s\n" (Pprintast.string_of_expression expr) in *)
-      (* L.VarTuple ([expr_to_name expr]) *)
-    | Pexp_ident _ ->
-      (* let _ = Printf.printf "ident: %s\n" (Pprintast.string_of_expression expr) in *)
-      L.VarTuple ([expr_to_name expr])
+    | Pexp_ident _ ->  L.Var (expr_to_name expr)
     | Pexp_construct (_, _) | Pexp_constant _ -> Lit (solve_lits expr)
     | Pexp_let (_, vbs, e) ->
       List.fold_right (fun vb body ->
@@ -186,8 +189,15 @@ let body_of_ocamlast expr =
     | Pexp_apply (func, args) ->
       (* let _ = Printf.printf "func: %s\n" (Pprintast.string_of_expression func) in *)
       let funcname = expr_to_name func in
-      let args = List.map (fun (_, e) -> try expr_to_name e with _ ->
-          raise @@ failwith "parsing: application can only contains variables") args in
+      let args = List.map (fun x -> aux @@ snd x) args in
+      (* let inptps, outtps = StrMap.find (spf "unknown function fenv") fenv funcname in *)
+      (* let args = List.map (fun (tp, e) -> *)
+      (*     match aux e with *)
+      (*     | L.VarTuple [x] -> AppVar x *)
+      (*     | L.VarTuple _ -> raise @@ failwith "parsing: argument of application can not be tuple" *)
+      (*     | l -> let varname = new_name () in *)
+      (*       AppExpr ((tp, varname), l) *)
+      (*     ) @@ List.combine args in *)
       if Clientlang_op.known_op funcname
       then L.Op (funcname, args)
       else L.App(funcname, args)
@@ -195,12 +205,14 @@ let body_of_ocamlast expr =
     | Pexp_ifthenelse (_, _, None) -> raise @@ failwith "no else branch in ite"
     | Pexp_match (case_target, cases) ->
       let handle_match_args match_arg =
-        let aux e =
-          match e.pexp_desc with
-          | Pexp_ident ld -> longident_to_string ld.txt
+        let e = aux match_arg in
+        let rec aux e =
+          match e with
+          | L.Var var -> [var]
+          | L.Tuple vars -> List.flatten @@ List.map aux vars
           | _ -> failwith "parser: wrong format in match"
         in
-        aux match_arg
+        aux e
       in
       let case_target = handle_match_args case_target in
       let handle_case case =
@@ -212,10 +224,11 @@ let body_of_ocamlast expr =
       in
       let cs = List.map (fun case ->
           let case_e, body = handle_case case in
-          match aux case_e with
-          | L.VarTuple [funcname] -> (funcname, [], aux body)
-          | L.App (funcname, args) -> (funcname, args, aux body)
-          | _ -> failwith "parser: wrong format in match"
+          (aux case_e, aux body)
+          (* match aux case_e with *)
+          (* | L.VarTuple [funcname] -> (funcname, [], aux body) *)
+          (* | L.App (funcname, args) -> (funcname, args, aux body) *)
+          (* | _ -> failwith "parser: wrong format in match" *)
         ) cases in
       L.Match (case_target, cs)
     | _ -> raise @@ failwith (spf "not imp client parsing:%s" @@ Pprintast.string_of_expression expr )
@@ -413,6 +426,7 @@ let of_ocamlast source_client source_assertions =
       | HasPre (_, sigma, _, phi) -> sigma, phi
     in
     let tps = List.map fst args in
-    let client_func = Clientlang.({fname = client_name; args = args; body = client; res = outt}) in
-    preds, sigma, client_func, libs, i_err, phi, tps, op_pool, sampling_rounds, p_size
+    (* let () = Printf.printf "args: %s\n" @@ List.split_by_comma Tp.layouttvar args in *)
+    let client_func = L.({fname = client_name; args = args; body = client; res = outt}) in
+    sigma, client_func, libs, i_err, phi, tps, op_pool, preds, sampling_rounds, p_size
 

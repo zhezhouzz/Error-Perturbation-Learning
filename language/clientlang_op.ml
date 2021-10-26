@@ -12,4 +12,5 @@ let eval op values =
   | "==", [V.I i1; V.I i2] -> [V.B (i1 == i2)]
   | "<",  [V.I i1; V.I i2] -> [V.B (i1 < i2)]
   | ">",  [V.I i1; V.I i2] -> [V.B (i1 > i2)]
-  | _ , _ -> raise @@ failwith (spf "unknown op %s" op)
+  | _ , _ ->
+    raise @@ failwith (spf "unknown %s op %s(%s)" (Primitive.Tp.layout @@ V.get_tp @@ List.nth values 1) op @@ List.split_by_comma V.layout values)

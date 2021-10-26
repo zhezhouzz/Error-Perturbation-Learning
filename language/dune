@@ -1,13 +1,16 @@
 (library
  (name language)
  (libraries utils primitive z3 prover specification ocaml_parser)
+ (modules_without_implementation tinyocaml)
  (modules
- oplang
- oplang_interp
- arg_solving
- clientlang
- clientlang_op
- clientlang_of_ocamlast
- bblib
+   tinyocaml
+   oplang
+   oplang_interp
+   arg_solving
+   clientlang
+   clientlang_op
+   clientlang_tycheck
+   clientlang_of_ocamlast
+   bblib
  )
 )

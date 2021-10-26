@@ -6,46 +6,6 @@ let interexn self m = UInterExn (sprintf "[%s%s]:%s" self_location self m)
 
 let spf = sprintf
 
-module IntMap = (struct
-  include Map.Make(struct type t = int let compare = compare end);;
-  let self = "IntMap"
-  let interexn = interexn self
-  let find info m k =
-    match find_opt k m with
-    | None -> raise @@ interexn info
-    | Some v -> v
-  let find_opt m k = find_opt k m
-  let to_value_list m = fold (fun _ v l -> v :: l) m []
-  let to_key_list m = fold (fun k _ l -> k :: l) m []
-  let to_kv_list m = fold (fun k v l -> (k,v) :: l) m []
-  let from_kv_list l =
-    List.fold_left (fun m (k, v) ->
-        add k v m
-      ) empty l
-  let force_update_list m l =
-    List.fold_left (fun m (k, v) ->
-        update k (fun _ -> Some v) m
-      ) m l
-end)
-
-module StrMap = (struct
-  include Map.Make(String)
-  let self = "StrMap"
-  let interexn = interexn self
-  let find info m k =
-    match find_opt k m with
-    | None -> raise @@ interexn info
-    | Some v -> v
-  let find_opt m k = find_opt k m
-  let to_value_list m = fold (fun _ v l -> v :: l) m []
-  let to_key_list m = fold (fun k _ l -> k :: l) m []
-  let to_kv_list m = fold (fun k v l -> (k,v) :: l) m []
-  let from_kv_list l =
-    List.fold_left (fun m (k, v) ->
-        add k v m
-      ) empty l
-end)
-
 module Renaming = (struct
   let universe_label = ref 0
   let name () =
@@ -513,6 +473,41 @@ module List = (struct
     aux default
 end)
 
+module MyMap (Ord : Map.OrderedType) = struct
+  include Map.Make(Ord);;
+  let find info m k =
+    match find_opt k m with
+    | None -> raise @@ interexn __MODULE__ info
+    | Some v -> v
+  let find_opt m k = find_opt k m
+  let to_value_list m = fold (fun _ v l -> v :: l) m []
+  let to_key_list m = fold (fun k _ l -> k :: l) m []
+  let to_kv_list m = fold (fun k v l -> (k,v) :: l) m []
+  let from_kv_list l =
+    List.fold_left (fun m (k, v) ->
+        add k v m
+      ) empty l
+  let from_klist_vlist_consistent_exn kl vl =
+    if List.length kl != List.length vl
+    then raise @@ failwith (spf "[%s]; then number keys and values has different" __MODULE__)
+    else
+    List.fold_left (fun m (k, v) ->
+        match find_opt m k with
+        | Some v' ->
+          if Ord.compare v v' == 0
+          then m
+          else raise @@ failwith (spf "[%s]; the key has different values" __MODULE__)
+        | None -> add k v m
+      ) empty @@ List.combine kl vl
+  let force_update_list m l =
+    List.fold_left (fun m (k, v) ->
+        update k (fun _ -> Some v) m
+      ) m l
+end
+
+module IntMap = MyMap(struct type t = int let compare = compare end);;
+module StrMap = MyMap(String);;
+
 module Tree = (struct
   type 'a t =
     | Leaf
@@ -520,6 +515,57 @@ module Tree = (struct
 
   let self = "Tree"
   let interexn = interexn self
+
+  let flip tr =
+    match tr with
+    | Leaf -> Leaf
+    | Node (a, b, c) -> Node (a, c, b)
+
+  let rec rec_flip tr =
+    match tr with
+    | Leaf -> Leaf
+    | Node (a, b, c) ->
+      Node (a, rec_flip c, rec_flip b)
+
+  let rotation_left_opt tr =
+    match tr with
+    | Leaf -> Some Leaf
+    | Node (x, Node(y, a, b), c) ->
+      Some (Node (y, a, Node(x, b, c)))
+    | _ -> None
+
+  let rotation_right_opt tr =
+    match tr with
+    | Leaf -> Some Leaf
+    | Node (x, a, Node(y, b, c)) ->
+      Some (Node (y, Node(x, a, b), c))
+    | _ -> None
+
+  let rec append_to_left_most x tr =
+    match tr with
+    | Leaf -> Node (x, Leaf, Leaf)
+    | Node (y, a, b) -> Node (y, append_to_left_most x a, b)
+
+  let rec append_to_right_most x tr =
+    match tr with
+    | Leaf -> Node (x, Leaf, Leaf)
+    | Node (y, a, b) -> Node (y, a, append_to_right_most x b)
+
+  let max_opt (e_compare: 'a -> 'a -> int) (t1: 'a t) =
+    let rec aux max_e = function
+      | Leaf -> max_e
+      | Node(a, b, c) ->
+        let max_e =
+          match max_e with
+          | None -> a
+          | Some max_e -> if e_compare a max_e > 0 then max_e else a
+        in
+        aux (aux (Some max_e) b) c
+    in
+    aux None t1
+
+  let min_opt e_compare t1 =
+    max_opt (fun x y -> ~- (e_compare x y)) t1
 
   let exists f t =
     let rec aux before t =
@@ -534,7 +580,7 @@ module Tree = (struct
   let layout f tr =
     let rec aux = function
       | Leaf -> "."
-      | Node (a, Leaf, Leaf) -> (f a)
+      | Node (a, Leaf, Leaf) -> Printf.sprintf "{%s}" (f a)
       | Node (a, l, r) ->
         Printf.sprintf "{%s, %s, %s}" (aux l) (f a) (aux r)
     in
@@ -638,6 +684,7 @@ module Tree = (struct
             aux r1 r2
     in
     aux t1 t2
+
 end)
 
 module LabeledTree = (struct

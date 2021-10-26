@@ -14,7 +14,7 @@ let perturbation_pre_infer (cctx: Cctx.t) (acache: Sampling.cache) (sigma: V.t l
       let i_err' = Hashtbl.find valuem out_idx in
       match client i_err' with
       | None -> false
-      | Some o_err' -> sigma i_err' && not (phi o_err')
+      | Some o_err' -> sigma i_err' && not (phi (i_err' @ o_err'))
     in
     let _ = Infer.spec_infer cctx io_list to_value to_label in
     ()

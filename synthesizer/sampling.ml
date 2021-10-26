@@ -106,7 +106,10 @@ let cost_sampling_ tps (init_set: Value.t list list) f num =
 
 let cost_sampling (env: Env.t) =
   let open Env in
-  cost_sampling_ env.tps [env.i_err] env.cur_p.prog env.sampling_rounds
+  match env.cur_p with
+  | None -> raise @@ failwith "the env has not prog initialized"
+  | Some cur_p ->
+    cost_sampling_ env.tps [env.i_err] cur_p.prog env.sampling_rounds
 
 let test () =
   let tps, ops = Oplang.test_tps_ops in

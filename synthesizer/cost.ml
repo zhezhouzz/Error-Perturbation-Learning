@@ -18,7 +18,7 @@ let cost_valid_iter (sigma: V.t list -> bool) (prog: V.t list -> (V.t list) opti
           match prog v with
           | None -> alpha_none
           | Some v' ->
-            if phi v'
+            if phi (v @ v')
             then alpha_out_pre_not_err
             else (if sigma v
                   then alpha_in_pre_is_err
@@ -86,7 +86,7 @@ let cost_weighted_valid_iter
             match result with
             | None -> alpha_none
             | Some v' ->
-              if phi v'
+              if phi (v @ v')
               then alpha_out_pre_not_err
               else (if sigma v
                     then
@@ -138,8 +138,15 @@ let cal_cost (sigma: V.t list -> bool) (prog: V.t list -> (int list * (V.t list)
 let cost (env: Env.t) =
   let open Env in
   Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") (fun () ->
-      let () = Zlog.log_write (Printf.sprintf "prog(non-det: %b):\n%s\n"
-                                (Language.Oplang.check_non_det env.cur_p.prog) (Language.Oplang.layout env.cur_p.prog)) in
+      let () =
+        match env.cur_p with
+        | None -> Zlog.log_write @@ spf "[%s:%i] the env is not initialized" __FILE__ __LINE__
+        | Some cur_p ->
+          Zlog.log_write (Printf.sprintf "[%s:%i] prog(non-det: %b):\n%s\n"
+                            __FILE__ __LINE__
+                            (Language.Oplang.check_non_det cur_p.prog)
+                            (Language.Oplang.layout cur_p.prog))
+      in
       let scache = Sampling.cost_sampling env in
       (* let () = Zlog.log_write (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) in *)
       let cost = cal_cost env.sigma (env.client env.library_inspector) env.phi env.i_err_non_trivial_info scache in

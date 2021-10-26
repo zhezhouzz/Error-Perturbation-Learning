@@ -31,7 +31,11 @@ let metropolis_hastings
   in
   let rec loop (cur, cur_cost) =
     (* (if !counter mod 20 == 0 then Printf.printf "MCMC: %i\n" !counter else ()); *)
-    let cur_id = Syn_stat.add cur.Env.cur_p.prog in
+    let cur_id = Syn_stat.add
+        (match cur.Env.cur_p with
+             | None -> raise @@ failwith "the env has not prog initialized"
+             | Some x -> x.prog
+        ) in
     let _ = update_best_one (cur_id, cur, cur_cost) in
     if !counter >= !bound then cur, cur_cost else
       let next, next_cost =

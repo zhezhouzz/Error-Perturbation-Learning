@@ -17,7 +17,7 @@ open Prover;;
 open Basic_dt;;
 type t = Tp.t * int * int
 let spf = Printf.sprintf
-let to_string (tp, place, source) = spf "h!%s!%i_%i" (Tp.layout tp) place source
+let to_tvar (tp, place, source) = tp, spf "h!%s!%i_%i" (Tp.layout tp) place source
 (* TODO: improve cache *)
 type cache = {
   tps: Tp.t list;
@@ -70,20 +70,20 @@ let early_check cs =
 
 let one_hole_one_arg_to_z3 ctx cs (_, v1) =
   let aux c =
-    let holes = List.map (fun v -> tpedvar_to_z3 ctx (Tp.Int, to_string v)) c in
+    let holes = List.map (fun v -> tpedvar_to_z3 ctx @@ to_tvar v) c in
     mk_eq ctx (mk_add ctx holes) v1
   in
   mk_and ctx (List.map aux cs)
 
 let must_used_to_z3 ctx cs (_, v1) =
   let aux c =
-    let holes = List.map (fun v -> tpedvar_to_z3 ctx (Tp.Int, to_string v)) c in
+    let holes = List.map (fun v -> tpedvar_to_z3 ctx @@ to_tvar v) c in
     mk_ge ctx (mk_add ctx holes) v1
   in
   mk_and ctx (List.map aux cs)
 
 let must_boolean_to_z3 ctx total (v0, v1)=
-  let vs = List.map (fun v -> tpedvar_to_z3 ctx (Tp.Int, to_string v)) total in
+  let vs = List.map (fun v -> tpedvar_to_z3 ctx @@ to_tvar v) total in
   let aux v =
     mk_or ctx [mk_eq ctx v v0; mk_eq ctx v v1]
   in
@@ -108,17 +108,29 @@ let init_cache ctx tps ops prog_with_holes =
   let v0 = int_to_z3 ctx 0 in
   let v1 = int_to_z3 ctx 1 in
   let total, one_arg, must_used = make_constraint prog_with_holes in
+  let vs, total_z3 = must_boolean_to_z3 ctx total (v0, v1) in
+  (* let () = Printf.printf "total_z3:\n%s\n" (Expr.to_string total_z3) in *)
+  (* let () = Printf.printf "must_used:\n%s\n" (Expr.to_string @@ must_used_to_z3 ctx must_used (v0, v1)) in *)
+  (* let () = Printf.printf "one_hole_one_arg:\n%s\n" @@ *)
+  (*   List.split_by "\n" (fun l -> spf "[%s]" @@ *)
+  (*                        List.split_by_comma (fun (tp, place_idx, idx) -> *)
+  (*                            spf "(%i<-%i:%s)" place_idx idx @@ Tp.layout tp) *)
+  (*                          l *)
+  (*                      ) one_arg in *)
   if not (early_check one_arg) || not (early_check must_used) then None else
-    let vs, total_z3 = must_boolean_to_z3 ctx total (v0, v1) in
     let query = mk_and ctx [
         total_z3;
         one_hole_one_arg_to_z3 ctx one_arg (v0, v1);
         must_used_to_z3 ctx must_used (v0, v1)] in
+    (* let () = Printf.printf "constraint:\n%s\n" (Expr.to_string query) in *)
     Some {
       tps = tps; ops = ops;
       prog_with_holes = prog_with_holes;
           total = total; total_z3 = vs; v0 = v0; v1 = v1; query = query; solutions = [];
-         current_using = None}
+      current_using = None}
+
+let cache_reset_prog cache =
+  { cache with current_using = None }
 
 
 let solve_one ctx (total, vs, query) =
@@ -142,7 +154,7 @@ let solve ctx cache =
   let rec loop no_dup cache =
     if List.length cache.solutions > max_solution then cache else
     let r =
-      Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ (string_of_int !counter)) (fun () ->
+      Zlog.event_ (Printf.sprintf "%s:%i[%s]-%i {%s}" __FILE__ __LINE__ __FUNCTION__ (!counter) (StrList.to_string cache.ops)) (fun () ->
           solve_one ctx (cache.total, cache.total_z3, mk_and ctx (cache.query :: no_dup)))
     in
     match r with
@@ -155,7 +167,9 @@ let solve ctx cache =
   loop [] cache
 
 let arg_assign_ ctx tps ops =
+  (* let () = Printf.printf "arg_assign_ tps:\n%s\n" (List.split_by_comma Tp.layout tps) in *)
   let prog_with_holes = initial_naming tps ops in
+  (* let () = Printf.printf "prog_with_holes:\n%s\n" (Oplang.layout prog_with_holes) in *)
   Sugar.opt_fmap (init_cache ctx tps ops prog_with_holes) (solve ctx)
 
 let shift_within_in_cache cache idx =
@@ -167,7 +181,9 @@ let shift_within_in_cache cache idx =
 let arg_assign tps ops =
   let ctx = match Config.(!conf.z3_ctx) with Some ctx -> ctx | None -> raise @@ failwith "wrong config z3" in
   Sugar.(
+    (* let () = Printf.printf "\tops:%s\n" @@ StrList.to_string ops in *)
     let* cache = arg_assign_ ctx tps ops in
+    (* let () = Printf.printf "\tops:%s\n" @@ StrList.to_string cache.ops in *)
     match cache.solutions with
     | [] -> None
     | _ -> Some (shift_within_in_cache cache 0)

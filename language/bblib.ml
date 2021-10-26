@@ -13,18 +13,24 @@ let make_interfaces imp_name =
   | [] -> raise @@ failwith (spf "lib(%s) cannot find imp..." imp_name)
   | [imp] -> imp.Imp.imp_itps, imp.Imp.imp_otps, imp.Imp.imp_exec
   | _ -> raise @@ failwith (spf "poly lib(%s) do not impelemented" imp_name)
-let modules =
-  let list_module =
-    ("List",
-     ["is_empty", "is_empty";
-      "cons", "cons";
-      "top", "top";
-      "tail", "tail";
-      "nil", "nil";
-      "nil_rev", "nil_rev";
-      "cons_rev", "cons_rev"]
-    ) in
-  [list_module]
+let modules = [
+  ("List",
+   ["is_empty", "is_empty";
+    "cons", "cons";
+    "top", "top";
+    "tail", "tail";
+    "nil", "nil";
+    "nil_rev", "nil_rev";
+    "cons_rev", "cons_rev"]
+  );
+  ("Unbset",
+   ["leaf", "tree_leaf";
+    "node", "tree_node";
+    "leaf_rev", "tree_leaf_rev";
+    "node_rev", "tree_node_rev";
+   ]
+  );
+]
 
 
 let invocation_inspector_init module_name =
@@ -55,14 +61,49 @@ let invocation_inspector_call {m; _} name input =
     (* let _ = Printf.printf "i = %i\n" i in *)
     Hashtbl.replace m name {stat with calling_num = stat.calling_num + 1}; result
 
-let invocation_inspector_rev_call inspector name input =
+(* reverse call does not update stat *)
+let invocation_inspector_rev_call {m; _} name input =
   let rev_name = spf "%s_rev" name in
-  invocation_inspector_call inspector rev_name input
+  match Hashtbl.find_opt m rev_name with
+  | None -> raise @@ failwith (Printf.sprintf "invocation_inspector_call: cannot find the name(%s)" rev_name)
+  | Some stat -> stat.imp input
 
 let invocation_inspector_stat {names; m} =
   try List.map (fun name -> let stat = Hashtbl.find m name in stat.calling_num) names with
   | _ -> raise @@ failwith "never happen: the invocation inspector has inconsistent names"
 
+let update_rev_stat {m; _} l =
+  List.iter (fun name ->
+      let rev_name = spf "%s_rev" name in
+      match Hashtbl.find_opt m rev_name with
+      | None -> raise @@ failwith (Printf.sprintf "invocation_inspector_call: cannot find the name(%s)" rev_name)
+      | Some stat ->
+        Hashtbl.replace m rev_name {stat with calling_num = stat.calling_num + 1}
+    ) l
+
+let lib_get_member {m; _} =
+  Hashtbl.fold (fun name stat l ->
+      match stat.itps, stat.otps with
+      | [], [tp] ->
+        (match stat.imp [] with
+         | Some v -> (tp, name, v) :: l
+         | _ -> raise @@ failwith "wrong library member value")
+      | [], _ -> raise @@ failwith "wrong library member deifnition"
+      | _ -> l
+    ) m []
+
+let lib_check_member {m; _} name =
+  match Hashtbl.find_opt m name with
+  | None -> false
+  | Some stat ->
+    match stat.itps with
+    | [] -> true
+    | _ -> false
+
+let lib_get_tp_by_name {m; _} name =
+  match Hashtbl.find_opt m name with
+  | None -> None
+  | Some stat -> Some (stat.itps, stat.otps)
 
 let merge inspector input =
   let _ = invocation_inspector_clear inspector in

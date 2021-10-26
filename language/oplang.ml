@@ -5,6 +5,9 @@ type tvar = Tp.t * int
 type instr = {op: string; args: tvar list; res: tvar list}
 type t = {fin: tvar list; body: instr list; fout: tvar list}
 
+let extract_tps {fin; _} = List.map fst fin
+let extract_ops {body; _} = List.map (fun instr -> instr.op) body
+
 let compare_tvar (t1, name1) (t2, name2) =
   let c1 = Tp.compare t1 t2 in
   if c1 == 0 then compare name1 name2 else c1

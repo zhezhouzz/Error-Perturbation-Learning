@@ -55,7 +55,11 @@ let forallformula_eval (qv, e) env =
 
 let eval {args; qv; body} argsvalue =
   let env = try StrMap.from_kv_list (List.combine (List.map snd args) argsvalue) with
-    | _ -> raise @@ failwith "spec' args and values are mismatched in spec::exec"
+    | _ -> raise @@ failwith
+        (spf "spec' args(%s) and values(%s) are mismatched in spec::exec"
+           (List.split_by_comma Tp.layouttvar args)
+           (List.split_by_comma Value.layout argsvalue)
+        )
   in
   forallformula_eval (qv, body) env
 
