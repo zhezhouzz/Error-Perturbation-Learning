@@ -18,6 +18,16 @@ let layout = function
   | IntTreeI -> "int treei"
   | IntTreeB -> "int treeb"
 
+let of_string = function
+  | "unit" -> Unit
+  | "bool" -> Bool
+  | "int" -> Int
+  | "int list" -> IntList
+  | "int tree" -> IntTree
+  | "int treei" -> IntTreeI
+  | "int treeb" -> IntTreeB
+  | _ as tp -> failwith (Printf.sprintf "unknown type name(%s)" tp)
+
 let layout_l = Basic_dt.List.split_by_comma layout
 
 let compare t1 t2 =

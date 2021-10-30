@@ -2,6 +2,7 @@ open Primitive;;
 
 open Basic_dt;;
 module V = Value;;
+module T = Tp;;
 type libf = {module_name: string; interface_name: string;
              calling_num: int; imp: V.t list -> (V.t list) option;
              itps: Tp.t list; otps: Tp.t list}
@@ -30,8 +31,29 @@ let modules = [
     "node_rev", "tree_node_rev";
    ]
   );
+  ("Splayhp",
+   ["leaf", "tree_leaf";
+    "node", "tree_node";
+    "leaf_rev", "tree_leaf_rev";
+    "node_rev", "tree_node_rev";
+   ]
+  );
 ]
 
+let underline_type_reduction = function
+  | "List.t" -> "int list"
+  | "Customstk.t" -> "int list"
+  | "Bankersq.t" -> "int list"
+  | "Batchedq.t" -> "int list"
+  | "Leftisthp.t" -> "int treei"
+  | "Rbset.t" -> "int treeb"
+  | "Splayhp.t" -> "int tree"
+  | "Stream.t" -> "int list"
+  | "Trie.t" -> "int tree"
+  | "Trie.tp" -> "int list"
+  | "Unbset.t" -> "int tree"
+  | "Uniquel.t" -> "int list"
+  | tp -> failwith (spf "unknown type(%s)" tp)
 
 let invocation_inspector_init module_name =
   let imodules = List.map (fun name -> match List.find_opt (fun (name', _) -> String.equal name name') modules with

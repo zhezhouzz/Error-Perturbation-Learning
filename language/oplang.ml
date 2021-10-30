@@ -58,7 +58,17 @@ let initial_naming (input_tp: Tp.t list) (ops: string list) =
   let body = List.rev @@ List.fold_left f [] ops in
   {fin = fin; body = body; fout = List.map (fun tp -> (tp, newname2 ())) input_tp}
 
-let layout_tvar (tp, idx) = Printf.sprintf "x%i: %s" idx (Tp.layout tp)
+let layout_var (tp, idx) =
+  let name tp =
+    match tp with
+    | Tp.Bool -> "b"
+    | Tp.IntList -> "l"
+    | Tp.IntTree | Tp.IntTreeB | Tp.IntTreeI -> "tr"
+    | _ -> "i"
+  in
+  spf "%s%i" (name tp) idx
+
+let layout_tvar (tp, idx) = Printf.sprintf "%s: %s" (layout_var (tp, idx)) (Tp.layout tp)
 
 let layout_instr {op; args; res} =
   Printf.sprintf "(%s) = %s(%s)" (List.split_by_comma layout_tvar res) op

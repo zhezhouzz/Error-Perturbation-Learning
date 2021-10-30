@@ -26,7 +26,7 @@ let tpenv_safe_diff (old: (Tp.t list) StrMap.t) (newone: (Tp.t list) StrMap.t) =
         if Tp.tps_eq tp tp'
         then TySafe ()
         else
-          let msg = spf "type of %s cannot be unified: %s vs. %s" name (Tp.layout_l tp) (Tp.layout_l tp') in
+          let msg = spf "type of \"%s\" cannot be unified: %s vs. %s" name (Tp.layout_l tp) (Tp.layout_l tp') in
           match result with
           | TySafe _ -> TyErr msg
           | TyErr msg' -> TyErr (spf "%s\n%s" msg' msg)
@@ -53,11 +53,6 @@ let compare_expected tps expected =
                 (List.split_by_comma Tp.layout expected)
              )
 
-let solve_op op =
-  match op with
-  | "==" | "<" | ">" -> TySafe ([Tp.Int; Tp.Int;], [Tp.Bool])
-  | _ -> TyErr (spf "unknown op(%s)" op)
-
 let type_check libdef funcdef =
   let (let*) x f = tc_bind x f in
   let kv_list_from_args = List.map (fun (a, b) -> b, [a]) in
@@ -83,7 +78,9 @@ let type_check libdef funcdef =
       let* _ = compare_expected (List.map V.get_tp lit) expecteds in
       TySafe tenv
     | Op (op, args) ->
-      let* inpt, outt = solve_op op in
+      let* inpt, outt = match Clientlang_op.tp op with
+        | Some (inpt, outt) -> TySafe (inpt, outt)
+        | None -> TyErr (spf "cannot find type of operator %s" op) in
       let* t', expecteds' = handle_function inpt outt args expecteds in
       aux tenv t' expecteds'
     | App (fanme, args) when String.equal funcdef.fname fanme ->

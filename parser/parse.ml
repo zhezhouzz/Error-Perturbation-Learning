@@ -29,16 +29,68 @@ let layout_position (p: Lexing.position) =
   let open Lexing in
   spf "At line %i, offset %i: syntax error" p.pos_lnum (p.pos_cnum - p.pos_bol)
 
-let parse filename =
+let parse_ linebuf =
   to_prog
   (* @@ parse_ Parser.prog_eof (Lexing.from_channel (open_in filename)) *)
   @@
-  (let linebuf = Lexing.from_channel (open_in filename) in
-    try
-      Parser.prog_eof Lexer.next_token linebuf
+  (try
+     Parser.prog_eof Lexer.next_token linebuf
    with
    | Lexer.LexError msg ->
      raise @@ failwith (Printf.sprintf "%s%!" msg)
    | Parser.Error ->
      raise @@ failwith (layout_position @@ Lexing.lexeme_end_p linebuf)
   )
+
+let parse filename =
+  let linebuf = Lexing.from_channel (open_in filename) in
+  parse_ linebuf
+let parse_string str =
+  parse_ @@ Lexing.from_string str
+
+type parsing_res =
+  | ParsePre of string
+  | ParseF of string
+
+let parse_piecewise filename =
+  let open Stdlib in
+  let ic = open_in filename in
+  let rec loop tmp current =
+    try
+      let line = input_line ic in
+      match line with
+      | "Pre" -> loop (tmp @ [current]) (ParsePre "")
+      | "Perturbation" | "Default" -> loop (tmp @ [current]) (ParseF "")
+      | line ->
+        let current =
+          match current with
+          | ParsePre x -> ParsePre (spf "%s\n%s" x line)
+          | ParseF x -> ParseF (spf "%s\n%s" x line)
+        in
+        loop tmp current
+    with _ ->
+      close_in ic;
+      tmp @ [current]
+  in
+  let res = loop [] (ParseF "") in
+  res
+
+let solve_piecewise (c: parsing_res list) =
+  match List.rev c with
+  | [] | (ParsePre _) :: _ -> raise @@ failwith "wrong format of piecewise perturbation function"
+  | (ParseF x) :: c ->
+    let c = List.rev c in
+    let default_f = parse_string x in
+    let get_pre x = Language.Of_ocamlast.load_precondition default_f.Lang.fin @@ Ocaml_parser.Frontend.parse_string x in
+    let rec aux (previous, pre_opt) c =
+      match c, pre_opt with
+      | [], None -> previous
+      | [], Some _ -> raise @@ failwith "wrong format of piecewise perturbation function"
+      | (ParsePre _) :: _, Some _ -> raise @@ failwith "perturbation function expected"
+      | (ParsePre x) :: t, None -> aux (previous, Some (get_pre x)) t
+      | (ParseF x) :: t, Some pre ->
+        let f = parse_string x in
+        aux (previous @ [pre, f], None) t
+      | (ParseF _) :: _, None -> raise @@ failwith "wrong format of piecewise perturbation function"
+    in
+    aux ([], None) c

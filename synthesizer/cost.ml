@@ -138,20 +138,39 @@ let cal_cost (sigma: V.t list -> bool) (prog: V.t list -> (int list * (V.t list)
 let cost (env: Env.t) =
   let open Env in
   Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") (fun () ->
-      let () =
-        match env.cur_p with
-        | None -> Zlog.log_write @@ spf "[%s:%i] the env is not initialized" __FILE__ __LINE__
-        | Some cur_p ->
+      match env.cur_p with
+      | None -> raise @@ failwith (spf "[%s:%i] the env is not initialized" __FILE__ __LINE__)
+      | Some cur_p ->
+        let () =
           Zlog.log_write (Printf.sprintf "[%s:%i] prog(non-det: %b):\n%s\n"
                             __FILE__ __LINE__
                             (Language.Oplang.check_non_det cur_p.prog)
                             (Language.Oplang.layout cur_p.prog))
-      in
-      let scache = Sampling.cost_sampling env in
-      (* let () = Zlog.log_write (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) in *)
-      let cost = cal_cost env.sigma (env.client env.library_inspector) env.phi env.i_err_non_trivial_info scache in
-      let () = Zlog.log_write (Printf.sprintf "cost = %f\n" cost) in
-      cost
+        in
+        let scache = Sampling.biased_cost_sampling (fun _ -> true) env.tps [env.i_err] cur_p.prog env.sampling_rounds in
+        (* let () = Zlog.log_write (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) in *)
+        let cost = cal_cost env.sigma (env.client env.library_inspector) env.phi env.i_err_non_trivial_info scache in
+        let () = Zlog.log_write (Printf.sprintf "cost = %f\n" cost) in
+        cost
+    )
+
+let biased_cost (bias: V.t list -> bool) (env: Env.t) =
+  let open Env in
+  Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") (fun () ->
+      match env.cur_p with
+      | None -> raise @@ failwith (spf "[%s:%i] the env is not initialized" __FILE__ __LINE__)
+      | Some cur_p ->
+        let () =
+          Zlog.log_write (Printf.sprintf "[%s:%i] prog(non-det: %b):\n%s\n"
+                            __FILE__ __LINE__
+                            (Language.Oplang.check_non_det cur_p.prog)
+                            (Language.Oplang.layout cur_p.prog))
+        in
+        let scache = Sampling.biased_cost_sampling bias env.tps [env.i_err] cur_p.prog env.sampling_rounds in
+        (* let () = Zlog.log_write (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) in *)
+        let cost = cal_cost env.sigma (env.client env.library_inspector) env.phi env.i_err_non_trivial_info scache in
+        let () = Zlog.log_write (Printf.sprintf "cost = %f\n" cost) in
+        cost
     )
 
 let test (env: Env.t) =

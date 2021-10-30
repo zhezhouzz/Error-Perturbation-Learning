@@ -64,7 +64,18 @@ let eval {args; qv; body} argsvalue =
   forallformula_eval (qv, body) env
 
 let layout {args; qv; body} =
-  Printf.sprintf "(%s) -> ∀ %s, %s"
-    (List.split_by_comma Tp.layouttvar args)
-    (List.split_by_comma Tp.layouttvar qv)
+  let layout_arg (tp, name) = spf "(%s:%s)" name (Tp.layout tp) in
+  Printf.sprintf "let spec %s %s = %s"
+    (List.split_by " " layout_arg args)
+    (List.split_by " " layout_arg qv)
     (Prop.layout body)
+
+let is_true {body; _} =
+  match body with
+  | Specast.True -> true
+  | _ -> false
+
+let is_false {body; _} =
+  match body with
+  | Specast.(Not True) -> true
+  | _ -> false

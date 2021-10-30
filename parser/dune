@@ -17,5 +17,5 @@
    parser
    past
  )
- (libraries primitive language utils menhirLib)
+ (libraries primitive language ocaml_parser utils menhirLib core)
 )

@@ -35,7 +35,7 @@ let mk_env_from_files source_file meta_file =
   (*     sampling_rounds p_size *)
   (* in *)
   let sigma, client, libs, i_err, phi, tps, op_pool, preds, sampling_rounds, p_size =
-    Language.Clientlang_of_ocamlast.of_ocamlast prog meta in
+    Language.Of_ocamlast.load_client_and_meta prog meta in
   Synthesizer.Mkenv.mk_env_v2 sigma client libs phi tps i_err op_pool preds sampling_rounds p_size
 
 let test_cost env =
@@ -56,7 +56,7 @@ let test_mcmc env =
    | None ->
      Printf.printf "No result; prog(cost: ??):\n/?\n"
   in
-  ()
+  env
 
 let test_oplang () =
   let open Synthesizer in
@@ -70,7 +70,7 @@ let test_feature () =
   let inferctx = Classify.Cctx.mk_cctx args qv mps in
   let () = Printf.printf "fset: %s\n" (Classify.Feature.layout_set inferctx.Classify.Cctx.fset) in
   let module V = Primitive.Value in
-  let () = Classify.Infer.spec_infer inferctx
+  let spec = Classify.Infer.spec_infer inferctx
       [[V.L [1;2]; V.L [3;4]]; [V.L [3;4]; V.L [1;2]]]
       (fun x -> x)
       (function
@@ -90,7 +90,7 @@ let test_pre_infer env =
   let mps = ["mem"; "hd"; "<"] in
   let cctx = Classify.Cctx.mk_cctx [Primitive.Tp.IntList, "x1"; Primitive.Tp.IntList, "x2"] qv mps in
   let () = Printf.printf "fset: %s\n" (Classify.Feature.layout_set cctx.Classify.Cctx.fset) in
-  let () = Pre.perturbation_pre_infer cctx scache
+  let spec = Pre.perturbation_pre_infer cctx scache
       env.Synthesizer.Env.sigma
       (fun v -> snd @@ env.client env.library_inspector v)
       env.Synthesizer.Env.phi
@@ -154,7 +154,8 @@ let test = Command.basic
                           let env = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
                               (fun () -> Synthesizer.Mkenv.random_init_prog @@
                                 mk_standard_env ()) in
-                          test_mcmc env)
+                          let env = test_mcmc env in
+                          ())
           | "oplang" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
                           (fun () -> Printf.printf "test!\n"; test_oplang ())
           | "feature" -> Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
@@ -220,30 +221,36 @@ let ocaml_parse =  Command.basic
                 in_phi in
           let () = Printf.printf "stat: %s\n" @@ Basic_dt.List.split_by_comma string_of_int stat in
           (* let () = test_cost env in *)
-          (* let () = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") ( *)
-          (*     fun () -> *)
-          (*       test_mcmc env) in *)
+          let env = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") (
+              fun () ->
+                test_mcmc env) in
+          let spec = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+              (fun () -> Synthesizer.Pre.pre_infer_from_env env 2) in
+          let () = Printf.printf "infered precondition: %s\n" @@ Specification.Spec.layout spec in
           ()
         )
     )
 
-(* let ocaml_tycheck =  Command.basic *)
-(*     ~summary:"ocaml-tycheck" *)
-(*     Command.Let_syntax.( *)
-(*       let%map_open configfile = anon ("configfile" %: regular_file) *)
-(*       and source_file = anon ("source file" %: regular_file) *)
-(*       and meta_file = anon ("meta file" %: regular_file) *)
-(*       in *)
-(*       fun () -> Config.exec_main configfile (fun () -> *)
-(*           let env = mk_env_from_files source_file meta_file in *)
-(*           let () = Printf.printf "stat: %s\n" @@ Basic_dt.List.split_by_comma string_of_int stat in *)
-(*           (\* let () = test_cost env in *\) *)
-(*           let () = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") ( *)
-(*               fun () -> *)
-(*                 test_mcmc env) in *)
-(*           () *)
-(*         ) *)
-(*     ) *)
+let synthesize =  Command.basic
+    ~summary:"synthesize"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and max_length = anon ("maximal length of the pieces" %: int)
+      and num_burn_in = anon ("num burn-in" %: int)
+      and num_sampling = anon ("num sampling" %: int)
+      in
+      fun () -> Config.exec_main configfile (fun () ->
+          let env = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+              (fun () -> Synthesizer.Mkenv.random_init_prog @@
+                mk_env_from_files source_file meta_file) in
+          let result = Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+              (fun () -> Synthesizer.Piecewise.synthesize env max_length num_burn_in num_sampling) in
+          let () = Printf.printf "result:\n%s\n" @@ Synthesizer.Piecewise.layout result in
+          ()
+        )
+    )
 
 let sampling = Command.basic
     ~summary:"sampling"
@@ -256,8 +263,8 @@ let sampling = Command.basic
       fun () -> Config.exec_main configfile (fun () ->
           let env = mk_env_from_files source_file meta_file in
           let prog = Parse.parse prog_file in
-          let env = Synthesizer.Mkenv.update_prog env prog in
-          let scache = Synthesizer.Sampling.cost_sampling env in
+          let scache =
+            Synthesizer.Sampling.biased_cost_sampling (fun _ -> true) env.tps [env.i_err] prog env.sampling_rounds in
           let () = Printf.printf "%s\n" @@ Synthesizer.Sampling.cache_layout scache in
           ()
         )
@@ -269,6 +276,7 @@ let command =
       "batched-test", batched_test;
       "parse", parse;
       "sampling", sampling;
+      "synthesize", synthesize;
       "ocaml-parse", ocaml_parse;
     ]
 

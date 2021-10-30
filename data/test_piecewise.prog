@@ -1,0 +1,31 @@
+Pre (int list:l0, int list:l1) -> ∀ int:u, int:v, ((list_mem(l1, v) ==> ((!list_mem(l0, v))&&(list_mem(l0, u) ==> (!<(v, u)))))&&(((!list_mem(l1, v))&&list_mem(l1, u)) ==> ((!list_mem(l0, u))&&(list_mem(l0, v) ==> <(v, u))))):
+IN: (l0: int list, l1: int list) {
+(i2: int) = max(l1: int list);
+(i3: int) = const0();
+(l4: int list) = append(l0: int list, i2: int);
+(l5: int list) = cons(i3: int, l0: int list)}
+OUT: (l4: int list, l5: int list)
+
+Pre (int list:l0, int list:l1) -> ∀ int:u, int:v, ((list_mem(l1, v) ==> ((!list_mem(l0, v))&&(list_mem(l0, u) ==> (!<(v, u)))))&&(((!list_mem(l1, v))&&list_mem(l1, u)) ==> ((!list_mem(l0, u))&&(list_hd(l0, v) ==> <(v, u))))):
+IN: (l0: int list, l1: int list) {
+(i2: int) = bottom(l1: int list);
+(i3: int) = min(l1: int list);
+(i4: int) = minus1(i3: int);
+(l5: int list) = insert(l0: int list, i4: int, i2: int)}
+OUT: (l1: int list, l5: int list)
+
+Pre (int list:l0, int list:l1) -> ∀ int:u, int:v, ((list_mem(l0, v) ==> ((!list_hd(l1, v))&&((list_mem(l0, u)&&(!list_hd(l0, v))) ==> ((!list_hd(l1, u))&&(!<(v, u))))))&&(((!list_mem(l0, v))&&list_hd(l1, u)) ==> (!list_hd(l0, u)))):
+IN: (l0: int list, l1: int list) {
+(i2: int) = const0();
+(l3: int list) = replace(l1: int list, i2: int, i2: int);
+(l4: int list) = cons(i2: int, l0: int list);
+(i5: int) = const1()}
+OUT: (l4: int list, l3: int list)
+
+Default:
+IN: (l0: int list, l1: int list) {
+(i2: int) = max(l0: int list);
+(i3: int) = plus1(i2: int);
+(i4: int) = bottom(l1: int list);
+(l5: int list) = insert(l0: int list, i3: int, i4: int)}
+OUT: (l1: int list, l5: int list)

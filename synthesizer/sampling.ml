@@ -41,15 +41,18 @@ let cache_init tps vs =
 
 (* If non-det, sample for multiple times *)
 let non_det_sampling_times = 3
-let next_iteration f cache =
+let biased_next_iteration bias f cache =
   let sampling_times = if Oplang.check_non_det f then non_det_sampling_times else 1 in
   let sampling_result =
     VM.fold (fun v idx sampling_result ->
-        let r =
+        if bias v then
+          let r =
             List.filter_map (fun x -> x) @@
             List.init sampling_times (fun _ -> Oplang_interp.interp f v)
-        in
-        (idx, r) :: sampling_result
+          in
+          (idx, r) :: sampling_result
+        else
+          (idx, []) :: sampling_result
       ) cache.datam []
   in
   let total = VM.cardinal cache.datam in
@@ -100,16 +103,25 @@ let cost_sampling_ tps (init_set: Value.t list list) f num =
   let cache = cache_init tps init_set in
   let rec loop n cache =
     if n >= num then cache else
-      loop (n + 1) @@ next_iteration f cache
+      loop (n + 1) @@ biased_next_iteration (fun _ -> true) f cache
   in
   loop 0 cache
 
-let cost_sampling (env: Env.t) =
-  let open Env in
-  match env.cur_p with
-  | None -> raise @@ failwith "the env has not prog initialized"
-  | Some cur_p ->
-    cost_sampling_ env.tps [env.i_err] cur_p.prog env.sampling_rounds
+(* let cost_sampling (env: Env.t) = *)
+(*   let open Env in *)
+(*   match env.cur_p with *)
+(*   | None -> raise @@ failwith "the env has not prog initialized" *)
+(*   | Some cur_p -> *)
+(*     cost_sampling_ env.tps [env.i_err] cur_p.prog env.sampling_rounds *)
+
+(* TODO: Effiency *)
+let biased_cost_sampling (bias: Value.t list -> bool) tps (init_set: Value.t list list) f num =
+  let cache = cache_init tps init_set in
+  let rec loop n cache =
+    if n >= num then cache else
+      loop (n + 1) @@ biased_next_iteration bias f cache
+  in
+  loop 0 cache
 
 let test () =
   let tps, ops = Oplang.test_tps_ops in

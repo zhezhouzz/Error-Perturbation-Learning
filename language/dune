@@ -10,7 +10,7 @@
    clientlang
    clientlang_op
    clientlang_tycheck
-   clientlang_of_ocamlast
+   of_ocamlast
    bblib
  )
 )
