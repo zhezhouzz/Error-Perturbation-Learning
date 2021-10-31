@@ -2,33 +2,11 @@ module Spec = Specification.Spec
 module F = Language.Oplang
 module FInterp = Language.Oplang_interp
 open Basic_dt
-type decision_list = (Spec.t * F.t) list * F.t
-
-let layout (cases, default) =
-  let cases_str =
-    List.fold_left (fun str (pre, f) ->
-        spf "%sPre\n%s\nPerturbation\n%s\n" str (Spec.layout pre) (F.layout f)
-      ) "" cases in
-  spf "%sDefault:\n%s\n" cases_str (F.layout default)
-
-let eval (cases, default) inps =
-  let rec loop = function
-    | [] -> FInterp.interp default inps
-    | (pre, f) :: cases ->
-      if Spec.eval pre inps
-      then FInterp.interp f inps
-      else loop cases
-  in
-  loop cases
-
-(* let add_case current (pre, f) = *)
-(*   match current with *)
-(*   | None -> Some [pre, f] *)
-(*   | Some (cases, default) -> Some (cases @ [pre, f], default) *)
+module P = Language.Piecewise
 
 let iter_bound = 10
 
-let synthesize env max_length num_burn_in num_sampling =
+let synthesize_piecewise env max_length num_burn_in num_sampling =
   let rec force_converge cases =
     match cases with
     | [] -> raise @@ failwith (spf "Cannot find any perturbation function within the iteration bound(%i)" iter_bound)
@@ -69,3 +47,6 @@ let synthesize env max_length num_burn_in num_sampling =
         else loop (current @ [pre, cur_p.prog]) (iter + 1)
   in
   loop [] 0
+
+let synthesize_one env num_burn_in num_sampling =
+  synthesize_piecewise env 0 num_burn_in num_sampling

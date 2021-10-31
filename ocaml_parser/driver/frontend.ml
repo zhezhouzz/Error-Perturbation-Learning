@@ -5,5 +5,4 @@ let parse ~sourcefile =
   (* let _ = Printast.structure 0 Format.std_formatter structure in *)
   structure
 
-let parse_string str = Parse.implementation @@Lexing.from_string str
-;;
+let parse_string str = Parse.implementation @@ Lexing.from_string str

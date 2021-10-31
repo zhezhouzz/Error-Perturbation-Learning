@@ -1,0 +1,17 @@
+Pre
+let spec (x0:int list) (x1:int list) (u:int) (v:int) = ((implies (hd x0 v) ((not (mem x1 v))&&(implies (hd x1 u) (v < u))))&&(implies (not (hd x0 v)) ((implies (hd x0 u) ((not (mem x1 u))&&(implies (hd x1 v) (not (v < u)))))&&(implies ((not (hd x0 u))&&(not (hd x1 v))&&(not (hd x1 u))) ((implies (mem x1 v) ((implies (mem x1 u) ((implies (v < u) (not (mem x0 v)))&&(implies ((not (v < u))&&(mem x0 u)) (mem x0 v))))&&(implies ((not (mem x1 u))&&(mem x0 u)&&(not (v < u))) (not (mem x0 v)))))&&(implies (((not (mem x1 v))&&(mem x0 v))&&(mem x1 u)&&(v < u)) (not (mem x0 u))))))))
+Perturbation
+IN: (x0: int list, x1: int list) {
+(x2: int) = top(x1: int list);
+(x3: int) = random_int();
+(x4: int list) = insert(x0: int list, x2: int, x2: int);
+(x5: int list) = cons(x3: int, x1: int list)}
+OUT: (x5: int list, x4: int list)
+
+Default
+IN: (x0: int list, x1: int list) {
+(x2: int) = random_int();
+(x3: int list) = cons(x2: int, x0: int list);
+(x4: int) = random_int();
+(x5: int) = top(x1: int list)}
+OUT: (x3: int list, x1: int list)

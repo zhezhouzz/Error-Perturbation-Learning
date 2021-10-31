@@ -6,6 +6,7 @@
    tinyocaml
    oplang
    oplang_interp
+   piecewise
    arg_solving
    clientlang
    clientlang_op
