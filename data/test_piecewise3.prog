@@ -1,0 +1,17 @@
+Pre
+let spec (x0:int list) (x1:int list) (u:int) (v:int) = implies ((hd x0 u) && (hd x1 v)) (u < v)
+Perturbation
+IN: (x0: int list, x1: int list) {
+(x2: int) = top(x1: int list);
+(x3: int) = const1();
+(x4: int) = minus(x2: int, x3: int);
+(x5: int list) = cons(x1: int, x4: int list)}
+OUT: (x0: int list, x5: int list)
+
+Default
+IN: (x0: int list, x1: int list) {
+(x2: int) = random_int();
+(x3: int) = random_int();
+(x4: int) = random_int();
+(x5: int) = top(x1: int list)}
+OUT: (x1: int list, x0: int list)

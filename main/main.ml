@@ -347,11 +347,16 @@ let sampling =
       fun () ->
         Config.exec_main configfile (fun () ->
             let env = mk_env_from_files source_file meta_file in
-            let prog = Parse.parse prog_file in
+            let conds, default = Parse.parse_piecewise prog_file in
+            let pres = Basic_dt.List.map fst conds in
             let scache =
               Synthesizer.Sampling.biased_cost_sampling
-                (fun _ -> true)
-                env.tps [ env.i_err ] prog env.sampling_rounds
+                (fun x ->
+                  not
+                  @@ Basic_dt.List.for_all
+                       (fun pre -> Specification.Spec.eval pre x)
+                       pres)
+                env.tps [ env.i_err ] default env.sampling_rounds
             in
             let () =
               Printf.printf "%s\n" @@ Synthesizer.Sampling.cache_layout scache
