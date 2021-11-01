@@ -53,6 +53,8 @@ let cache_init tps vs =
 (* If non-det, sample for multiple times *)
 let non_det_sampling_times = 3
 
+let bais_rate = 0.5
+
 let biased_next_iteration bias f cache =
   let sampling_times =
     if Oplang.check_non_det f then non_det_sampling_times else 1
@@ -60,7 +62,7 @@ let biased_next_iteration bias f cache =
   let sampling_result =
     VM.fold
       (fun v idx sampling_result ->
-        if bias v then
+        if bias v || Random.float 1.0 > bais_rate then
           let r =
             List.filter_map (fun x -> x)
             @@ List.init sampling_times (fun _ -> Oplang_interp.interp f v)

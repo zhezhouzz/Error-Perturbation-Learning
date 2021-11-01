@@ -202,7 +202,7 @@ let cost (env : Env.t) =
           let scache =
             Sampling.biased_cost_sampling
               (fun _ -> true)
-              env.tps [ env.i_err ] cur_p.prog env.sampling_rounds
+              env.tps env.init_sampling_set cur_p.prog env.sampling_rounds
           in
           (* let () = Zlog.log_write (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) in *)
           let cost =
@@ -231,8 +231,8 @@ let biased_cost (bias : V.t list -> bool) (env : Env.t) =
                  (Language.Oplang.layout cur_p.prog))
           in
           let scache =
-            Sampling.biased_cost_sampling bias env.tps [ env.i_err ] cur_p.prog
-              env.sampling_rounds
+            Sampling.biased_cost_sampling bias env.tps env.init_sampling_set
+              cur_p.prog env.sampling_rounds
           in
           let () =
             Zlog.log_write
@@ -361,7 +361,7 @@ let test (env : Env.t) =
          (Language.Oplang.check_non_det f)
          (Language.Oplang.layout f));
     let scache =
-      cost_sampling_ [ Tp.IntList; Tp.IntList ] [ env.i_err ] f
+      cost_sampling_ [ Tp.IntList; Tp.IntList ] env.init_sampling_set f
         env.sampling_rounds
     in
     let () =
