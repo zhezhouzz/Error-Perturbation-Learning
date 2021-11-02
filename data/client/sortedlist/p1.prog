@@ -1,0 +1,17 @@
+Pre
+let spec (x0:int list) (x1:int list) (u:int) (v:int) = ((implies (mem x1 v) ((not (mem x0 v))&&(implies ((mem x0 u)&&(not (hd x1 v))) ((not (mem x1 u))&&(not (v < u))))))&&(implies ((not (mem x1 v))&&(mem x1 u)) ((not (mem x0 u))&&(implies (mem x0 v) (v < u)))))
+Perturbation
+IN: (x0: int list, x1: int list) {
+(x2: int) = top(x1: int list);
+(x3: int) = const1();
+(x4: int list) = insert(x0: int list, x2: int, x2: int);
+(x5: int list) = cons(x3: int, x1: int list)}
+OUT: (x5: int list, x4: int list)
+
+Default
+IN: (x0: int list, x1: int list) {
+(x2: int) = top(x0: int list);
+(x3: int list) = cons(x2: int, x1: int list);
+(x4: int) = minus1(x2: int);
+(x5: int list) = cons(x4: int, x3: int list)}
+OUT: (x5: int list, x3: int list)

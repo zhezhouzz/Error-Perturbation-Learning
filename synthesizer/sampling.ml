@@ -21,6 +21,15 @@ type cache = {
   jump_table : int list array list;
 }
 
+let to_data { datam_rev; jump_table; _ } =
+  List.fold_left
+    (fun res arr ->
+       List.fold_left
+         (fun res outs -> res @ List.map (Hashtbl.find datam_rev) outs)
+         res
+       @@ Array.to_list arr)
+    [] jump_table
+
 let pure_sampled_input_output { datam_rev; jump_table; _ } =
   match jump_table with
   | [] -> raise @@ failwith (spf "sampling empty in %s" __FUNCTION__)
@@ -167,6 +176,32 @@ let biased_cost_sampling (bias : Value.t list -> bool) tps
     else loop (n + 1) @@ biased_next_iteration bias f cache
   in
   loop 0 cache
+
+let sampling_to_data (init_set : Value.t list list) f num =
+  let max_pool = num / 8 in
+  let res = ref [] in
+  let rec aux pool =
+    let samples =
+      List.flatten
+      @@ List.map
+        (fun x -> Piecewise.eval_sampling f x non_det_sampling_times)
+        pool
+    in
+    res := !res @ samples;
+    if List.length !res >= num then List.sublist !res (0, num)
+    else
+      let pool' =
+        let pool' = List.filter_map (fun x -> x) samples in
+        if List.length pool' == 0 then pool
+        else if List.length pool' > max_pool then
+          Array.to_list
+          @@ QCheck.Gen.generate1
+            (QCheck.Gen.array_subset max_pool (Array.of_list pool'))
+        else pool'
+      in
+      aux pool'
+  in
+  aux init_set
 
 let test () =
   let tps, ops = Oplang.test_tps_ops in

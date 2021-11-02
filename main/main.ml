@@ -64,8 +64,8 @@ let test_mcmc env =
   let () =
     match env.cur_p with
     | Some cur_p ->
-        Printf.printf "prog(cost: %f):\n%s\n" cost
-          (Language.Oplang.layout cur_p.prog)
+      Printf.printf "prog(cost: %f):\n%s\n" cost
+        (Language.Oplang.layout cur_p.prog)
     | None -> Printf.printf "No result; prog(cost: ??):\n/?\n"
   in
   env
@@ -90,8 +90,8 @@ let test_feature () =
       [ [ V.L [ 1; 2 ]; V.L [ 3; 4 ] ]; [ V.L [ 3; 4 ]; V.L [ 1; 2 ] ] ]
       (fun x -> x)
       (function [ V.L [ 1; 2 ]; V.L [ 3; 4 ] ] -> true | _ -> false)
-    (* (fun v -> not (Primitive.Imp.phi_merge v)) *)
-    (* Primitive.Imp.sigma_merge *)
+      (* (fun v -> not (Primitive.Imp.phi_merge v)) *)
+      (* Primitive.Imp.sigma_merge *)
   in
   ()
 
@@ -135,18 +135,18 @@ let batched_test source_file meta_file num_times num_burn_in num_sampling =
         Zlog.event_
           (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
           (fun () ->
-            Mcmc.metropolis_hastings ~burn_in:num_burn_in
-              ~sampling_steps:num_sampling ~proposal_distribution:Mutate.mutate
-              ~cost_function:Cost.cost ~init_distribution:env)
+             Mcmc.metropolis_hastings ~burn_in:num_burn_in
+               ~sampling_steps:num_sampling ~proposal_distribution:Mutate.mutate
+               ~cost_function:Cost.cost ~init_distribution:env)
       in
       let () =
         match env.cur_p with
         | Some cur_p ->
-            Zlog.log_write
-            @@ Printf.sprintf "prog(cost: %f):\n%s\n" cost
-                 (Language.Oplang.layout cur_p.prog)
+          Zlog.log_write
+          @@ Printf.sprintf "prog(cost: %f):\n%s\n" cost
+            (Language.Oplang.layout cur_p.prog)
         | None ->
-            Zlog.log_write @@ Printf.sprintf "No result; prog(cost: ??):\n/?\n"
+          Zlog.log_write @@ Printf.sprintf "No result; prog(cost: ??):\n/?\n"
       in
       (* let () = Zlog.log_write @@ Printf.sprintf "prog(cost: %f):\n%s\n" cost (Language.Oplang.layout env.cur_p.prog) in *)
       let () = Config.refresh_logfile (string_of_int n) in
@@ -171,55 +171,55 @@ let test =
             (* event "test" (fun () -> Printf.printf "test!\n"; Language.Arg_solving.test ()) *)
             match test_name with
             | "cost" ->
-                Zlog.event_
-                  (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
-                     "") (fun () ->
+              Zlog.event_
+                (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
+                   "") (fun () ->
                     Printf.printf "test!\n";
                     let env =
                       Zlog.event_
                         (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
                            __FUNCTION__ "") (fun () ->
-                          Synthesizer.Mkenv.random_init_prog
-                          @@ mk_standard_env ())
+                            Synthesizer.Mkenv.random_init_prog
+                            @@ mk_standard_env ())
                     in
                     test_cost env)
             | "mcmc" ->
-                Zlog.event_
-                  (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
-                     "") (fun () ->
+              Zlog.event_
+                (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
+                   "") (fun () ->
                     Printf.printf "test!\n";
                     let env =
                       Zlog.event_
                         (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
                            __FUNCTION__ "") (fun () ->
-                          Synthesizer.Mkenv.random_init_prog
-                          @@ mk_standard_env ())
+                            Synthesizer.Mkenv.random_init_prog
+                            @@ mk_standard_env ())
                     in
                     let env = test_mcmc env in
                     ())
             | "oplang" ->
-                Zlog.event_
-                  (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
-                     "") (fun () ->
+              Zlog.event_
+                (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
+                   "") (fun () ->
                     Printf.printf "test!\n";
                     test_oplang ())
             | "feature" ->
-                Zlog.event_
-                  (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
-                     "") (fun () ->
+              Zlog.event_
+                (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
+                   "") (fun () ->
                     Printf.printf "test!\n";
                     test_feature ())
             | "pre" ->
-                Zlog.event_
-                  (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
-                     "") (fun () ->
+              Zlog.event_
+                (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
+                   "") (fun () ->
                     Printf.printf "test!\n";
                     let env =
                       Zlog.event_
                         (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
                            __FUNCTION__ "") (fun () ->
-                          Synthesizer.Mkenv.random_init_prog
-                          @@ mk_standard_env ())
+                            Synthesizer.Mkenv.random_init_prog
+                            @@ mk_standard_env ())
                     in
                     test_pre_infer env)
             | _ -> raise @@ failwith "unknown test name"))
@@ -249,7 +249,7 @@ let parse_result =
               Zlog.event_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
                 (fun () ->
-                  Language.Piecewise.layout @@ Parse.parse_piecewise source_file)
+                   Language.Piecewise.layout @@ Parse.parse_piecewise source_file)
             in
             Printf.printf "%s\n" prog))
 
@@ -286,13 +286,13 @@ let parse_input =
               match result with
               | None -> Printf.printf "execption...\n"
               | Some vs ->
-                  let in_sigma = env.sigma env.i_err in
-                  let in_phi = env.phi (env.i_err @ vs) in
-                  Printf.printf "[%s](in_sigma:%b) ==> [%s](in_phi:%b)\n"
-                    (Primitive.Value.layout_l env.i_err)
-                    in_sigma
-                    (Primitive.Value.layout_l vs)
-                    in_phi
+                let in_sigma = env.sigma env.i_err in
+                let in_phi = env.phi (env.i_err @ vs) in
+                Printf.printf "[%s](in_sigma:%b) ==> [%s](in_phi:%b)\n"
+                  (Primitive.Value.layout_l env.i_err)
+                  in_sigma
+                  (Primitive.Value.layout_l vs)
+                  in_phi
             in
             let () =
               Printf.printf "stat: %s\n"
@@ -322,15 +322,15 @@ let synthesize =
               Zlog.event_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
                 (fun () ->
-                  Synthesizer.Mkenv.random_init_prog
-                  @@ mk_env_from_files source_file meta_file)
+                   Synthesizer.Mkenv.random_init_prog
+                   @@ mk_env_from_files source_file meta_file)
             in
             let result =
               Zlog.event_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
                 (fun () ->
-                  Synthesizer.Syn.synthesize_piecewise env max_length
-                    num_burn_in num_sampling)
+                   Synthesizer.Syn.synthesize_piecewise env max_length
+                     num_burn_in num_sampling)
             in
             let () =
               Printf.printf "result:\n%s\n" @@ Language.Piecewise.layout result
@@ -343,30 +343,52 @@ let sampling =
       let%map_open configfile = anon ("configfile" %: regular_file)
       and source_file = anon ("source file" %: regular_file)
       and meta_file = anon ("meta file" %: regular_file)
-      and prog_file = anon ("prog file" %: regular_file) in
+      and prog_file = anon ("prog file" %: regular_file)
+      and num_sampling = anon ("num sampling" %: int) in
       fun () ->
         Config.exec_main configfile (fun () ->
             let env = mk_env_from_files source_file meta_file in
-            let conds, default = Parse.parse_piecewise prog_file in
-            let pres = Basic_dt.List.map fst conds in
-            let scache =
-              Synthesizer.Sampling.biased_cost_sampling
-                (fun x ->
-                  not
-                  @@ Basic_dt.List.for_all
-                       (fun pre -> Specification.Spec.eval pre x)
-                       pres)
-                env.tps [ env.i_err ] default env.sampling_rounds
+            let prog = Parse.parse_piecewise prog_file in
+            let data =
+              Synthesizer.Sampling.sampling_to_data [ env.i_err ] prog
+                num_sampling
             in
-            let () =
-              Printf.printf "%s\n" @@ Synthesizer.Sampling.cache_layout scache
+            let stat =
+              Evaluation.Ev.evaluation data env.sigma
+                (fun inp -> snd @@ env.client env.library_inspector inp)
+                env.phi
             in
+            let () = Printf.printf "%s\n" @@ Evaluation.Ev.layout stat in
+            ()))
+
+let baseline =
+  Command.basic ~summary:"baseline"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and qc_file = anon ("quickcheck config file" %: regular_file)
+      and num = anon ("sampling number" %: int) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let env = mk_env_from_files source_file meta_file in
+            let qc_conf = Zquickcheck.Qc.load_config qc_file in
+            let data = Zquickcheck.Qc_baseline.baseline qc_conf env.tps num in
+            let stat =
+              Evaluation.Ev.evaluation
+                (List.map ~f:(fun x -> Some x) data)
+                env.sigma
+                (fun inp -> snd @@ env.client env.library_inspector inp)
+                env.phi
+            in
+            let () = Printf.printf "%s\n" @@ Evaluation.Ev.layout stat in
             ()))
 
 let command =
   Command.group ~summary:"Error Perturbation Learning"
     [
       ("test", test);
+      ("baseline", baseline);
       ("batched-test", batched_test);
       ("parse-input", parse_input);
       ("parse-result", parse_result);
