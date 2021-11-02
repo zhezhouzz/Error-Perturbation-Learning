@@ -25,17 +25,17 @@ let pure_sampled_input_output { datam_rev; jump_table; _ } =
   match jump_table with
   | [] -> raise @@ failwith (spf "sampling empty in %s" __FUNCTION__)
   | _ ->
-      let j = List.last jump_table in
-      let tmp_table = Hashtbl.create (Array.length j) in
-      let _ =
-        Array.iteri
-          (fun in_idx out_idxs ->
-            List.iter
-              (fun out_idx -> Hashtbl.add tmp_table (in_idx, out_idx) ())
-              out_idxs)
-          j
-      in
-      (datam_rev, List.of_seq @@ Hashtbl.to_seq_keys @@ tmp_table)
+    let j = List.last jump_table in
+    let tmp_table = Hashtbl.create (Array.length j) in
+    let _ =
+      Array.iteri
+        (fun in_idx out_idxs ->
+           List.iter
+             (fun out_idx -> Hashtbl.add tmp_table (in_idx, out_idx) ())
+             out_idxs)
+        j
+    in
+    (datam_rev, List.of_seq @@ Hashtbl.to_seq_keys @@ tmp_table)
 
 let cache_init tps vs =
   let m = Hashtbl.create 1000 in
@@ -55,21 +55,36 @@ let non_det_sampling_times = 3
 
 let bais_rate = 0.5
 
+let biased_sample bias f sampling_times datam =
+  VM.fold
+    (fun v idx sampling_result ->
+       if bias v || Random.float 1.0 > bais_rate then
+         let r =
+           List.filter_map (fun x -> x)
+           @@ List.init sampling_times (fun _ -> Oplang_interp.interp f v)
+         in
+         (idx, r) :: sampling_result
+       else (idx, []) :: sampling_result)
+    datam []
+
+let unbiased_sample f sampling_times datam =
+  VM.fold
+    (fun v idx sampling_result ->
+       let r =
+         List.filter_map (fun x -> x)
+         @@ List.init sampling_times (fun _ -> Oplang_interp.interp f v)
+       in
+       (idx, r) :: sampling_result)
+    datam []
+
 let biased_next_iteration bias f cache =
   let sampling_times =
     if Oplang.check_non_det f then non_det_sampling_times else 1
   in
   let sampling_result =
-    VM.fold
-      (fun v idx sampling_result ->
-        if bias v || Random.float 1.0 > bais_rate then
-          let r =
-            List.filter_map (fun x -> x)
-            @@ List.init sampling_times (fun _ -> Oplang_interp.interp f v)
-          in
-          (idx, r) :: sampling_result
-        else (idx, []) :: sampling_result)
-      cache.datam []
+    match !Config.conf.bias_method with
+    | Config.SamplingCutOff -> biased_sample bias f sampling_times cache.datam
+    | Config.CostPenalty -> unbiased_sample f sampling_times cache.datam
   in
   let total = VM.cardinal cache.datam in
   let arr = Array.make total [] in
@@ -79,24 +94,24 @@ let biased_next_iteration bias f cache =
   let update_m m v' =
     match VM.find_opt v' m with
     | None ->
-        let idx' = !counter in
-        counter := idx' + 1;
-        Hashtbl.add cache.datam_rev idx' v';
-        (VM.add v' idx' m, idx')
+      let idx' = !counter in
+      counter := idx' + 1;
+      Hashtbl.add cache.datam_rev idx' v';
+      (VM.add v' idx' m, idx')
     | Some idx' -> (m, idx')
   in
   let m' =
     List.fold_left
       (fun m (idx, vs') ->
-        let m, vidxs =
-          List.fold_left
-            (fun (m, vidxs) v' ->
-              let m, vidx = update_m m v' in
-              (m, vidx :: vidxs))
-            (m, []) vs'
-        in
-        Array.set arr idx vidxs;
-        m)
+         let m, vidxs =
+           List.fold_left
+             (fun (m, vidxs) v' ->
+                let m, vidx = update_m m v' in
+                (m, vidx :: vidxs))
+             (m, []) vs'
+         in
+         Array.set arr idx vidxs;
+         m)
       cache.datam sampling_result
   in
   {
@@ -111,19 +126,19 @@ let biased_next_iteration bias f cache =
 let jump_layout datam_rev arr =
   Array.fold_lefti
     (fun str i j ->
-      Printf.sprintf "%s; %s -> |%s|" str
-        (Value.layout_l @@ Hashtbl.find datam_rev i)
-        (List.split_by_comma
-           (fun idx -> Value.layout_l @@ Hashtbl.find datam_rev idx)
-           j))
+       Printf.sprintf "%s; %s -> |%s|" str
+         (Value.layout_l @@ Hashtbl.find datam_rev i)
+         (List.split_by_comma
+            (fun idx -> Value.layout_l @@ Hashtbl.find datam_rev idx)
+            j))
     "" arr
 
 let cache_layout cache =
   let jump_table =
     List.fold_lefti
       (fun r idx j ->
-        Printf.sprintf "%s\n[iter %i]:\n%s" r idx
-        @@ jump_layout cache.datam_rev j)
+         Printf.sprintf "%s\n[iter %i]:\n%s" r idx
+         @@ jump_layout cache.datam_rev j)
       "" cache.jump_table
   in
   jump_table
@@ -158,7 +173,7 @@ let test () =
   match Arg_solving.arg_assign tps ops with
   | None -> raise @@ failwith "never happen"
   | Some (prog, _) ->
-      let _ = Printf.printf "prog:\n%s\n" (Oplang.layout prog) in
-      let cache = cost_sampling_ tps [ [ Value.L [ 0 ] ] ] prog 1 in
-      let _ = Printf.printf "sample cache:\n%s\n" (cache_layout cache) in
-      ()
+    let _ = Printf.printf "prog:\n%s\n" (Oplang.layout prog) in
+    let cache = cost_sampling_ tps [ [ Value.L [ 0 ] ] ] prog 1 in
+    let _ = Printf.printf "sample cache:\n%s\n" (cache_layout cache) in
+    ()

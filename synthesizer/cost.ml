@@ -17,19 +17,19 @@ let cost_valid_iter (sigma : V.t list -> bool)
   let r =
     Array.fold_left
       (fun r j ->
-        match j with
-        | None -> alpha_none
-        | Some j ->
-            let v = Hashtbl.find m j in
-            let delta =
-              match prog v with
-              | None -> alpha_none
-              | Some v' ->
-                  if phi (v @ v') then alpha_out_pre_not_err
-                  else if sigma v then alpha_in_pre_is_err
-                  else alpha_out_pre_is_err
-            in
-            r +. delta)
+         match j with
+         | None -> alpha_none
+         | Some j ->
+           let v = Hashtbl.find m j in
+           let delta =
+             match prog v with
+             | None -> alpha_none
+             | Some v' ->
+               if phi (v @ v') then alpha_out_pre_not_err
+               else if sigma v then alpha_in_pre_is_err
+               else alpha_out_pre_is_err
+           in
+           r +. delta)
       0.0 jump_entry
   in
   r /. float_of_int num
@@ -44,9 +44,9 @@ let duplicate_level gh i j =
     let dup_times x =
       fst
       @@ List.fold_left
-           (fun (dup_times, gidx) gtotal ->
-             if gidx < gtotal then (dup_times + 1, gidx) else (dup_times, gidx))
-           (0, x) gh
+        (fun (dup_times, gidx) gtotal ->
+           if gidx < gtotal then (dup_times + 1, gidx) else (dup_times, gidx))
+        (0, x) gh
     in
     let dup_times = dup_times j in
     let _ = Zlog.log_write @@ Printf.sprintf "dup_times:%i" dup_times in
@@ -90,7 +90,7 @@ let non_trival_v2 r1 r2 =
   let b =
     max 0.3
       (List.fold_left (fun sum x -> if x then sum +. 1.0 else sum) 0.0 b
-      /. c_b_2_num)
+       /. c_b_2_num)
   in
   let result = a *. b in
   (* let _ = Zlog.log_write @@ Printf.sprintf "|<%s> - <%s>| = %f * %f = %f" *)
@@ -99,35 +99,43 @@ let non_trival_v2 r1 r2 =
 
 let no_new_output_panalty = 4.5
 
-let cost_weighted_valid_iter (sigma : V.t list -> bool)
-    (prog : V.t list -> int list * V.t list option) (phi : V.t list -> bool)
-    (i_err_non_trivial_info : Env.non_trivial_info) gh m jump_entry =
+let bias_penalty = 2.0
+
+let cost_weighted_valid_iter (bias : V.t list -> bool)
+    (sigma : V.t list -> bool) (prog : V.t list -> int list * V.t list option)
+    (phi : V.t list -> bool) (i_err_non_trivial_info : Env.non_trivial_info) gh
+    m jump_entry =
   let f i jopt =
     match jopt with
     | [] -> alpha_none
     | js ->
-        let one j =
-          let k_dupliate = duplicate_level gh i j in
-          let v = Hashtbl.find m j in
-          let delta =
-            let invocation_record, result = prog v in
-            let alpha =
-              match result with
-              | None -> alpha_none
-              | Some v' ->
-                  if phi (v @ v') then alpha_out_pre_not_err
-                  else if sigma v then
-                    let k_non_trivial =
-                      non_trival_v2 i_err_non_trivial_info invocation_record
-                    in
-                    k_non_trivial *. alpha_in_pre_is_err
-                  else alpha_out_pre_is_err
-            in
-            alpha
-          in
-          delta *. k_dupliate
+      let one j =
+        let k_dupliate = duplicate_level gh i j in
+        let v = Hashtbl.find m j in
+        let k_bias_penalty =
+          match !Config.conf.bias_method with
+          | Config.SamplingCutOff -> 1.0
+          | Config.CostPenalty -> if bias v then 1.0 else bias_penalty
         in
-        List.mean one js
+        let delta =
+          let invocation_record, result = prog v in
+          let alpha =
+            match result with
+            | None -> alpha_none
+            | Some v' ->
+              if phi (v @ v') then alpha_out_pre_not_err
+              else if sigma v then
+                let k_non_trivial =
+                  non_trival_v2 i_err_non_trivial_info invocation_record
+                in
+                k_non_trivial *. k_bias_penalty *. alpha_in_pre_is_err
+              else alpha_out_pre_is_err
+          in
+          alpha
+        in
+        delta *. k_dupliate
+      in
+      List.mean one js
   in
   Array.meani f jump_entry
 
@@ -136,9 +144,9 @@ let cost_duplicate_iter jump_entry =
   let r =
     Array.fold_left
       (fun r j ->
-        match j with
-        | None -> 0.0
-        | Some j -> if j >= bound then r else 1.0 +. r)
+         match j with
+         | None -> 0.0
+         | Some j -> if j >= bound then r else 1.0 +. r)
       0.0 jump_entry
   in
   r /. float_of_int (Array.length jump_entry)
@@ -147,36 +155,36 @@ let k_duplicate = 0.5
 
 let k_valid = 0.5
 
-let cal_cost (sigma : V.t list -> bool)
+let cal_cost (bias : V.t list -> bool) (sigma : V.t list -> bool)
     (prog : V.t list -> int list * V.t list option) (phi : V.t list -> bool)
     (i_err_non_trivial_info : Env.non_trivial_info) (cache : cache) =
   let sum =
     List.fold_lefti
       (fun sum i j ->
-        (* let cost_valid = cost_valid_iter sigma prog phi cache.datam_rev j in *)
-        (* let cost_duplicate = cost_duplicate_iter j in *)
-        (* let () = Zlog.log_write (Printf.sprintf "cost_valid[%i]: %f" i cost_valid) in *)
-        (* let () = Zlog.log_write (Printf.sprintf "cost_duplicate[%i]: %f" i cost_duplicate) in *)
-        let cost =
-          cost_weighted_valid_iter sigma prog phi i_err_non_trivial_info
-            cache.generation_hierarchy_rev cache.datam_rev j
-        in
-        let k_no_new gh i =
-          if i == 0 then 1.0
-          else
-            try
-              if List.nth gh i == List.nth gh (i - 1) then no_new_output_panalty
-              else 1.0
-            with _ ->
-              raise
-              @@ failwith
-                   (Printf.sprintf "never happen in cost([%s]:%i)"
-                      (List.split_by_comma string_of_int gh)
-                      i)
-        in
-        let cost = k_no_new cache.generation_hierarchy_rev i *. cost in
-        let () = Zlog.log_write (Printf.sprintf "cost[%i]: %f" i cost) in
-        sum +. cost)
+         (* let cost_valid = cost_valid_iter sigma prog phi cache.datam_rev j in *)
+         (* let cost_duplicate = cost_duplicate_iter j in *)
+         (* let () = Zlog.log_write (Printf.sprintf "cost_valid[%i]: %f" i cost_valid) in *)
+         (* let () = Zlog.log_write (Printf.sprintf "cost_duplicate[%i]: %f" i cost_duplicate) in *)
+         let cost =
+           cost_weighted_valid_iter bias sigma prog phi i_err_non_trivial_info
+             cache.generation_hierarchy_rev cache.datam_rev j
+         in
+         let k_no_new gh i =
+           if i == 0 then 1.0
+           else
+             try
+               if List.nth gh i == List.nth gh (i - 1) then no_new_output_panalty
+               else 1.0
+             with _ ->
+               raise
+               @@ failwith
+                 (Printf.sprintf "never happen in cost([%s]:%i)"
+                    (List.split_by_comma string_of_int gh)
+                    i)
+         in
+         let cost = k_no_new cache.generation_hierarchy_rev i *. cost in
+         let () = Zlog.log_write (Printf.sprintf "cost[%i]: %f" i cost) in
+         sum +. cost)
       0.0 cache.jump_table
   in
   sum /. float_of_int (List.length cache.jump_table)
@@ -186,66 +194,68 @@ let cost (env : Env.t) =
   let open Env in
   Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
     (fun () ->
-      match env.cur_p with
-      | None ->
-          raise
-          @@ failwith
-               (spf "[%s:%i] the env is not initialized" __FILE__ __LINE__)
-      | Some cur_p ->
-          let () =
-            Zlog.log_write
-              (Printf.sprintf "[%s:%i] prog(non-det: %b):\n%s\n" __FILE__
-                 __LINE__
-                 (Language.Oplang.check_non_det cur_p.prog)
-                 (Language.Oplang.layout cur_p.prog))
-          in
-          let scache =
-            Sampling.biased_cost_sampling
-              (fun _ -> true)
-              env.tps env.init_sampling_set cur_p.prog env.sampling_rounds
-          in
-          (* let () = Zlog.log_write (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) in *)
-          let cost =
-            cal_cost env.sigma
-              (env.client env.library_inspector)
-              env.phi env.i_err_non_trivial_info scache
-          in
-          let () = Zlog.log_write (Printf.sprintf "cost = %f\n" cost) in
-          cost)
+       match env.cur_p with
+       | None ->
+         raise
+         @@ failwith
+           (spf "[%s:%i] the env is not initialized" __FILE__ __LINE__)
+       | Some cur_p ->
+         let () =
+           Zlog.log_write
+             (Printf.sprintf "[%s:%i] prog(non-det: %b):\n%s\n" __FILE__
+                __LINE__
+                (Language.Oplang.check_non_det cur_p.prog)
+                (Language.Oplang.layout cur_p.prog))
+         in
+         let scache =
+           Sampling.biased_cost_sampling
+             (fun _ -> false)
+             env.tps env.init_sampling_set cur_p.prog env.sampling_rounds
+         in
+         (* let () = Zlog.log_write (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) in *)
+         let cost =
+           cal_cost
+             (fun _ -> false)
+             env.sigma
+             (env.client env.library_inspector)
+             env.phi env.i_err_non_trivial_info scache
+         in
+         let () = Zlog.log_write (Printf.sprintf "cost = %f\n" cost) in
+         cost)
 
 let biased_cost (bias : V.t list -> bool) (env : Env.t) =
   let open Env in
   Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
     (fun () ->
-      match env.cur_p with
-      | None ->
-          raise
-          @@ failwith
-               (spf "[%s:%i] the env is not initialized" __FILE__ __LINE__)
-      | Some cur_p ->
-          let () =
-            Zlog.log_write
-              (Printf.sprintf "[%s:%i] prog(non-det: %b):\n%s\n" __FILE__
-                 __LINE__
-                 (Language.Oplang.check_non_det cur_p.prog)
-                 (Language.Oplang.layout cur_p.prog))
-          in
-          let scache =
-            Sampling.biased_cost_sampling bias env.tps env.init_sampling_set
-              cur_p.prog env.sampling_rounds
-          in
-          let () =
-            Zlog.log_write
-              (Printf.sprintf "sample cache:\n%s\n"
-                 (Sampling.cache_layout scache))
-          in
-          let cost =
-            cal_cost env.sigma
-              (env.client env.library_inspector)
-              env.phi env.i_err_non_trivial_info scache
-          in
-          let () = Zlog.log_write (Printf.sprintf "cost = %f\n" cost) in
-          cost)
+       match env.cur_p with
+       | None ->
+         raise
+         @@ failwith
+           (spf "[%s:%i] the env is not initialized" __FILE__ __LINE__)
+       | Some cur_p ->
+         let () =
+           Zlog.log_write
+             (Printf.sprintf "[%s:%i] prog(non-det: %b):\n%s\n" __FILE__
+                __LINE__
+                (Language.Oplang.check_non_det cur_p.prog)
+                (Language.Oplang.layout cur_p.prog))
+         in
+         let scache =
+           Sampling.biased_cost_sampling bias env.tps env.init_sampling_set
+             cur_p.prog env.sampling_rounds
+         in
+         let () =
+           Zlog.log_write
+             (Printf.sprintf "sample cache:\n%s\n"
+                (Sampling.cache_layout scache))
+         in
+         let cost =
+           cal_cost env.sigma bias
+             (env.client env.library_inspector)
+             env.phi env.i_err_non_trivial_info scache
+         in
+         let () = Zlog.log_write (Printf.sprintf "cost = %f\n" cost) in
+         cost)
 
 let test (env : Env.t) =
   let open Language.Oplang in
@@ -369,7 +379,9 @@ let test (env : Env.t) =
         (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache))
     in
     let cost =
-      cal_cost env.sigma
+      cal_cost
+        (fun _ -> false)
+        env.sigma
         (env.client env.library_inspector)
         env.phi env.i_err_non_trivial_info scache
     in

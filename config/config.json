@@ -1,3 +1,7 @@
-{"exec_flag": "debug", "if_random": true, "if_z3": true,
-"mutation_distribution": {"op_replace": 1, "op_swap": 1, "op_deny": 0, "arg_reassign": 1}
+{
+  "exec_flag": "debug",
+               "if_random": true,
+               "if_z3": true,
+               "bias_method": "CostPenalty",
+               "mutation_distribution": {"op_replace": 1, "op_swap": 1, "op_deny": 0, "arg_reassign": 1}
 }
