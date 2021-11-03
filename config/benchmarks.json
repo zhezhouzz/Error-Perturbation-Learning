@@ -29,7 +29,7 @@
     },
     {
       "name": "batchedq",
-      "source_file": "data/client/batchedq/merge.ml",
+      "source_file": "data/client/batchedq/tail.ml",
       "meta_file": "data/client/batchedq/assertion1.ml",
       "max_length": 1,
       "num_burn_in": 1500,
@@ -38,7 +38,7 @@
     },
     {
       "name": "uniquel",
-      "source_file": "data/client/uniquel/merge.ml",
+      "source_file": "data/client/uniquel/set_add.ml",
       "meta_file": "data/client/uniquel/assertion1.ml",
       "max_length": 1,
       "num_burn_in": 1500,

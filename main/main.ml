@@ -344,6 +344,29 @@ let synthesize =
             in
             ()))
 
+let parse_benchmark_config source_configfile =
+  let open Yojson.Basic.Util in
+  let cases =
+    Config.load_json source_configfile |> member "benchmarks" |> to_list
+  in
+  let get_setting j =
+    let benchname = j |> member "name" |> to_string in
+    let source_file = j |> member "source_file" |> to_string in
+    let meta_file = j |> member "meta_file" |> to_string in
+    let max_length = j |> member "max_length" |> to_int in
+    let num_burn_in = j |> member "num_burn_in" |> to_int in
+    let num_sampling = j |> member "num_sampling" |> to_int in
+    let output_dir = j |> member "output_dir" |> to_string in
+    ( benchname,
+      source_file,
+      meta_file,
+      max_length,
+      num_burn_in,
+      num_sampling,
+      output_dir )
+  in
+  List.map ~f:get_setting cases
+
 let synthesize_all =
   Command.basic ~summary:"synthesize-all"
     Command.Let_syntax.(
@@ -351,38 +374,17 @@ let synthesize_all =
       and source_configfile = anon ("source config file" %: regular_file)
       and num_syn = anon ("num synthesize" %: int) in
       fun () ->
-        let open Yojson.Basic.Util in
-        let cases =
-          Config.load_json source_configfile |> member "benchmarks" |> to_list
-        in
-        let get_setting j =
-          let benchname = j |> member "name" |> to_string in
-          let source_file = j |> member "source_file" |> to_string in
-          let meta_file = j |> member "meta_file" |> to_string in
-          let max_length = j |> member "max_length" |> to_int in
-          let num_burn_in = j |> member "num_burn_in" |> to_int in
-          let num_sampling = j |> member "num_sampling" |> to_int in
-          let output_dir = j |> member "output_dir" |> to_string in
-          ( benchname,
-            source_file,
-            meta_file,
-            max_length,
-            num_burn_in,
-            num_sampling,
-            output_dir )
-        in
+        let benchmarks = parse_benchmark_config source_configfile in
         let () =
           List.iter
-            ~f:(fun j ->
-              let ( benchname,
-                    source_file,
-                    meta_file,
-                    max_length,
-                    num_burn_in,
-                    num_sampling,
-                    output_dir ) =
-                get_setting j
-              in
+            ~f:
+              (fun ( benchname,
+                     source_file,
+                     meta_file,
+                     max_length,
+                     num_burn_in,
+                     num_sampling,
+                     output_dir ) ->
               for i = 0 to num_syn - 1 do
                 Config.make_dir output_dir;
                 Config.exec_main configfile (fun () ->
@@ -400,7 +402,105 @@ let synthesize_all =
                     in
                     ())
               done)
-            cases
+            benchmarks
+        in
+        ())
+
+let eval_baseline =
+  Command.basic ~summary:"eval-baseline"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_configfile = anon ("source config file" %: regular_file)
+      and qc_file = anon ("quickcheck config file" %: regular_file)
+      and num = anon ("sampling number" %: int) in
+      fun () ->
+        let qc_conf = Zquickcheck.Qc.load_config qc_file in
+        let benchmarks = parse_benchmark_config source_configfile in
+        let () =
+          Config.exec_main configfile (fun () ->
+              List.iter
+                ~f:
+                  (fun ( benchname,
+                         source_file,
+                         meta_file,
+                         max_length,
+                         num_burn_in,
+                         num_sampling,
+                         output_dir ) ->
+                  let env = mk_env_from_files source_file meta_file in
+                  let data, cost_time =
+                    Zlog.event_time_
+                      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
+                         __FUNCTION__ "baseline sampling") (fun () ->
+                        Zquickcheck.Qc_baseline.baseline qc_conf env.tps num)
+                  in
+                  let stat =
+                    Zlog.event_
+                      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
+                         __FUNCTION__ "baseline evaluation") (fun () ->
+                        Evaluation.Ev.evaluation
+                          (List.map ~f:(fun x -> Some x) data)
+                          env.sigma
+                          (fun inp ->
+                            snd @@ env.client env.library_inspector inp)
+                          env.phi)
+                  in
+                  let () =
+                    Printf.printf "%s:\ncost time:%fs\n%s\n" benchname cost_time
+                    @@ Evaluation.Ev.layout stat
+                  in
+                  ())
+                benchmarks)
+        in
+        ())
+
+let eval_result =
+  Command.basic ~summary:"eval-result"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_configfile = anon ("source config file" %: regular_file)
+      and qc_file = anon ("quickcheck config file" %: regular_file)
+      and num = anon ("sampling number" %: int) in
+      fun () ->
+        let qc_conf = Zquickcheck.Qc.load_config qc_file in
+        let benchmarks = parse_benchmark_config source_configfile in
+        let () =
+          Config.exec_main configfile (fun () ->
+              List.iter
+                ~f:
+                  (fun ( benchname,
+                         source_file,
+                         meta_file,
+                         max_length,
+                         num_burn_in,
+                         num_sampling,
+                         output_dir ) ->
+                  let env = mk_env_from_files source_file meta_file in
+                  let prog =
+                    Parse.parse_piecewise (sprintf "%s/0.prog" output_dir)
+                  in
+                  let data, cost_time =
+                    Zlog.event_time_
+                      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
+                         __FUNCTION__ "sampling") (fun () ->
+                        Synthesizer.Sampling.sampling_to_data [ env.i_err ] prog
+                          num_sampling)
+                  in
+                  let stat =
+                    Zlog.event_
+                      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
+                         __FUNCTION__ "evaluation") (fun () ->
+                        Evaluation.Ev.evaluation data env.sigma
+                          (fun inp ->
+                            snd @@ env.client env.library_inspector inp)
+                          env.phi)
+                  in
+                  let () =
+                    Printf.printf "%s:\ncost time:%fs\n%s\n" benchname cost_time
+                    @@ Evaluation.Ev.layout stat
+                  in
+                  ())
+                benchmarks)
         in
         ())
 
@@ -490,6 +590,8 @@ let command =
       ("sampling", sampling);
       ("synthesize", synthesize);
       ("synthesize-all", synthesize_all);
+      ("eval-baseline", eval_baseline);
+      ("eval-result ", eval_result);
     ]
 
 let () = Command.run command
