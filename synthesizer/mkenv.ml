@@ -63,6 +63,8 @@ let mk_env_v2_ (sigma : V.t list -> bool)
              (spf "mk_env: inconsistent i_err(%s) and client code"
                 (V.layout_l i_err))
     | Some i_err' ->
+        Zlog.log_write
+          (spf "i_err: %s -> %s" (V.layout_l i_err) (V.layout_l i_err'));
         if phi (i_err @ i_err') then
           raise
           @@ failwith

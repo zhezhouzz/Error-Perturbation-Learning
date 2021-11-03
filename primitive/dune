@@ -1,5 +1,6 @@
 (library
  (name primitive)
+ (modules_without_implementation imp)
  (libraries utils qcheck)
  (modules
  tp
@@ -7,6 +8,11 @@
  value_map
  operator
  imp
+ imp_const
+ imp_list
+ imp_tree
+ imp_treei
+ imp_treeb
  randomgen
  method_predicate
  )

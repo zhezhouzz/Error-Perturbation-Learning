@@ -23,11 +23,11 @@ module Renaming = struct
   let unique name =
     match Hashtbl.find_opt name_tab name with
     | Some n ->
-      Hashtbl.replace name_tab name (n + 1);
-      sprintf "%s%i" name (n + 1)
+        Hashtbl.replace name_tab name (n + 1);
+        sprintf "%s%i" name (n + 1)
     | None ->
-      Hashtbl.add name_tab name 0;
-      sprintf "%s%i" name 0
+        Hashtbl.add name_tab name 0;
+        sprintf "%s%i" name 0
 end
 
 module Array = struct
@@ -69,8 +69,8 @@ module List = struct
       | [], _ :: _ -> -1
       | _ :: _, [] -> 1
       | h1 :: t1, h2 :: t2 ->
-        let c = e_compare h1 h2 in
-        if c != 0 then c else aux t1 t2
+          let c = e_compare h1 h2 in
+          if c != 0 then c else aux t1 t2
     in
     aux l1 l2
 
@@ -81,20 +81,20 @@ module List = struct
     match l with
     | [] -> true
     | h :: t ->
-      let rec aux previous l =
-        match l with
-        | [] -> true
-        | h :: t -> if judge previous h then aux h t else false
-      in
-      aux h t
+        let rec aux previous l =
+          match l with
+          | [] -> true
+          | h :: t -> if judge previous h then aux h t else false
+        in
+        aux h t
 
   let split_by sp f l =
     match
       List.fold_left
         (fun r x ->
-           match r with
-           | None -> Some (sprintf "%s" (f x))
-           | Some r -> Some (sprintf "%s%s%s" r sp (f x)))
+          match r with
+          | None -> Some (sprintf "%s" (f x))
+          | Some r -> Some (sprintf "%s%s%s" r sp (f x)))
         None l
     with
     | None -> ""
@@ -104,9 +104,9 @@ module List = struct
     match
       List.fold_left
         (fun r x ->
-           match r with
-           | None -> Some (sprintf "%s" (f x))
-           | Some r -> Some (sprintf "%s, %s" r (f x)))
+          match r with
+          | None -> Some (sprintf "%s" (f x))
+          | Some r -> Some (sprintf "%s, %s" r (f x)))
         None l
     with
     | None -> ""
@@ -118,9 +118,9 @@ module List = struct
     let rec aux l n =
       match (l, n) with
       | [], _ ->
-        raise
-        @@ interexn
-          (Printf.sprintf "replace_exn(%i) within %i" n (List.length l))
+          raise
+          @@ interexn
+               (Printf.sprintf "replace_exn(%i) within %i" n (List.length l))
       | _ :: t, 0 -> elem :: t
       | h :: t, n -> h :: aux t (n - 1)
     in
@@ -140,8 +140,8 @@ module List = struct
       with _ ->
         raise
         @@ interexn
-          (Printf.sprintf "swap_exn(%i, %i) within %i" idx idx'
-             (List.length l))
+             (Printf.sprintf "swap_exn(%i, %i) within %i" idx idx'
+                (List.length l))
     in
     replace_exn (replace_exn l idx v') idx' v
 
@@ -195,7 +195,7 @@ module List = struct
   let find_index_opt f l =
     fold_lefti
       (fun r i x ->
-         match r with Some _ -> r | None -> if f x then Some i else None)
+        match r with Some _ -> r | None -> if f x then Some i else None)
       None l
 
   let find_index info f l =
@@ -268,7 +268,7 @@ module List = struct
     let rec aux r = function
       | [] -> r
       | h :: t ->
-        if exists (fun y -> compare h y) l2 then aux (h :: r) t else aux r t
+          if exists (fun y -> compare h y) l2 then aux (h :: r) t else aux r t
     in
     aux [] l1
 
@@ -326,9 +326,9 @@ module List = struct
       | [] -> []
       | [ hd ] -> [ [ hd ] ]
       | hd :: tl ->
-        List.fold_left
-          (fun acc p -> acc @ insert_all_positions hd p)
-          [] (aux tl)
+          List.fold_left
+            (fun acc p -> acc @ insert_all_positions hd p)
+            [] (aux tl)
     in
     aux l
 
@@ -450,7 +450,7 @@ module List = struct
         match l with
         | [] -> raise @@ interexn "sublist"
         | h :: t ->
-          if i >= s then aux (r @ [ h ]) (i + 1) t else aux r (i + 1) t
+            if i >= s then aux (r @ [ h ]) (i + 1) t else aux r (i + 1) t
     in
     aux [] 0 l
 
@@ -527,18 +527,18 @@ module MyMap (Ord : Map.OrderedType) = struct
     if List.length kl != List.length vl then
       raise
       @@ failwith
-        (spf "[%s]; then number keys and values has different" __MODULE__)
+           (spf "[%s]; then number keys and values has different" __MODULE__)
     else
       List.fold_left
         (fun m (k, v) ->
-           match find_opt m k with
-           | Some v' ->
-             if Ord.compare v v' == 0 then m
-             else
-               raise
-               @@ failwith
-                 (spf "[%s]; the key has different values" __MODULE__)
-           | None -> add k v m)
+          match find_opt m k with
+          | Some v' ->
+              if Ord.compare v v' == 0 then m
+              else
+                raise
+                @@ failwith
+                     (spf "[%s]; the key has different values" __MODULE__)
+          | None -> add k v m)
         empty
       @@ List.combine kl vl
 
@@ -547,10 +547,10 @@ module MyMap (Ord : Map.OrderedType) = struct
 end
 
 module IntMap = MyMap (struct
-    type t = int
+  type t = int
 
-    let compare = compare
-  end)
+  let compare = compare
+end)
 
 module StrMap = MyMap (String)
 
@@ -560,6 +560,8 @@ module Tree = struct
   let self = "Tree"
 
   let interexn = interexn self
+
+  let rec size = function Leaf -> 0 | Node (_, a, b) -> 1 + size a + size b
 
   let flip tr = match tr with Leaf -> Leaf | Node (a, b, c) -> Node (a, c, b)
 
@@ -594,12 +596,12 @@ module Tree = struct
     let rec aux max_e = function
       | Leaf -> max_e
       | Node (a, b, c) ->
-        let max_e =
-          match max_e with
-          | None -> a
-          | Some max_e -> if e_compare a max_e > 0 then max_e else a
-        in
-        aux (aux (Some max_e) b) c
+          let max_e =
+            match max_e with
+            | None -> a
+            | Some max_e -> if e_compare a max_e > 0 then max_e else a
+          in
+          aux (aux (Some max_e) b) c
     in
     aux None t1
 
@@ -646,8 +648,8 @@ module Tree = struct
         match t with
         | Leaf -> false
         | Node (a, l, r) ->
-          if eq a u && exists (fun x -> eq x v) l then true
-          else aux (aux false l) r
+            if eq a u && exists (fun x -> eq x v) l then true
+            else aux (aux false l) r
     in
     aux false t
 
@@ -658,8 +660,8 @@ module Tree = struct
         match t with
         | Leaf -> false
         | Node (a, l, r) ->
-          if eq a u && exists (fun x -> eq x v) r then true
-          else aux (aux false l) r
+            if eq a u && exists (fun x -> eq x v) r then true
+            else aux (aux false l) r
     in
     aux false t
 
@@ -667,8 +669,8 @@ module Tree = struct
     let rec aux = function
       | Leaf -> false
       | Node (_, l, r) ->
-        (exists (fun x -> eq x u) l && exists (fun x -> eq x v) r)
-        || aux l || aux r
+          (exists (fun x -> eq x u) l && exists (fun x -> eq x v) r)
+          || aux l || aux r
     in
     aux t
 
@@ -676,8 +678,8 @@ module Tree = struct
     let rec aux = function
       | Leaf, Leaf -> true
       | Node (a1, l1, r1), Node (a2, l2, r2) ->
-        if compare a1 a2 then if aux (l1, l2) then aux (r1, r2) else false
-        else false
+          if compare a1 a2 then if aux (l1, l2) then aux (r1, r2) else false
+          else false
       | _, _ -> false
     in
     aux (t1, t2)
@@ -709,11 +711,11 @@ module Tree = struct
       | Leaf, Node _ -> -1
       | Node _, Leaf -> 1
       | Node (a1, l1, r1), Node (a2, l2, r2) ->
-        let c = e_compare a1 a2 in
-        if c != 0 then c
-        else
-          let c = aux l1 l2 in
-          if c != 0 then c else aux r1 r2
+          let c = e_compare a1 a2 in
+          if c != 0 then c
+          else
+            let c = aux l1 l2 in
+            if c != 0 then c else aux r1 r2
     in
     aux t1 t2
 end
@@ -725,11 +727,62 @@ module LabeledTree = struct
 
   let interexn = interexn self
 
+  let rec size = function Leaf -> 0 | Node (_, _, a, b) -> 1 + size a + size b
+
+  let flip tr =
+    match tr with Leaf -> Leaf | Node (label, a, b, c) -> Node (label, a, c, b)
+
+  let rec rec_flip tr =
+    match tr with
+    | Leaf -> Leaf
+    | Node (label, a, b, c) -> Node (label, a, rec_flip c, rec_flip b)
+
+  let rotation_left_opt tr =
+    match tr with
+    | Leaf -> Some Leaf
+    | Node (labelx, x, Node (labely, y, a, b), c) ->
+        Some (Node (labely, y, a, Node (labelx, x, b, c)))
+    | _ -> None
+
+  let rotation_right_opt tr =
+    match tr with
+    | Leaf -> Some Leaf
+    | Node (labelx, x, a, Node (labely, y, b, c)) ->
+        Some (Node (labely, y, Node (labelx, x, a, b), c))
+    | _ -> None
+
+  let rec append_to_left_most_label label x tr =
+    match tr with
+    | Leaf -> Node (label, x, Leaf, Leaf)
+    | Node (labely, y, a, b) ->
+        Node (labely, y, append_to_left_most_label label x a, b)
+
+  let rec append_to_right_most_label label x tr =
+    match tr with
+    | Leaf -> Node (label, x, Leaf, Leaf)
+    | Node (labely, y, a, b) ->
+        Node (labely, y, a, append_to_right_most_label label x b)
+
+  let max_opt (e_compare : 'a -> 'a -> int) t1 =
+    let rec aux max_e = function
+      | Leaf -> max_e
+      | Node (_, a, b, c) ->
+          let max_e =
+            match max_e with
+            | None -> a
+            | Some max_e -> if e_compare a max_e > 0 then max_e else a
+          in
+          aux (aux (Some max_e) b) c
+    in
+    aux None t1
+
+  let min_opt e_compare t1 = max_opt (fun x y -> ~-(e_compare x y)) t1
+
   let rec from_tree label t =
     match t with
     | Tree.Leaf -> Leaf
     | Tree.Node (a, l, r) ->
-      Node (label, a, from_tree label l, from_tree label r)
+        Node (label, a, from_tree label l, from_tree label r)
 
   let exists f t =
     let rec aux before t =
@@ -764,7 +817,7 @@ module LabeledTree = struct
     match t with
     | Leaf -> false
     | Node (_, a, l, r) ->
-      (eq a u && haschild l r) || node eq l u || node eq r u
+        (eq a u && haschild l r) || node eq l u || node eq r u
 
   let left_child eq t u v =
     let rec aux before t =
@@ -773,8 +826,8 @@ module LabeledTree = struct
         match t with
         | Leaf -> false
         | Node (_, a, l, r) ->
-          if eq a u && exists (fun x -> eq x v) l then true
-          else aux (aux false l) r
+            if eq a u && exists (fun x -> eq x v) l then true
+            else aux (aux false l) r
     in
     aux false t
 
@@ -785,8 +838,8 @@ module LabeledTree = struct
         match t with
         | Leaf -> false
         | Node (_, a, l, r) ->
-          if eq a u && exists (fun x -> eq x v) r then true
-          else aux (aux false l) r
+            if eq a u && exists (fun x -> eq x v) r then true
+            else aux (aux false l) r
     in
     aux false t
 
@@ -794,8 +847,8 @@ module LabeledTree = struct
     let rec aux = function
       | Leaf -> false
       | Node (_, _, l, r) ->
-        (exists (fun x -> eq x u) l && exists (fun x -> eq x v) r)
-        || aux l || aux r
+          (exists (fun x -> eq x u) l && exists (fun x -> eq x v) r)
+          || aux l || aux r
     in
     aux t
 
@@ -803,9 +856,9 @@ module LabeledTree = struct
     let rec aux = function
       | Leaf, Leaf -> true
       | Node (lab1, a1, l1, r1), Node (lab2, a2, l2, r2) ->
-        if compare a1 a2 && lcompare lab1 lab2 then
-          if aux (l1, l2) then aux (r1, r2) else false
-        else false
+          if compare a1 a2 && lcompare lab1 lab2 then
+            if aux (l1, l2) then aux (r1, r2) else false
+          else false
       | _, _ -> false
     in
     aux (t1, t2)
@@ -829,11 +882,11 @@ module LabeledTree = struct
       | Leaf, Node _ -> -1
       | Node _, Leaf -> 1
       | Node (_, a1, l1, r1), Node (_, a2, l2, r2) ->
-        let c = e_compare a1 a2 in
-        if c != 0 then c
-        else
-          let c = aux l1 l2 in
-          if c != 0 then c else aux r1 r2
+          let c = e_compare a1 a2 in
+          if c != 0 then c
+          else
+            let c = aux l1 l2 in
+            if c != 0 then c else aux r1 r2
     in
     aux t1 t2
 end
@@ -866,7 +919,7 @@ module IntList = struct
   let to_string l =
     List.fold_lefti
       (fun res i a ->
-         if i == 0 then res ^ string_of_int a else res ^ ";" ^ string_of_int a)
+        if i == 0 then res ^ string_of_int a else res ^ ";" ^ string_of_int a)
       "" l
 
   let max_opt l =
@@ -913,9 +966,9 @@ module BitVector = struct
   let of_string str =
     List.map
       (fun c ->
-         match c with
-         | '0' -> false
-         | '1' -> true
-         | _ -> raise @@ interexn "BitVector")
+        match c with
+        | '0' -> false
+        | '1' -> true
+        | _ -> raise @@ interexn "BitVector")
       (List.of_seq @@ String.to_seq str)
 end

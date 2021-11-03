@@ -31,8 +31,9 @@ let mk_standard_env () =
   in
   let preds = [ "hd"; "mem" ] in
   let inspector = Language.Bblib.invocation_inspector_init libraries in
-  Synthesizer.Mkenv.mk_env_v2_ Imp.sigma_merge Language.Bblib.merge inspector
-    Imp.phi_merge tps i_err op_pool preds sampling_rounds prog_size
+  Synthesizer.Mkenv.mk_env_v2_ Imp_const.sigma_merge Language.Bblib.merge
+    inspector Imp_const.phi_merge tps i_err op_pool preds sampling_rounds
+    prog_size
 
 let mk_env_from_files source_file meta_file =
   let prog = Ocaml_parser.Frontend.parse ~sourcefile:source_file in
@@ -307,6 +308,23 @@ let parse_input =
             (* let () = Printf.printf "infered precondition: %s\n" @@ Specification.Spec.layout spec in *)
             ()))
 
+let syn source_file meta_file max_length num_burn_in num_sampling =
+  let env =
+    Zlog.event_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () ->
+        Synthesizer.Mkenv.random_init_prog
+        @@ mk_env_from_files source_file meta_file)
+  in
+  let result =
+    Zlog.event_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () ->
+        Synthesizer.Syn.synthesize_piecewise env max_length num_burn_in
+          num_sampling)
+  in
+  result
+
 let synthesize =
   Command.basic ~summary:"synthesize"
     Command.Let_syntax.(
@@ -318,24 +336,65 @@ let synthesize =
       and num_sampling = anon ("num sampling" %: int) in
       fun () ->
         Config.exec_main configfile (fun () ->
-            let env =
-              Zlog.event_
-                (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-                (fun () ->
-                  Synthesizer.Mkenv.random_init_prog
-                  @@ mk_env_from_files source_file meta_file)
-            in
             let result =
-              Zlog.event_
-                (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-                (fun () ->
-                  Synthesizer.Syn.synthesize_piecewise env max_length
-                    num_burn_in num_sampling)
+              syn source_file meta_file max_length num_burn_in num_sampling
             in
             let () =
               Printf.printf "result:\n%s\n" @@ Language.Piecewise.layout result
             in
             ()))
+
+let synthesize_all =
+  Command.basic ~summary:"synthesize-all"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_configfile = anon ("source config file" %: regular_file)
+      and num_syn = anon ("num synthesize" %: int) in
+      fun () ->
+        let open Yojson.Basic.Util in
+        let cases =
+          Config.load_json source_configfile |> member "benchmarks" |> to_list
+        in
+        let get_setting j =
+          let source_file = j |> member "source_file" |> to_string in
+          let meta_file = j |> member "meta_file" |> to_string in
+          let max_length = j |> member "max_length" |> to_int in
+          let num_burn_in = j |> member "num_burn_in" |> to_int in
+          let num_sampling = j |> member "num_sampling" |> to_int in
+          let output_dir = j |> member "output_dir" |> to_string in
+          ( source_file,
+            meta_file,
+            max_length,
+            num_burn_in,
+            num_sampling,
+            output_dir )
+        in
+        let () =
+          List.iter
+            ~f:(fun j ->
+              let ( source_file,
+                    meta_file,
+                    max_length,
+                    num_burn_in,
+                    num_sampling,
+                    output_dir ) =
+                get_setting j
+              in
+              for i = 0 to num_syn - 1 do
+                Config.make_dir output_dir;
+                Config.exec_main configfile (fun () ->
+                    let result =
+                      syn source_file meta_file max_length num_burn_in
+                        num_sampling
+                    in
+                    let output_file = sprintf "%s/%i.prog" output_dir i in
+                    let () = Config.refresh_logfile output_file in
+                    Core.Out_channel.write_all output_file
+                      ~data:(Language.Piecewise.layout result))
+              done)
+            cases
+        in
+        ())
 
 let sampling =
   Command.basic ~summary:"sampling"
@@ -387,6 +446,10 @@ let baseline =
       fun () ->
         Config.exec_main configfile (fun () ->
             let env = mk_env_from_files source_file meta_file in
+            let () =
+              Printf.printf "init err: %s\n"
+                (Primitive.Value.layout_l env.i_err)
+            in
             let qc_conf = Zquickcheck.Qc.load_config qc_file in
             let data =
               Zlog.event_
@@ -418,6 +481,7 @@ let command =
       ("parse-result-one", parse_result_one);
       ("sampling", sampling);
       ("synthesize", synthesize);
+      ("synthesize-all", synthesize_all);
     ]
 
 let () = Command.run command

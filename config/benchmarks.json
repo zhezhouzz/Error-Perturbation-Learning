@@ -1,0 +1,76 @@
+{
+  "benchmarks": [
+    {
+      "source_file": "data/client/sortedlist/merge.ml",
+      "meta_file": "data/client/sortedlist/assertion1.ml",
+      "max_length": 1,
+      "num_burn_in": 1500,
+      "num_sampling": 500,
+      "output_dir": "data/.result/sortedlist/"
+    },
+    {
+      "source_file": "data/client/customstk/concat.ml",
+      "meta_file": "data/client/customstk/assertion1.ml",
+      "max_length": 1,
+      "num_burn_in": 1500,
+      "num_sampling": 500,
+      "output_dir": "data/.result/customstk/"
+    },
+    {
+      "source_file": "data/client/bankersq/snoc.ml",
+      "meta_file": "data/client/bankersq/assertion1.ml",
+      "max_length": 1,
+      "num_burn_in": 1500,
+      "num_sampling": 500,
+      "output_dir": "data/.result/bankersq/"
+    },
+    {
+      "source_file": "data/client/batchedq/merge.ml",
+      "meta_file": "data/client/batchedq/assertion1.ml",
+      "max_length": 1,
+      "num_burn_in": 1500,
+      "num_sampling": 500,
+      "output_dir": "data/.result/batchedq/"
+    },
+    {
+      "source_file": "data/client/uniquel/merge.ml",
+      "meta_file": "data/client/uniquel/assertion1.ml",
+      "max_length": 1,
+      "num_burn_in": 1500,
+      "num_sampling": 500,
+      "output_dir": "data/.result/uniquel/"
+    },
+    {
+      "source_file": "data/client/stream/reverse.ml",
+      "meta_file": "data/client/stream/assertion1.ml",
+      "max_length": 1,
+      "num_burn_in": 1500,
+      "num_sampling": 500,
+      "output_dir": "data/.result/stream/"
+    },
+    {
+      "source_file": "data/client/unbset/insert.ml",
+      "meta_file": "data/client/unbset/assertion1.ml",
+      "max_length": 1,
+      "num_burn_in": 1500,
+      "num_sampling": 500,
+      "output_dir": "data/.result/unbset/"
+    },
+    {
+      "source_file": "data/client/splayhp/partition.ml",
+      "meta_file": "data/client/splayhp/assertion1.ml",
+      "max_length": 1,
+      "num_burn_in": 1500,
+      "num_sampling": 500,
+      "output_dir": "data/.result/splayhp/"
+    },
+    {
+      "source_file": "data/client/trie/ins.ml",
+      "meta_file": "data/client/trie/assertion1.ml",
+      "max_length": 1,
+      "num_burn_in": 1500,
+      "num_sampling": 500,
+      "output_dir": "data/.result/trie/"
+    }
+  ]
+}

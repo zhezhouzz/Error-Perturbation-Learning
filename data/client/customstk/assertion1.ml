@@ -1,4 +1,4 @@
-let preds = [| "hd"; "mem"; "<" |]
+let preds = [| "hd"; "mem"; "ord" |]
 
 let op_pool =
   [|
@@ -17,7 +17,7 @@ let op_pool =
     "const1";
   |]
 
-let libs = [| "List" |]
+let libs = [| "Customstk" |]
 
 let i_err = ([ 1; 2 ], [ 3; 4 ])
 

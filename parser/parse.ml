@@ -91,7 +91,10 @@ let solve_piecewise (c : parsing_res list) =
       (* Printf.printf "parsing f(%s)\n" x; *)
       let default_f = parse_string x in
       let get_pre x =
-        Language.Of_ocamlast.load_precondition default_f.Lang.fin
+        Language.Of_ocamlast.load_precondition
+          (List.map
+             (fun (tp, idx) -> (tp, Lang.layout_var (tp, idx)))
+             default_f.Lang.fin)
         @@ Ocaml_parser.Frontend.parse_string x
       in
       let rec aux (previous, pre_opt) c =

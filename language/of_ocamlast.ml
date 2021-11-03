@@ -46,16 +46,41 @@ let rec lit_of_ocamlexpr e =
       match (longident_to_string id.txt, e) with
       | "true", None -> [ V.B true ]
       | "false", None -> [ V.B false ]
+      | "Leaf", None -> [ V.T Tree.Leaf ]
+      | "LILeaf", None -> [ V.TI LabeledTree.Leaf ]
+      | "LBLeaf", None -> [ V.TB LabeledTree.Leaf ]
       | "()", None -> [ V.U ]
+      | "Empty", None -> [ V.U ]
       | "[]", None -> [ V.L [] ]
+      | "Node", Some e -> (
+          match lit_of_ocamlexpr e with
+          | [ V.I x; V.T a; V.T b ] -> [ V.T (Tree.Node (x, a, b)) ]
+          | k ->
+              raise
+              @@ failwith
+                   (spf "do not support complicate literal %s --> [%s] --"
+                      (Pprintast.string_of_expression e)
+                      (List.split_by_comma V.layout k)))
+      | "LNode", Some e -> (
+          match lit_of_ocamlexpr e with
+          | [ V.B label; V.I x; V.TB a; V.TB b ] ->
+              [ V.TB (LabeledTree.Node (label, x, a, b)) ]
+          | [ V.I label; V.I x; V.TI a; V.TI b ] ->
+              [ V.TI (LabeledTree.Node (label, x, a, b)) ]
+          | k ->
+              raise
+              @@ failwith
+                   (spf "do not support complicate literal %s --> [%s] --"
+                      (Pprintast.string_of_expression e)
+                      (List.split_by_comma V.layout k)))
       | "::", Some e -> (
           match lit_of_ocamlexpr e with
-          | [ V.U; V.L [] ] -> [ V.T Tree.Leaf ]
-          | [ V.I x; V.T Tree.Leaf ] ->
-              [ V.T (Tree.Node (x, Tree.Leaf, Tree.Leaf)) ]
-          | [ V.T x; V.L [] ] -> [ V.T x ]
-          | [ V.T x; V.T y ] -> [ V.T x; V.T y ]
-          | [ V.I x; V.T a; V.T b ] -> [ V.T (Tree.Node (x, a, b)) ]
+          (* | [ V.U; V.L [] ] -> [ V.T Tree.Leaf ] *)
+          (* | [ V.I x; V.T Tree.Leaf ] -> *)
+          (*     [ V.T (Tree.Node (x, Tree.Leaf, Tree.Leaf)) ] *)
+          (* | [ V.T x; V.L [] ] -> [ V.T x ] *)
+          (* | [ V.T x; V.T y ] -> [ V.T x; V.T y ] *)
+          (* | [ V.I x; V.T a; V.T b ] -> [ V.T (Tree.Node (x, a, b)) ] *)
           | [ V.I hd; V.L tl ] -> [ V.L (hd :: tl) ]
           | k ->
               raise
@@ -369,8 +394,11 @@ let slipt_args argtps assertionargs =
   if List.length assertionargs < List.length argtps then
     raise
     @@ failwith
-         "the length of args of client does not match the args of the \
-          assertions"
+         (spf
+            "the length of args of client(%i) does not match the args of the \
+             assertions(%i)"
+            (List.length assertionargs)
+            (List.length argtps))
   else
     let args' = List.sublist assertionargs (0, List.length argtps) in
     let rest =
@@ -391,18 +419,19 @@ let slipt_args argtps assertionargs =
     (args', rest)
 
 let pre_to_spec args { assertionargs; assertionbody; _ } =
-  let specargs, qv = slipt_args (List.map fst args) assertionargs in
-  Spec.{ args = specargs; qv; body = assertionbody }
-
-let post_to_spec args rettps { assertionargs; assertionbody; _ } =
   match assertionbody with
   | SpecAst.True ->
       (* When the preconditino is omitted *)
       Spec.{ args; qv = []; body = SpecAst.True }
   | _ ->
-      let specargs, rest = slipt_args (List.map fst args) assertionargs in
-      let specargs', qv = slipt_args rettps rest in
-      Spec.{ args = specargs @ specargs'; qv; body = assertionbody }
+      let specargs, qv = slipt_args (List.map fst args) assertionargs in
+      Spec.{ args = specargs; qv; body = assertionbody }
+
+let post_to_spec args rettps { assertionargs; assertionbody; _ } =
+  (* let () = Printf.printf "assertion name = %s\n" assertionname in *)
+  let specargs, rest = slipt_args (List.map fst args) assertionargs in
+  let specargs', qv = slipt_args rettps rest in
+  Spec.{ args = specargs @ specargs'; qv; body = assertionbody }
 
 let load_rettps struc =
   match struc.pstr_desc with
