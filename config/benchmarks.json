@@ -1,76 +1,85 @@
 {
   "benchmarks": [
     {
+      "name": "sortedlist",
       "source_file": "data/client/sortedlist/merge.ml",
       "meta_file": "data/client/sortedlist/assertion1.ml",
       "max_length": 1,
       "num_burn_in": 1500,
       "num_sampling": 500,
-      "output_dir": "data/.result/sortedlist/"
+      "output_dir": ".result/sortedlist/"
     },
     {
+      "name": "customstk",
       "source_file": "data/client/customstk/concat.ml",
       "meta_file": "data/client/customstk/assertion1.ml",
       "max_length": 1,
       "num_burn_in": 1500,
       "num_sampling": 500,
-      "output_dir": "data/.result/customstk/"
+      "output_dir": ".result/customstk/"
     },
     {
+      "name": "bankersq",
       "source_file": "data/client/bankersq/snoc.ml",
       "meta_file": "data/client/bankersq/assertion1.ml",
       "max_length": 1,
       "num_burn_in": 1500,
       "num_sampling": 500,
-      "output_dir": "data/.result/bankersq/"
+      "output_dir": ".result/bankersq/"
     },
     {
+      "name": "batchedq",
       "source_file": "data/client/batchedq/merge.ml",
       "meta_file": "data/client/batchedq/assertion1.ml",
       "max_length": 1,
       "num_burn_in": 1500,
       "num_sampling": 500,
-      "output_dir": "data/.result/batchedq/"
+      "output_dir": ".result/batchedq/"
     },
     {
+      "name": "uniquel",
       "source_file": "data/client/uniquel/merge.ml",
       "meta_file": "data/client/uniquel/assertion1.ml",
       "max_length": 1,
       "num_burn_in": 1500,
       "num_sampling": 500,
-      "output_dir": "data/.result/uniquel/"
+      "output_dir": ".result/uniquel/"
     },
     {
+      "name": "stream",
       "source_file": "data/client/stream/reverse.ml",
       "meta_file": "data/client/stream/assertion1.ml",
       "max_length": 1,
       "num_burn_in": 1500,
       "num_sampling": 500,
-      "output_dir": "data/.result/stream/"
+      "output_dir": ".result/stream/"
     },
     {
+      "name": "unbset",
       "source_file": "data/client/unbset/insert.ml",
       "meta_file": "data/client/unbset/assertion1.ml",
       "max_length": 1,
       "num_burn_in": 1500,
       "num_sampling": 500,
-      "output_dir": "data/.result/unbset/"
+      "output_dir": ".result/unbset/"
     },
     {
+      "name": "splayhp",
       "source_file": "data/client/splayhp/partition.ml",
       "meta_file": "data/client/splayhp/assertion1.ml",
       "max_length": 1,
       "num_burn_in": 1500,
       "num_sampling": 500,
-      "output_dir": "data/.result/splayhp/"
+      "output_dir": ".result/splayhp/"
     },
     {
+      "name": "trie",
       "source_file": "data/client/trie/ins.ml",
       "meta_file": "data/client/trie/assertion1.ml",
       "max_length": 1,
       "num_burn_in": 1500,
       "num_sampling": 500,
-      "output_dir": "data/.result/trie/"
+      "output_dir": ".result/trie/"
     }
   ]
 }

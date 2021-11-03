@@ -356,13 +356,15 @@ let synthesize_all =
           Config.load_json source_configfile |> member "benchmarks" |> to_list
         in
         let get_setting j =
+          let benchname = j |> member "name" |> to_string in
           let source_file = j |> member "source_file" |> to_string in
           let meta_file = j |> member "meta_file" |> to_string in
           let max_length = j |> member "max_length" |> to_int in
           let num_burn_in = j |> member "num_burn_in" |> to_int in
           let num_sampling = j |> member "num_sampling" |> to_int in
           let output_dir = j |> member "output_dir" |> to_string in
-          ( source_file,
+          ( benchname,
+            source_file,
             meta_file,
             max_length,
             num_burn_in,
@@ -372,7 +374,8 @@ let synthesize_all =
         let () =
           List.iter
             ~f:(fun j ->
-              let ( source_file,
+              let ( benchname,
+                    source_file,
                     meta_file,
                     max_length,
                     num_burn_in,
@@ -388,9 +391,14 @@ let synthesize_all =
                         num_sampling
                     in
                     let output_file = sprintf "%s/%i.prog" output_dir i in
-                    let () = Config.refresh_logfile output_file in
-                    Core.Out_channel.write_all output_file
-                      ~data:(Language.Piecewise.layout result))
+                    let () =
+                      Core.Out_channel.write_all output_file
+                        ~data:(Language.Piecewise.layout result)
+                    in
+                    let () =
+                      Config.refresh_logfile (sprintf "%s_%i" benchname i)
+                    in
+                    ())
               done)
             cases
         in

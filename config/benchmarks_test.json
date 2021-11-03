@@ -1,0 +1,13 @@
+{
+  "benchmarks": [
+    {
+      "name": "sortedlist",
+      "source_file": "data/client/sortedlist/merge.ml",
+      "meta_file": "data/client/sortedlist/assertion1.ml",
+      "max_length": 1,
+      "num_burn_in": 150,
+      "num_sampling": 50,
+      "output_dir": ".result/sortedlist/"
+    }
+  ]
+}
