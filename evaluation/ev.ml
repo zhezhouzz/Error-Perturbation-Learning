@@ -5,8 +5,8 @@ let cond_length cond l =
   let rec aux n = function
     | [] -> n
     | h :: t ->
-      let n' = if cond h then n + 1 else n in
-      aux n' t
+        let n' = if cond h then n + 1 else n in
+        aux n' t
   in
   aux l
 
@@ -50,14 +50,14 @@ let evaluation (data : V.t list option list) (sigma : V.t list -> bool)
   let total =
     List.filter_map
       (fun inp ->
-         match inp with None -> None | Some inp -> Some (inp, client inp))
+        match inp with None -> None | Some inp -> Some (inp, client inp))
       data
   in
   let total_num = List.length total in
   let succ_data =
     List.filter_map
       (fun (inp, output) ->
-         match output with None -> None | Some output -> Some (inp, output))
+        match output with None -> None | Some output -> Some (inp, output))
       total
   in
   let succ_num = List.length succ_data in
@@ -67,13 +67,13 @@ let evaluation (data : V.t list option list) (sigma : V.t list -> bool)
     List.filter (fun (inp, output) -> not @@ phi @@ inp @ output) in_sigma_data
   in
   let in_sigma_out_phi_num = List.length in_sigma_out_phi_data in
-  let () =
-    Zlog.log_write
-    @@ Printf.sprintf "in_sigma_out_phi:\n%s\n"
-    @@ Basic_dt.List.split_by "\n"
-      (fun (i, o) -> Printf.sprintf "%s -> %s" (V.layout_l i) (V.layout_l o))
-      in_sigma_out_phi_data
-  in
+  (* let () = *)
+  (*   Zlog.log_write *)
+  (*   @@ Printf.sprintf "in_sigma_out_phi:\n%s\n" *)
+  (*   @@ Basic_dt.List.split_by "\n" *)
+  (*     (fun (i, o) -> Printf.sprintf "%s -> %s" (V.layout_l i) (V.layout_l o)) *)
+  (*     in_sigma_out_phi_data *)
+  (* in *)
   let in_sigma_out_phi_unique_data =
     Basic_dt.List.remove_duplicates
       (fun (inp, _) (inp', _) -> List.equal V.eq inp inp')
