@@ -8,6 +8,12 @@ let interexn self m = UInterExn (sprintf "[%s%s]:%s" self_location self m)
 
 let spf = sprintf
 
+module IntSet = Set.Make (struct
+  let compare = compare
+
+  type t = int
+end)
+
 module Renaming = struct
   let universe_label = ref 0
 
@@ -256,13 +262,9 @@ module List = struct
     in
     go l []
 
-  let remove_duplicates compare l =
-    let rec go l acc =
-      match l with
-      | [] -> List.rev acc
-      | x :: xs -> go (remove_elt compare x xs) (x :: acc)
-    in
-    go l []
+  let remove_duplicates l =
+    let s = IntSet.add_seq (List.to_seq l) IntSet.empty in
+    List.of_seq @@ IntSet.to_seq s
 
   let interset compare l1 l2 =
     let rec aux r = function
@@ -272,7 +274,7 @@ module List = struct
     in
     aux [] l1
 
-  let remove_duplicates_eq l = remove_duplicates (fun x y -> x == y) l
+  (* let remove_duplicates_eq l = remove_duplicates (fun x y -> x == y) l *)
 
   let inner_layout l split default =
     match l with
@@ -348,7 +350,7 @@ module List = struct
     | [] -> raise @@ interexn "match_snoc: []"
     | h :: t -> (List.rev t, h)
 
-  let union compare l0 l1 = remove_duplicates compare (l0 @ l1)
+  (* let union compare l0 l1 = remove_duplicates compare (l0 @ l1) *)
 
   let shape_reverse ll =
     let nth l id =
@@ -438,10 +440,10 @@ module List = struct
     else if n == 0 then [ [] ]
     else aux (List.map (fun x -> [ x ]) l) (n - 1)
 
-  let choose_n_eq eq l n = choose_n (remove_duplicates eq l) n
+  let choose_n_eq l n = choose_n (remove_duplicates l) n
 
-  let choose_eq_all eq l =
-    List.flatten @@ List.init (List.length l + 1) (fun n -> choose_n_eq eq l n)
+  let choose_eq_all l =
+    List.flatten @@ List.init (List.length l + 1) (fun n -> choose_n_eq l n)
 
   let sublist l (s, e) =
     let rec aux r i l =
@@ -561,6 +563,16 @@ module Tree = struct
 
   let interexn = interexn self
 
+  let deep t =
+    let rec aux = function
+      | Leaf -> 0
+      | Node (_, l, r) ->
+          let ln = aux l in
+          let rn = aux r in
+          if ln > rn then ln + 1 else rn + 1
+    in
+    aux t
+
   let rec size = function Leaf -> 0 | Node (_, a, b) -> 1 + size a + size b
 
   let flip tr = match tr with Leaf -> Leaf | Node (a, b, c) -> Node (a, c, b)
@@ -592,7 +604,7 @@ module Tree = struct
     | Leaf -> Node (x, Leaf, Leaf)
     | Node (y, a, b) -> Node (y, a, append_to_right_most x b)
 
-  let max_opt (e_compare : 'a -> 'a -> int) (t1 : 'a t) =
+  let max_opt (e_compare : 'a -> 'a -> int) t1 =
     let rec aux max_e = function
       | Leaf -> max_e
       | Node (a, b, c) ->
@@ -608,71 +620,72 @@ module Tree = struct
   let min_opt e_compare t1 = max_opt (fun x y -> ~-(e_compare x y)) t1
 
   let exists f t =
-    let rec aux before t =
-      if before then true
-      else
-        match t with
-        | Leaf -> false
-        | Node (e, l, r) -> if f e then true else aux (aux before l) r
+    let rec aux = function
+      | [] -> false
+      | Leaf :: t -> aux t
+      | Node (x, l, r) :: t -> if f x then true else aux (l :: r :: t)
     in
-    aux false t
+    aux [ t ]
 
   let layout f tr =
     let rec aux = function
       | Leaf -> "."
-      | Node (a, Leaf, Leaf) -> Printf.sprintf "{%s}" (f a)
+      | Node (a, Leaf, Leaf) -> f a
       | Node (a, l, r) -> Printf.sprintf "{%s, %s, %s}" (aux l) (f a) (aux r)
     in
     aux tr
 
-  let rec leaf eq t u =
-    let nochild l r = match (l, r) with Leaf, Leaf -> true | _, _ -> false in
-    match t with
-    | Leaf -> false
-    | Node (a, l, r) -> (eq a u && nochild l r) || leaf eq l u || leaf eq r u
-
-  let rec node eq t u =
-    let haschild l r =
-      match (l, r) with
-      | Node (_, _, _), _ | _, Node (_, _, _) -> true
-      | _, _ -> false
+  let leaf eq t u =
+    let rec aux = function
+      | [] -> false
+      | Leaf :: t -> aux t
+      | Node (x, Leaf, Leaf) :: t -> if eq x u then true else aux t
+      | Node (_, Leaf, r) :: t -> aux (r :: t)
+      | Node (_, l, Leaf) :: t -> aux (l :: t)
+      | Node (_, l, r) :: t -> aux (l :: r :: t)
     in
-    match t with
-    | Leaf -> false
-    | Node (a, l, r) -> (eq a u && haschild l r) || node eq l u || node eq r u
+    aux [ t ]
+
+  let node eq t u =
+    let rec aux = function
+      | [] -> false
+      | Leaf :: t -> aux t
+      | Node (_, Leaf, Leaf) :: t -> aux t
+      | Node (x, Leaf, r) :: t -> if eq x u then true else aux (r :: t)
+      | Node (x, l, Leaf) :: t -> if eq x u then true else aux (l :: t)
+      | Node (x, l, r) :: t -> if eq x u then true else aux (l :: r :: t)
+    in
+    aux [ t ]
 
   let left_child eq t u v =
-    let rec aux before t =
-      if before then true
-      else
-        match t with
-        | Leaf -> false
-        | Node (a, l, r) ->
-            if eq a u && exists (fun x -> eq x v) l then true
-            else aux (aux false l) r
+    let rec aux = function
+      | [] -> false
+      | Leaf :: t -> aux t
+      | Node (x, l, r) :: t ->
+          if eq x u && exists (fun x -> eq x v) l then true
+          else aux (l :: r :: t)
     in
-    aux false t
+    aux [ t ]
 
   let right_child eq t u v =
-    let rec aux before t =
-      if before then true
-      else
-        match t with
-        | Leaf -> false
-        | Node (a, l, r) ->
-            if eq a u && exists (fun x -> eq x v) r then true
-            else aux (aux false l) r
+    let rec aux = function
+      | [] -> false
+      | Leaf :: t -> aux t
+      | Node (x, l, r) :: t ->
+          if eq x u && exists (fun x -> eq x v) r then true
+          else aux (l :: r :: t)
     in
-    aux false t
+    aux [ t ]
 
   let parallel_child eq t u v =
     let rec aux = function
-      | Leaf -> false
-      | Node (_, l, r) ->
-          (exists (fun x -> eq x u) l && exists (fun x -> eq x v) r)
-          || aux l || aux r
+      | [] -> false
+      | Leaf :: t -> aux t
+      | Node (_, l, r) :: t ->
+          if exists (fun x -> eq x u) l && exists (fun x -> eq x v) r then true
+          else aux (l :: r :: t)
     in
-    aux t
+    aux [ t ]
 
   let eq compare t1 t2 =
     let rec aux = function
@@ -688,21 +701,11 @@ module Tree = struct
     | Leaf -> []
     | Node (a, l, r) -> a :: (flatten l @ flatten r)
 
-  let flatten_forall compare t = List.remove_duplicates compare (flatten t)
-
-  let union l0 l1 = List.union (fun x y -> x == y) l0 l1
+  let flatten_forall t = List.remove_duplicates (flatten t)
 
   let once f tr e =
     let l = flatten tr in
     List.once f l e
-
-  let fold_left f default t =
-    let rec aux t default =
-      match t with
-      | Leaf -> default
-      | Node (a, l, r) -> aux r @@ aux l @@ f default a
-    in
-    aux t default
 
   let compare e_compare t1 t2 =
     let rec aux t1 t2 =
@@ -720,12 +723,273 @@ module Tree = struct
     aux t1 t2
 end
 
+(* overwrite the tail call version *)
+module TreeTailRec = struct
+  open Tree
+
+  let self = "Tree"
+
+  let interexn = interexn self
+
+  (* tree with a single node  *)
+  let snode x = Node (x, Leaf, Leaf)
+
+  (* recursion, dfs *)
+  type ('b, 'a) dfs = Forward of ('b * 'a t) | EndL | Backword of 'a
+
+  let tree_rection (fleaf : 'c -> 'b -> 'b) (fnode : 'a -> 'b -> 'b)
+      (fend : 'b -> 'b) (fleft : 'c -> 'c) (fright : 'c -> 'c) (inp : 'c)
+      (default : 'b) tree =
+    let rec aux res = function
+      | [] -> res
+      | Forward (inp, Leaf) :: t -> aux (fleaf inp res) t
+      | Forward (inp, Node (x, l, r)) :: t ->
+          aux res
+            (Forward (fleft inp, l)
+            :: EndL
+            :: Forward (fright inp, r)
+            :: Backword x :: t)
+      | Backword x :: t -> aux (fnode x res) t
+      | EndL :: t -> aux (fend res) t
+    in
+    aux default [ Forward (inp, tree) ]
+
+  type ('b, 'a) dfs2 = Forward2 of ('b * 'a t) | Backword2 of 'a
+
+  let tree_rection2 (fleaf : 'c -> 'b -> 'b) (fnode : 'a -> 'b -> 'b)
+      (fleft : 'c -> 'c) (fright : 'c -> 'c) (inp : 'c) (default : 'b) tree =
+    let rec aux res = function
+      | [] -> res
+      | Forward2 (inp, Leaf) :: t -> aux (fleaf inp res) t
+      | Forward2 (inp, Node (x, l, r)) :: t ->
+          aux res
+            (Forward2 (fleft inp, l)
+            :: Forward2 (fright inp, r)
+            :: Backword2 x :: t)
+      | Backword2 x :: t -> aux (fnode x res) t
+    in
+    aux default [ Forward2 (inp, tree) ]
+
+  let tree_rection_no_node_rev (fleaf : 'c -> 'b -> 'b) (fleft : 'a -> 'c -> 'c)
+      (fright : 'a -> 'c -> 'c) (inp : 'c) (default : 'b) tree =
+    let rec aux res = function
+      | [] -> res
+      | (inp, Leaf) :: t -> aux (fleaf inp res) t
+      | (inp, Node (x, l, r)) :: t ->
+          aux res ((fleft x inp, l) :: (fright x inp, r) :: t)
+    in
+    aux default [ (inp, tree) ]
+
+  (* let rec_flip tree = *)
+  (*   let fleaf () rev_prev = Leaf :: rev_prev in *)
+  (*   let fnode x rev_prev = *)
+  (*     match rev_prev with *)
+  (*     | r :: l :: t -> Node (x, r, l) :: t *)
+  (*     | _ -> raise @@ failwith "bad recursion" *)
+  (*   in *)
+  (*   let fend rev_prev = rev_prev in *)
+  (*   match *)
+  (*     tree_rection fleaf fnode fend (fun () -> ()) (fun x -> x) () [] tree *)
+  (*   with *)
+  (*   | [ tr ] -> tr *)
+  (*   | _ -> raise @@ failwith "bad recursion" *)
+
+  let rec rec_flip tree =
+    match tree with
+    | Leaf -> Leaf
+    | Node (x, l, r) -> Node (x, rec_flip r, rec_flip l)
+
+  (* let deep tree = *)
+  (*   let fleaf n maximal = if n > maximal then n else maximal in *)
+  (*   let fnode _ maximal = maximal in *)
+  (*   tree_rection2 fleaf fnode (fun x -> x + 1) (fun x -> x + 1) 0 0 tree *)
+
+  let deep tree =
+    let fleaf n maximal = if n > maximal then n else maximal in
+    tree_rection_no_node_rev fleaf
+      (fun _ x -> x + 1)
+      (fun _ x -> x + 1)
+      0 0 tree
+
+  let size tree =
+    let fleaf _ sum = sum in
+    tree_rection_no_node_rev fleaf (fun _ x -> x + 1) (fun _ x -> x) 0 0 tree
+
+  let flip tr = match tr with Leaf -> Leaf | Node (a, b, c) -> Node (a, c, b)
+
+  let rotation_left_opt tr =
+    match tr with
+    | Leaf -> Some Leaf
+    | Node (x, Node (y, a, b), c) -> Some (Node (y, a, Node (x, b, c)))
+    | _ -> None
+
+  let rotation_right_opt tr =
+    match tr with
+    | Leaf -> Some Leaf
+    | Node (x, a, Node (y, b, c)) -> Some (Node (y, Node (x, a, b), c))
+    | _ -> None
+
+  let rec append_to_left_most x tr =
+    match tr with
+    | Leaf -> Node (x, Leaf, Leaf)
+    | Node (y, a, b) -> Node (y, append_to_left_most x a, b)
+
+  let rec append_to_right_most x tr =
+    match tr with
+    | Leaf -> Node (x, Leaf, Leaf)
+    | Node (y, a, b) -> Node (y, a, append_to_right_most x b)
+
+  let dfs (f : 'a -> unit -> unit) tree =
+    let rec aux = function
+      | [] -> ()
+      | Leaf :: t -> aux t
+      | Node (x, l, r) :: t ->
+          f x ();
+          aux (l :: r :: t)
+    in
+    aux [ tree ]
+
+  let max_opt (e_compare : 'a -> 'a -> int) (t1 : 'a t) =
+    let maximal = ref None in
+    dfs
+      (fun x () ->
+        match !maximal with
+        | None -> maximal := Some x
+        | Some m -> if e_compare x m > 0 then maximal := Some x else ())
+      t1;
+    !maximal
+
+  let min_opt e_compare t1 = max_opt (fun x y -> ~-(e_compare x y)) t1
+
+  let exists (f : 'a -> bool) tree =
+    let rec aux = function
+      | [] -> false
+      | Leaf :: t -> aux t
+      | Node (x, l, r) :: t -> if f x then true else aux (l :: r :: t)
+    in
+    aux [ tree ]
+
+  let layout f tr =
+    if deep tr > 6 then "{tree too large}"
+    else
+      let rec aux = function
+        | Leaf -> "."
+        | Node (a, Leaf, Leaf) -> Printf.sprintf "{%s}" (f a)
+        | Node (a, l, r) -> Printf.sprintf "{%s, %s, %s}" (aux l) (f a) (aux r)
+      in
+      aux tr
+
+  let leaf eq t u =
+    let rec aux = function
+      | [] -> false
+      | Leaf :: t -> aux t
+      | Node (x, Leaf, Leaf) :: t -> if eq x u then true else aux t
+      | Node (_, Leaf, r) :: t -> aux (r :: t)
+      | Node (_, l, Leaf) :: t -> aux (l :: t)
+      | Node (_, l, r) :: t -> aux (l :: r :: t)
+    in
+    aux [ t ]
+
+  let node eq t u =
+    let rec aux = function
+      | [] -> false
+      | Leaf :: t -> aux t
+      | Node (_, Leaf, Leaf) :: t -> aux t
+      | Node (x, Leaf, r) :: t -> if eq x u then true else aux (r :: t)
+      | Node (x, l, Leaf) :: t -> if eq x u then true else aux (l :: t)
+      | Node (x, l, r) :: t -> if eq x u then true else aux (l :: r :: t)
+    in
+    aux [ t ]
+
+  let left_child eq t u v =
+    let rec aux = function
+      | [] -> false
+      | Leaf :: t -> aux t
+      | Node (x, l, r) :: t ->
+          if eq x u && exists (fun x -> eq x v) l then true
+          else aux (l :: r :: t)
+    in
+    aux [ t ]
+
+  let right_child eq t u v =
+    let rec aux = function
+      | [] -> false
+      | Leaf :: t -> aux t
+      | Node (x, l, r) :: t ->
+          if eq x u && exists (fun x -> eq x v) r then true
+          else aux (l :: r :: t)
+    in
+    aux [ t ]
+
+  let parallel_child eq t u v =
+    let rec aux = function
+      | [] -> false
+      | Leaf :: t -> aux t
+      | Node (_, l, r) :: t ->
+          if exists (fun x -> eq x u) l && exists (fun x -> eq x v) r then true
+          else aux (l :: r :: t)
+    in
+    aux [ t ]
+
+  let eq eq t1 t2 =
+    let rec aux = function
+      | [] -> true
+      | (Leaf, Leaf) :: t -> aux t
+      | (Node (a1, l1, r1), Node (a2, l2, r2)) :: t ->
+          if eq a1 a2 then aux ((l1, l2) :: (r1, r2) :: t) else false
+      | _ -> false
+    in
+    aux [ (t1, t2) ]
+
+  let flatten t =
+    let rec aux res = function
+      | [] -> res
+      | Leaf :: t -> aux res t
+      | Node (x, l, r) :: t -> aux (x :: res) (l :: r :: t)
+    in
+    aux [] [ t ]
+
+  let flatten_forall t = List.remove_duplicates (flatten t)
+
+  let once f tr e = List.once f (flatten tr) e
+
+  let fold_left f default t =
+    let rec aux res = function
+      | [] -> res
+      | Leaf :: t -> aux res t
+      | Node (x, l, r) :: t -> aux (f res x) (l :: r :: t)
+    in
+    aux default [ t ]
+
+  let compare e_compare t1 t2 =
+    let rec aux = function
+      | [] -> 0
+      | (Leaf, Leaf) :: t -> aux t
+      | (Node _, Leaf) :: _ -> 1
+      | (Leaf, Node _) :: _ -> -1
+      | (Node (a1, l1, r1), Node (a2, l2, r2)) :: t ->
+          let c = e_compare a1 a2 in
+          if c != 0 then c else aux ((l1, l2) :: (r1, r2) :: t)
+    in
+    aux [ (t1, t2) ]
+end
+
 module LabeledTree = struct
   type ('a, 'b) t = Leaf | Node of ('b * 'a * ('a, 'b) t * ('a, 'b) t)
 
   let self = "LabeledTree"
 
   let interexn = interexn self
+
+  let deep t =
+    let rec aux = function
+      | Leaf -> 0
+      | Node (_, _, l, r) ->
+          let ln = aux l in
+          let rn = aux r in
+          if ln > rn then ln + 1 else rn + 1
+    in
+    aux t
 
   let rec size = function Leaf -> 0 | Node (_, _, a, b) -> 1 + size a + size b
 
@@ -867,9 +1131,9 @@ module LabeledTree = struct
     | Leaf -> []
     | Node (_, a, l, r) -> a :: (flatten l @ flatten r)
 
-  let flatten_forall compare t = List.remove_duplicates compare (flatten t)
+  let flatten_forall t = List.remove_duplicates (flatten t)
 
-  let union l0 l1 = List.union (fun x y -> x == y) l0 l1
+  (* let union l0 l1 = List.union (fun x y -> x == y) l0 l1 *)
 
   let once f tr e =
     let l = flatten tr in

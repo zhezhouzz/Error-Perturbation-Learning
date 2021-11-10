@@ -1,4 +1,15 @@
 open Primitive
+
+module AssSet = Set.Make (struct
+  let compare (tp1, place1, source1) (tp2, place2, source2) =
+    Sugar.(
+      compare_bind
+        (compare_bind (Tp.compare tp1 tp2) (compare place1 place2))
+        (compare source1 source2))
+
+  type t = Tp.t * int * int
+end)
+
 open Z3
 open Z3.Boolean
 open Z3.Arithmetic
@@ -17,6 +28,10 @@ open Prover
 open Basic_dt
 
 type t = Tp.t * int * int
+
+let assignment_remove_duplicates l =
+  let s = AssSet.add_seq (List.to_seq l) AssSet.empty in
+  List.of_seq @@ AssSet.to_seq s
 
 let spf = Printf.sprintf
 
@@ -69,7 +84,7 @@ let basic_constraint cs =
       m c
   in
   let m = List.fold_left aux IntMap.empty cs in
-  let m = IntMap.map (fun (tp, l) -> (tp, List.remove_duplicates_eq l)) m in
+  let m = IntMap.map (fun (tp, l) -> (tp, List.remove_duplicates l)) m in
   let must_used_constraint =
     IntMap.fold
       (fun source (tp, l) cs ->
@@ -77,10 +92,7 @@ let basic_constraint cs =
       m []
   in
   let total =
-    List.remove_duplicates
-      (fun (tp1, place1, source1) (tp2, place2, source2) ->
-        Tp.eq tp1 tp2 && place1 == place2 && source1 == source2)
-      (List.flatten must_used_constraint)
+    assignment_remove_duplicates (List.flatten must_used_constraint)
   in
   (total, must_used_constraint)
 

@@ -1,0 +1,3 @@
+IN: (x0: int, x1: int tree) {
+(x2: int tree) = tree_flip(x1: int tree)}
+OUT: (x0: int, x2: int tree)

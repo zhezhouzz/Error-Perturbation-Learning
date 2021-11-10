@@ -3,7 +3,7 @@ open Language
 open Basic_dt
 
 module VM = struct
-  include Value_map.ValueVectorMap
+  include Value_aux.ValueVectorMap
 
   let find key m =
     try find key m with _ -> raise @@ failwith "ValueVectorMap cannot find"
@@ -208,36 +208,108 @@ let array_subset size arr st =
   range_subset ~size 0 (Array.length arr - 1) st |> Array.map (fun i -> arr.(i))
 
 let sampling_to_data (init_set : Value.t list list) f num =
-  let max_pool = num / 8 in
+  (* let max_pool = num / 8 in *)
   let res = ref [] in
+  let apply_f =
+    match f with
+    | [], default ->
+        Printf.printf "simplfied\n";
+        fun x non_det_sampling_times ->
+          Piecewise.single_eval_sampling default x non_det_sampling_times
+    | _ ->
+        fun x non_det_sampling_times ->
+          Piecewise.eval_sampling f x non_det_sampling_times
+  in
   let rec aux pool =
     let samples =
-      Zlog.event_
-        (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-        (fun () ->
-          List.map
-            (fun x -> (x, Piecewise.eval_sampling f x non_det_sampling_times))
-            pool)
+      List.map (fun x -> (x, apply_f x non_det_sampling_times)) pool
     in
+    (* let samples = *)
+    (*   Zlog.event_ *)
+    (*     (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") *)
+    (*     (fun () -> *)
+    (*       List.map (fun x -> (x, apply_f x non_det_sampling_times)) pool) *)
+    (* in *)
     let samples = List.flatten @@ List.map snd samples in
     res := !res @ samples;
     if List.length !res >= num then List.sublist !res (0, num)
     else
-      let pool' =
-        Zlog.event_
-          (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
-             "cal pool") (fun () ->
-            let pool' = List.filter_map (fun x -> x) samples in
-            if List.length pool' == 0 then pool
-            else if List.length pool' > max_pool then (
-              let arr = Array.of_list pool' in
-              Printf.printf "len:%i n:%i\n" (Array.length arr) max_pool;
-              Array.to_list @@ QCheck.Gen.generate1 (array_subset max_pool arr))
-            else pool')
-      in
+      let pool' = List.filter_map (fun x -> x) samples in
+      (* let pool' = *)
+      (*   Zlog.event_ *)
+      (*     (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ *)
+      (*        "cal pool") (fun () -> *)
+      (*       if List.length pool' == 0 then pool *)
+      (*       else if List.length pool' > max_pool then ( *)
+      (*         let arr = Array.of_list pool' in *)
+      (*         Printf.printf "len:%i n:%i\n" (Array.length arr) max_pool; *)
+      (*         Array.to_list @@ QCheck.Gen.generate1 (array_subset max_pool arr)) *)
+      (*       else pool') *)
+      (* in *)
       aux pool'
   in
   aux init_set
+
+module HardCode = struct
+  let f1 (x0, x1) =
+    let x2 = Tree.rec_flip x1 in
+    Some (x0, x2)
+
+  let f2 (x0, x1) =
+    let x5 = x0 - 4 in
+    Some (x5, x1)
+
+  let f3 (x0, x1) =
+    let x2 = Tree.Node (x0, x1, x1) in
+    let x3 = Tree.Node (x0, x2, x2) in
+    match Tree.rotation_right_opt x3 with
+    | None -> None
+    | Some x4 ->
+        let x5 = x0 - 1 in
+        Some (x5, x4)
+
+  let fs = [ f1; f2; f3 ]
+end
+
+let det_sampling (init_set : Value.t list list) interp fs num =
+  let res = ref [] in
+  let rec aux pool =
+    let samples =
+      List.fold_left
+        (fun samples f ->
+          List.fold_left (fun samples x -> interp f x :: samples) samples pool)
+        [] fs
+    in
+    res := !res @ samples;
+    if List.length !res >= num then List.sublist !res (0, num)
+    else
+      let pool' = List.filter_map (fun x -> x) samples in
+      aux pool'
+  in
+  aux init_set
+
+let det_sampling' (init_set : (int * int Tree.t) list) num =
+  let res = ref [] in
+  let rec aux num_none pool =
+    let num_none, samples =
+      List.fold_left
+        (fun (num_none, samples) f ->
+          List.fold_left
+            (fun (num_none, samples) x ->
+              match f x with
+              | None -> (num_none + 1, samples)
+              | Some d -> (num_none, d :: samples))
+            (num_none, samples) pool)
+        (num_none, []) HardCode.fs
+    in
+    res := !res @ samples;
+    if List.length !res + num_none >= num then (
+      Printf.printf "when end: List.length !res + num_none = %i\n"
+        (List.length !res + num_none);
+      (num_none, List.sublist !res (0, num)))
+    else aux num_none samples
+  in
+  aux 0 init_set
 
 let test () =
   let tps, ops = Oplang.test_tps_ops in

@@ -5,7 +5,7 @@
  (modules
  tp
  value
- value_map
+ value_aux
  operator
  imp
  imp_const

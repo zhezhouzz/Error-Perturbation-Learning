@@ -320,8 +320,9 @@ let syn source_file meta_file max_length num_burn_in num_sampling =
     Zlog.event_
       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
       (fun () ->
-        Synthesizer.Syn.synthesize_piecewise env max_length num_burn_in
-          num_sampling)
+        (* Synthesizer.Syn.synthesize_piecewise env max_length num_burn_in *)
+        (*   num_sampling *)
+        Synthesizer.Syn.synthesize_multi env max_length num_burn_in num_sampling)
   in
   result
 
@@ -406,6 +407,17 @@ let synthesize_all =
         in
         ())
 
+let layout_eval benchname stat cost_time =
+  let open Evaluation.Ev in
+  let avg_time =
+    match stat.in_sigma_out_phi_unique_num with
+    | 0 -> "inf"
+    | n -> sprintf "%f" (cost_time *. 1000000.0 /. float_of_int n)
+  in
+  Printf.printf "%s:\ncost time:%f(s)\navg time:%s(us/instance)\n%s\n" benchname
+    cost_time avg_time
+  @@ Evaluation.Ev.layout stat
+
 let eval_baseline =
   Command.basic ~summary:"eval-baseline"
     Command.Let_syntax.(
@@ -438,17 +450,12 @@ let eval_baseline =
                     Zlog.event_
                       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
                          __FUNCTION__ "baseline evaluation") (fun () ->
-                        Evaluation.Ev.evaluation
-                          (List.map ~f:(fun x -> Some x) data)
-                          env.sigma
+                        Evaluation.Ev.evaluation 0 data env.sigma
                           (fun inp ->
                             snd @@ env.client env.library_inspector inp)
                           env.phi)
                   in
-                  let () =
-                    Printf.printf "%s:\ncost time:%fs\n%s\n" benchname cost_time
-                    @@ Evaluation.Ev.layout stat
-                  in
+                  let () = layout_eval benchname stat cost_time in
                   ())
                 benchmarks)
         in
@@ -490,15 +497,12 @@ let eval_result =
                     Zlog.event_
                       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
                          __FUNCTION__ "evaluation") (fun () ->
-                        Evaluation.Ev.evaluation data env.sigma
+                        Evaluation.Ev.evaluation_opt data env.sigma
                           (fun inp ->
                             snd @@ env.client env.library_inspector inp)
                           env.phi)
                   in
-                  let () =
-                    Printf.printf "%s:\ncost time:%fs\n%s\n" benchname cost_time
-                    @@ Evaluation.Ev.layout stat
-                  in
+                  let () = layout_eval benchname stat cost_time in
                   ())
                 benchmarks)
         in
@@ -513,34 +517,50 @@ let sampling =
       and prog_file = anon ("prog file" %: regular_file)
       and num_sampling = anon ("num sampling" %: int) in
       fun () ->
-        (* let arr = *)
-        (*   QCheck.Gen.generate1 (Synthesizer.Sampling.range_subset ~size:50 0 80) *)
-        (* in *)
-        (* let () = *)
-        (*   Printf.printf "random arr: [|%s|]" *)
-        (*   @@ Basic_dt.List.split_by_comma string_of_int *)
-        (*   @@ Array.to_list arr *)
-        (* in *)
-        (* let () = raise @@ failwith "zz end" in *)
         Config.exec_main configfile (fun () ->
+            (* let () = *)
+            (*   let open Basic_dt.Tree in *)
+            (*   let tree = *)
+            (*     Node (6, Node (3, snode 7, snode 3), Node (4, snode 8, snode 1)) *)
+            (*   in *)
+            (*   let () = Printf.printf "tree: %s\n" (layout string_of_int tree) in *)
+            (*   let tree' = rec_flip tree in *)
+            (*   let () = *)
+            (*     Printf.printf "tree': %s\n" (layout string_of_int tree') *)
+            (*   in *)
+            (*   let () = raise @@ failwith "end" in *)
+            (*   () *)
+            (* in *)
             let env = mk_env_from_files source_file meta_file in
             let prog = Parse.parse_piecewise prog_file in
-            let data =
-              Zlog.event_
+            let (num_none, data), cost_time =
+              Zlog.event_time_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
                    "sampling") (fun () ->
-                  Synthesizer.Sampling.sampling_to_data [ env.i_err ] prog
-                    num_sampling)
+                  (* Synthesizer.Sampling.sampling_to_data [ env.i_err ] prog *)
+                  (* let fs = snd prog :: List.map ~f:snd (fst prog) in *)
+                  match env.i_err with
+                  | [ Primitive.Value.I x0; Primitive.Value.T x1 ] ->
+                      let num_none, data =
+                        Synthesizer.Sampling.det_sampling' [ (x0, x1) ]
+                          num_sampling
+                      in
+                      ( num_none,
+                        List.map
+                          ~f:(fun (x0, x1) ->
+                            [ Primitive.Value.I x0; Primitive.Value.T x1 ])
+                          data )
+                  | _ -> (0, []))
             in
             let stat =
               Zlog.event_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
                    "evaluation") (fun () ->
-                  Evaluation.Ev.evaluation data env.sigma
+                  Evaluation.Ev.evaluation num_none data env.sigma
                     (fun inp -> snd @@ env.client env.library_inspector inp)
                     env.phi)
             in
-            let () = Printf.printf "%s\n" @@ Evaluation.Ev.layout stat in
+            let () = layout_eval "" stat cost_time in
             ()))
 
 let baseline =
@@ -569,9 +589,7 @@ let baseline =
               Zlog.event_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
                    "baseline evaluation") (fun () ->
-                  Evaluation.Ev.evaluation
-                    (List.map ~f:(fun x -> Some x) data)
-                    env.sigma
+                  Evaluation.Ev.evaluation 0 data env.sigma
                     (fun inp -> snd @@ env.client env.library_inspector inp)
                     env.phi)
             in

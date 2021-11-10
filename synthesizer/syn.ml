@@ -96,15 +96,56 @@ let synthesize_piecewise env max_length num_burn_in num_sampling =
       match f with
       | None -> loop current (iter + 1)
       | Some (env, f) -> (
-          match synthesize_pre env with
-          | FGoodEnough -> (prev_cases, f)
-          | FTotalWrong -> loop current (iter + 1)
-          | FIsOK (pre, samples) ->
-              Zlog.log_write @@ spf "Init Samples:\n%s\n"
-              @@ List.split_by "\n" V.layout_l samples;
-              loop (NextF (prev_cases, f, pre, samples, env)) (iter + 1))
+          if length current + 1 >= max_length then ([], f)
+          else
+            match synthesize_pre env with
+            | FGoodEnough -> (prev_cases, f)
+            | FTotalWrong -> loop current (iter + 1)
+            | FIsOK (pre, samples) ->
+                Zlog.log_write @@ spf "Init Samples:\n%s\n"
+                @@ List.split_by "\n" V.layout_l samples;
+                loop (NextF (prev_cases, f, pre, samples, env)) (iter + 1))
   in
   loop (InitF env) 0
 
 let synthesize_one env num_burn_in num_sampling =
   synthesize_piecewise env 0 num_burn_in num_sampling
+
+let synthesize_multi env max_length num_burn_in num_sampling =
+  let rec loop current init_set iter =
+    if iter >= iter_bound || List.length current >= max_length then current
+    else
+      match
+        synthesize_f (fun _ -> true) init_set num_burn_in num_sampling env
+      with
+      | None -> raise @@ failwith "synthesize_f fails"
+      | Some (env, new_f) ->
+          let scache =
+            Sampling.cost_sampling_ env.Env.tps init_set new_f
+              env.sampling_rounds
+          in
+          let valuem, io_list = Sampling.pure_sampled_input_output scache in
+          let good_list =
+            List.filter_map
+              (fun (in_idx, out_idx) ->
+                let inp = Hashtbl.find valuem in_idx in
+                let outp = Hashtbl.find valuem out_idx in
+                match snd @@ env.client env.library_inspector outp with
+                | None -> None
+                | Some outp ->
+                    if env.sigma inp && (not @@ env.phi outp) then Some inp
+                    else None)
+              io_list
+          in
+          if List.length good_list == 0 then
+            raise @@ failwith "synthesized f has no good result"
+          else
+            let init_set =
+              Primitive.Value_aux.remove_duplicates_l (init_set @ good_list)
+            in
+            loop (current @ [ new_f ]) init_set (iter + 1)
+  in
+  let fs : F.t list = loop [] [ env.i_err ] 0 in
+  match fs with
+  | [] -> raise @@ failwith "no perturbation function"
+  | h :: t -> (List.map (fun f -> (Spec.dummy_pre env.tps, f)) t, h)
