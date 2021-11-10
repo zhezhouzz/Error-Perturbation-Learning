@@ -88,8 +88,8 @@ let eval_version = VEfficient
 let eval { args; qv; body } argsvalue =
   match eval_version with
   | VEfficient ->
-      Zlog.log_write (spf "eval %s" @@ layout { args; qv; body });
-      Zlog.log_write (Value.layout_l_size argsvalue);
+      (* Zlog.log_write (spf "eval %s" @@ layout { args; qv; body }); *)
+      (* Zlog.log_write (Value.layout_l_size argsvalue); *)
       eval_range { args; qv; body } argsvalue (cal_range argsvalue)
   | VNormal ->
       let env =

@@ -112,6 +112,14 @@ let rev_eval libmember libinsp term values env =
 (*   aux body *)
 
 let eval funcdef libinsp inputs =
+  let () =
+    if List.length inputs != List.length funcdef.args then
+      raise @@ failwith
+      @@ spf "eval: (%s) mismatch with (%s)"
+           (List.split_by_comma T.layouttvar funcdef.args)
+           (V.layout_l inputs)
+    else ()
+  in
   let lib_members =
     StrMap.from_kv_list
     @@ List.map (fun (_, name, v) -> (name, v))

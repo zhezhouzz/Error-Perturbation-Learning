@@ -133,7 +133,8 @@ let synthesize_multi env max_length num_burn_in num_sampling =
                 match snd @@ env.client env.library_inspector outp with
                 | None -> None
                 | Some outp ->
-                    if env.sigma inp && (not @@ env.phi outp) then Some inp
+                    if env.sigma inp && (not @@ env.phi @@ inp @ outp) then
+                      Some inp
                     else None)
               io_list
           in
