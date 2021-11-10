@@ -15,7 +15,6 @@ let op_pool =
     "tree_min";
     "plus1";
     "minus1";
-    "random_int";
     "const0";
     "const1";
   |]

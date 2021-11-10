@@ -12,7 +12,6 @@ let op_pool =
     "bottom";
     "max";
     "min";
-    "random_int";
     "const0";
     "const1";
   |]

@@ -1,0 +1,27 @@
+Pre
+let spec (i_0:int) (it_0:int tree)  = true
+Perturbation
+IN: (x0: int, x1: int tree) {
+(x2: int tree) = tree_append_to_right_most(x0: int, x1: int tree);
+(x3: int tree) = tree_append_to_right_most(x0: int, x2: int tree);
+(x4: int tree) = tree_append_to_left_most(x0: int, x3: int tree);
+(x5: int tree) = tree_append_to_right_most(x0: int, x4: int tree)}
+OUT: (x0: int, x5: int tree)
+
+Pre
+let spec (i_0:int) (it_0:int tree)  = true
+Perturbation
+IN: (x0: int, x1: int tree) {
+(x2: int tree) = tree_append_to_right_most(x0: int, x1: int tree);
+(x3: int tree) = tree_append_to_right_most(x0: int, x2: int tree);
+(x4: int) = tree_max(x2: int tree);
+(x5: int tree) = tree_append_to_left_most(x4: int, x3: int tree)}
+OUT: (x0: int, x5: int tree)
+
+Default
+IN: (x0: int, x1: int tree) {
+(x2: int tree) = tree_append_to_right_most(x0: int, x1: int tree);
+(x3: int tree) = tree_append_to_right_most(x0: int, x2: int tree);
+(x4: int tree) = tree_append_to_left_most(x0: int, x3: int tree);
+(x5: int tree) = tree_append_to_right_most(x0: int, x4: int tree)}
+OUT: (x0: int, x5: int tree)

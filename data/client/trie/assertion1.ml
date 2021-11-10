@@ -26,7 +26,6 @@ let op_pool =
     (* int   *)
     "plus1";
     "minus1";
-    "random_int";
     "const0";
     "const1";
   |]
