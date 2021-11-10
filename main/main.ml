@@ -538,19 +538,21 @@ let sampling =
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
                    "sampling") (fun () ->
                   (* Synthesizer.Sampling.sampling_to_data [ env.i_err ] prog *)
-                  (* let fs = snd prog :: List.map ~f:snd (fst prog) in *)
-                  match env.i_err with
-                  | [ Primitive.Value.I x0; Primitive.Value.T x1 ] ->
-                      let num_none, data =
-                        Synthesizer.Sampling.det_sampling' [ (x0, x1) ]
-                          num_sampling
-                      in
-                      ( num_none,
-                        List.map
-                          ~f:(fun (x0, x1) ->
-                            [ Primitive.Value.I x0; Primitive.Value.T x1 ])
-                          data )
-                  | _ -> (0, []))
+                  let fs = snd prog :: List.map ~f:snd (fst prog) in
+                  Synthesizer.Sampling.det_sampling [ env.i_err ]
+                    Language.Oplang_interp.interp fs num_sampling
+                  (* match env.i_err with *)
+                  (* | [ Primitive.Value.I x0; Primitive.Value.T x1 ] -> *)
+                  (*     let num_none, data = *)
+                  (*       Synthesizer.Sampling.det_sampling' [ (x0, x1) ] *)
+                  (*         num_sampling *)
+                  (*     in *)
+                  (*     ( num_none, *)
+                  (*       List.map *)
+                  (*         ~f:(fun (x0, x1) -> *)
+                  (*           [ Primitive.Value.I x0; Primitive.Value.T x1 ]) *)
+                  (*         data ) *)
+                  (* | _ -> (0, []) *))
             in
             let stat =
               Zlog.event_

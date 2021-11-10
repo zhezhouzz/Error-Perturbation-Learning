@@ -111,6 +111,33 @@ let synthesize_piecewise env max_length num_burn_in num_sampling =
 let synthesize_one env num_burn_in num_sampling =
   synthesize_piecewise env 0 num_burn_in num_sampling
 
+(* bias on size of the result *)
+
+let i_err_compare vl1 vl2 =
+  List.compare (fun v1 v2 -> compare (V.size v1) (V.size v2)) vl1 vl2
+
+let max_init_set = 5
+
+let init_set_filter init_set =
+  if List.length init_set < max_init_set then init_set
+  else List.sublist (List.sort i_err_compare init_set) (0, max_init_set)
+
+let log_show_init_set iter init_set =
+  let () =
+    Zlog.log_write
+    @@ spf "iter(%i)\ninit_set:len:%i\n" iter
+    @@ List.length init_set
+  in
+  let () =
+    Zlog.log_write @@ spf "each lenL %s\n"
+    @@ List.split_by "\n" V.layout_l_size init_set
+  in
+  let () =
+    Zlog.log_write @@ spf "init_set:\n%s\n"
+    @@ List.split_by "\n" V.layout_l init_set
+  in
+  ()
+
 let synthesize_multi env max_length num_burn_in num_sampling =
   let rec loop current init_set iter =
     if iter >= iter_bound || List.length current >= max_length then current
@@ -144,6 +171,9 @@ let synthesize_multi env max_length num_burn_in num_sampling =
             let init_set =
               Primitive.Value_aux.remove_duplicates_l (init_set @ good_list)
             in
+            let () = log_show_init_set iter init_set in
+            let init_set = init_set_filter init_set in
+            let () = log_show_init_set iter init_set in
             loop (current @ [ new_f ]) init_set (iter + 1)
   in
   let fs : F.t list = loop [] [ env.i_err ] 0 in

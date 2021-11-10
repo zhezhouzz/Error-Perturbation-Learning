@@ -273,20 +273,24 @@ end
 
 let det_sampling (init_set : Value.t list list) interp fs num =
   let res = ref [] in
-  let rec aux pool =
-    let samples =
+  let rec aux num_none pool =
+    let num_none, samples =
       List.fold_left
-        (fun samples f ->
-          List.fold_left (fun samples x -> interp f x :: samples) samples pool)
-        [] fs
+        (fun (num_none, samples) f ->
+          List.fold_left
+            (fun (num_none, samples) x ->
+              match interp f x with
+              | None -> (num_none + 1, samples)
+              | Some d -> (num_none, d :: samples))
+            (num_none, samples) pool)
+        (num_none, []) fs
     in
     res := !res @ samples;
-    if List.length !res >= num then List.sublist !res (0, num)
-    else
-      let pool' = List.filter_map (fun x -> x) samples in
-      aux pool'
+    if num_none + List.length !res >= num then
+      (num_none, List.sublist !res (0, num))
+    else aux num_none samples
   in
-  aux init_set
+  aux 0 init_set
 
 let det_sampling' (init_set : (int * int Tree.t) list) num =
   let res = ref [] in

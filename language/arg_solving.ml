@@ -200,14 +200,18 @@ let solve ctx cache =
   let rec loop no_dup cache =
     if List.length cache.solutions > max_solution then cache
     else
+      (* let r = *)
+      (*   Zlog.event_ *)
+      (*     (Printf.sprintf "%s:%i[%s] %i {%s}" __FILE__ __LINE__ __FUNCTION__ *)
+      (*        !counter *)
+      (*        (StrList.to_string cache.ops)) *)
+      (*     (fun () -> *)
+      (*       solve_one ctx *)
+      (*         (cache.total, cache.total_z3, mk_and ctx (cache.query :: no_dup))) *)
+      (* in *)
       let r =
-        Zlog.event_
-          (Printf.sprintf "%s:%i[%s] %i {%s}" __FILE__ __LINE__ __FUNCTION__
-             !counter
-             (StrList.to_string cache.ops))
-          (fun () ->
-            solve_one ctx
-              (cache.total, cache.total_z3, mk_and ctx (cache.query :: no_dup)))
+        solve_one ctx
+          (cache.total, cache.total_z3, mk_and ctx (cache.query :: no_dup))
       in
       match r with
       | Some m ->
