@@ -1,10 +1,10 @@
 (library
  (name synthesizer)
  (modules_without_implementation env)
- (libraries primitive language utils qcheck classify)
+ (libraries primitive language utils qcheck classify sampling)
  (modules
  mutate
- sampling
+ ; sampling
  cost
  env
  mkenv

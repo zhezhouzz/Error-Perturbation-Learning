@@ -1,0 +1,7 @@
+(library
+ (name sampling)
+ (libraries primitive language utils qcheck)
+ (modules
+   scache
+ )
+)

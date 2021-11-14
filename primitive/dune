@@ -15,5 +15,6 @@
  imp_treeb
  randomgen
  method_predicate
+ measure
  )
 )

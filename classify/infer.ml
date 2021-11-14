@@ -75,16 +75,16 @@ let spec_infer ctx (data : 'a list) (to_values : 'a -> V.t list)
     @@ List.partition snd
     @@ List.map (fun d -> (to_values d, judge d)) data
   in
-  let () =
-    Zlog.log_write
-    @@ spf "pos:\n%s\n"
-         (List.split_by "\n" (fun x -> x) @@ List.map V.layout_l pos_values)
-  in
-  let () =
-    Zlog.log_write
-    @@ spf "neg:\n%s\n"
-         (List.split_by "\n" (fun x -> x) @@ List.map V.layout_l neg_values)
-  in
+  (* let () = *)
+  (*   Zlog.log_write *)
+  (*   @@ spf "pos:\n%s\n" *)
+  (*        (List.split_by "\n" (fun x -> x) @@ List.map V.layout_l pos_values) *)
+  (* in *)
+  (* let () = *)
+  (*   Zlog.log_write *)
+  (*   @@ spf "neg:\n%s\n" *)
+  (*        (List.split_by "\n" (fun x -> x) @@ List.map V.layout_l neg_values) *)
+  (* in *)
   if List.length neg_values == 0 then
     Specification.Spec.
       {
@@ -124,7 +124,8 @@ let spec_infer ctx (data : 'a list) (to_values : 'a -> V.t list)
     in
     let () = Zlog.log_write @@ spf "fvctx:\n%s\n" @@ FV.layout_fvctx ctx in
     let dt, _ = Dtree.classify ctx in
-    let body = Specification.Simplify.simplify_ite @@ Dtree.to_prop dt in
+    (* let body = Specification.Simplify.simplify_ite @@ Dtree.to_prop dt in *)
+    let body = Dtree.to_prop dt in
     let _ =
       Zlog.log_write
       @@ Printf.sprintf "spec: %s\n"

@@ -280,12 +280,18 @@ let det_sampling (init_set : Value.t list list) interp fs num =
           List.fold_left
             (fun (num_none, samples) x ->
               match interp f x with
-              | None -> (num_none + 1, samples)
-              | Some d -> (num_none, d :: samples))
+              | None ->
+                  Zlog.log_write @@ spf "%s --f-> none" (Value.layout_l x);
+                  (num_none + 1, samples)
+              | Some d ->
+                  Zlog.log_write
+                  @@ spf "%s --f-> %s" (Value.layout_l x) (Value.layout_l d);
+                  (num_none, d :: samples))
             (num_none, samples) pool)
         (num_none, []) fs
     in
-    res := !res @ samples;
+    if List.length samples == 0 then raise @@ failwith "sampling get stuck"
+    else res := !res @ samples;
     if num_none + List.length !res >= num then
       (num_none, List.sublist !res (0, num))
     else aux num_none samples

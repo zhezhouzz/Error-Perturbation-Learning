@@ -164,4 +164,73 @@ let table =
               Some [ I e ])
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
+    {
+      imp_name = "tree_upper_bound";
+      imp_itps = [ IntTree ];
+      imp_otps = [ Int ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ T tr ] -> (
+            match Tree.max_opt Stdlib.compare tr with
+            | None -> Some [ I 0 ]
+            | Some m -> Some [ I (m + 1) ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "tree_lower_bound";
+      imp_itps = [ IntTree ];
+      imp_otps = [ Int ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ T tr ] -> (
+            match Tree.min_opt Stdlib.compare tr with
+            | None -> Some [ I 0 ]
+            | Some m -> Some [ I (m - 1) ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "tree_add_to_bottom_left";
+      imp_itps = [ Int; IntTree ];
+      imp_otps = [ IntTree ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ I x; T tr ] -> Some [ T (Tree.add_to_bottom_left x tr) ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "tree_add_to_bottom_right";
+      imp_itps = [ Int; IntTree ];
+      imp_otps = [ IntTree ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ I x; T tr ] -> Some [ T (Tree.add_to_bottom_right x tr) ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "tree_drop_bottom";
+      imp_itps = [ IntTree ];
+      imp_otps = [ IntTree ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ T tr ] -> Some [ T (Tree.drop_bottom tr) ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "tree_destruct";
+      imp_itps = [ IntTree ];
+      imp_otps = [ Int; IntTree; IntTree ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ T tr ] ->
+            Sugar.(
+              let* x, a, b = Tree.destruct_opt tr in
+              Some [ I x; T a; T b ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
   ]

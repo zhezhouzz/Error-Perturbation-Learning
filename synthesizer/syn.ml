@@ -54,8 +54,8 @@ let synthesize_f bias samples num_burn_in num_sampling env =
 
 type state = FGoodEnough | FTotalWrong | FIsOK of (Spec.t * V.t list list)
 
-let synthesize_pre env =
-  let pre, (in_pre, out_pre) = Pre.pre_infer_from_env env 2 in
+let synthesize_pre env init_set =
+  let pre, (in_pre, out_pre) = Pre.pre_infer_from_env env init_set 2 in
   if List.length out_pre == 0 then FGoodEnough
   else if List.length in_pre == 0 then (
     Zlog.log_write ~log_level:LWarning
@@ -78,27 +78,29 @@ let synthesize_piecewise env max_length num_burn_in num_sampling =
     if iter >= iter_bound || length current >= max_length then
       force_converge current
     else
-      let prev_cases, f =
+      let prev_cases, f, init_set =
         match current with
         | InitF env ->
             ( [],
               synthesize_f
                 (fun _ -> true)
-                [ env.i_err ] num_burn_in num_sampling env )
+                [ env.i_err ] num_burn_in num_sampling env,
+              [ env.i_err ] )
         | NextF (cases, f, pre, samples, env) ->
             let pres = List.map fst cases in
             let bias x =
               not @@ List.for_all (fun pre -> Spec.eval pre x) (pres @ [ pre ])
             in
             ( cases @ [ (pre, f) ],
-              synthesize_f bias samples num_burn_in num_sampling env )
+              synthesize_f bias samples num_burn_in num_sampling env,
+              samples )
       in
       match f with
       | None -> loop current (iter + 1)
       | Some (env, f) -> (
           if length current + 1 >= max_length then ([], f)
           else
-            match synthesize_pre env with
+            match synthesize_pre env init_set with
             | FGoodEnough -> (prev_cases, f)
             | FTotalWrong -> loop current (iter + 1)
             | FIsOK (pre, samples) ->
@@ -138,6 +140,9 @@ let log_show_init_set iter init_set =
   in
   ()
 
+module S = Sampling.Scache
+open Primitive
+
 let synthesize_multi env max_length num_burn_in num_sampling =
   let rec loop current init_set iter =
     if iter >= iter_bound || List.length current >= max_length then current
@@ -147,24 +152,19 @@ let synthesize_multi env max_length num_burn_in num_sampling =
       with
       | None -> raise @@ failwith "synthesize_f fails"
       | Some (env, new_f) ->
+          let conds =
+            S.mk_conds
+              (Measure.mk_measure_cond env.i_err)
+              env.sigma
+              (fun v -> snd @@ env.client env.library_inspector v)
+              env.phi
+              (fun _ -> true)
+          in
           let scache =
-            Sampling.cost_sampling_ env.Env.tps init_set new_f
+            S.mk_generation Config.Correct init_set conds new_f
               env.sampling_rounds
           in
-          let valuem, io_list = Sampling.pure_sampled_input_output scache in
-          let good_list =
-            List.filter_map
-              (fun (in_idx, out_idx) ->
-                let inp = Hashtbl.find valuem in_idx in
-                let outp = Hashtbl.find valuem out_idx in
-                match snd @@ env.client env.library_inspector outp with
-                | None -> None
-                | Some outp ->
-                    if env.sigma inp && (not @@ env.phi @@ inp @ outp) then
-                      Some inp
-                    else None)
-              io_list
-          in
+          let good_list = S.Mem.all_outs_unique scache.mem in
           if List.length good_list == 0 then
             raise @@ failwith "synthesized f has no good result"
           else

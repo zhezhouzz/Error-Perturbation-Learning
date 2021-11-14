@@ -98,17 +98,28 @@ let eval_short_circuit (peval : int -> bool) e =
         in
         and_aux l
     | Or l ->
-        let rec or_aux = function [] -> false | h :: t -> aux h && or_aux t in
+        let rec or_aux = function [] -> false | h :: t -> aux h || or_aux t in
         or_aux l
     | Iff (e1, e2) -> aux e1 == aux e2
   in
   aux e
 
-let forall_eval (qvs, ast) env qv_range =
+open Basic_dt
+
+let forall_eval (qvs, normal_ast) env qv_range =
+  (* let open Primitive in *)
+  (* let () = *)
+  (*   Printf.printf "env: %s\n" *)
+  (*     (List.split_by_comma (fun (k, v) -> spf "%s => %s" k @@ Value.layout v) *)
+  (*     @@ List.of_seq @@ StrMap.to_seq env) *)
+  (* in *)
+  (* let () = *)
+  (*   Printf.printf "u: %s\n" (List.split_by_comma Value.layout qv_range) *)
+  (* in *)
   let qvs = List.map snd qvs in
   let qv_range_arr = Array.of_list qv_range in
   let len_qv_range_arr = Array.length qv_range_arr in
-  let m, ast = translate ast in
+  let m, ast = translate normal_ast in
   let rec efficient_cache qvs env =
     match qvs with
     | [] ->
@@ -121,6 +132,11 @@ let forall_eval (qvs, ast) env qv_range =
         let arr =
           Array.make_matrix (Array.length qv_range_arr) (SMap.cardinal m) true
         in
+        (* let () = *)
+        (*   Printf.printf "m: %s\n" *)
+        (*     (List.split_by_comma Prop.layout *)
+        (*     @@ List.map fst @@ List.of_seq @@ SMap.to_seq m) *)
+        (* in *)
         let () =
           Array.iteri
             (fun i u_value ->
@@ -128,18 +144,36 @@ let forall_eval (qvs, ast) env qv_range =
               SMap.iter (fun term j -> arr.(i).(j) <- Prop.eval term env) m)
             qv_range_arr
         in
+        (* let () = *)
+        (*   Array.iter *)
+        (*     (fun arr' -> *)
+        (*       Printf.printf "%s\n" *)
+        (*       @@ List.split_by_comma string_of_bool *)
+        (*       @@ Array.to_list arr') *)
+        (*     arr *)
+        (* in *)
         let rec aux i =
           if i >= len_qv_range_arr then true
-          else eval_short_circuit (fun j -> arr.(i).(j)) ast && (aux @@ (i + 1))
+          else if not @@ eval_short_circuit (fun j -> arr.(i).(j)) ast then
+            (* Printf.printf "%s:=%s rejects\n" u @@ Value.layout qv_range_arr.(i); *)
+            false
+          else aux @@ (i + 1)
         in
         aux 0
     | h :: t ->
         let rec aux i =
           if i >= len_qv_range_arr then true
-          else
-            efficient_cache t (Basic_dt.StrMap.add h qv_range_arr.(i) env)
-            && (aux @@ (i + 1))
+          else if
+            not
+            @@ efficient_cache t (Basic_dt.StrMap.add h qv_range_arr.(i) env)
+          then
+            (* Printf.printf "%s:=%s rejects\n" h @@ Value.layout qv_range_arr.(i); *)
+            false
+          else aux @@ (i + 1)
         in
         aux 0
   in
-  efficient_cache qvs env
+  let result = efficient_cache qvs env in
+  (* let () = Printf.printf "eval(%s) = %b\n" (Prop.layout normal_ast) result in *)
+  (* let () = raise @@ failwith "end" in *)
+  result

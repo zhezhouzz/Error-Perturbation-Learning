@@ -1,7 +1,7 @@
 open Primitive
-open Sampling
 module V = Value
 open Basic_dt
+module S = Sampling.Scache
 
 let alpha_in_pre_is_err = 0.05
 
@@ -38,19 +38,19 @@ let identity_panalty len = 1.5 *. float_of_int len
 
 let duplicate_panalty = 2.0
 
-let duplicate_level gh i j =
-  if i == j then identity_panalty @@ List.length gh
+let duplicate_level prev i j =
+  if i == j then identity_panalty @@ List.length prev
   else if j < i then
-    let dup_times x =
-      fst
-      @@ List.fold_left
-           (fun (dup_times, gidx) gtotal ->
-             if gidx < gtotal then (dup_times + 1, gidx) else (dup_times, gidx))
-           (0, x) gh
+    let dup = S.duplicate prev j in
+    let dup_times =
+      List.fold_left (fun sum x -> sum +. x) 0.0
+      @@ List.map (fun (dtimes, total) ->
+             float_of_int (List.length dtimes)
+             /. float_of_int (List.length total))
+      @@ List.combine dup prev
     in
-    let dup_times = dup_times j in
-    let _ = Zlog.log_write @@ Printf.sprintf "dup_times:%i" dup_times in
-    float_of_int @@ dup_times
+    let _ = Zlog.log_write @@ Printf.sprintf "dup_times:%f" dup_times in
+    dup_times
   else 1.0
 
 let delta_non_trival = 1.5
@@ -103,20 +103,21 @@ let bias_penalty = 2.0
 
 let cost_weighted_valid_iter (bias : V.t list -> bool)
     (sigma : V.t list -> bool) (prog : V.t list -> int list * V.t list option)
-    (phi : V.t list -> bool) (i_err_non_trivial_info : Env.non_trivial_info) gh
-    m jump_entry =
-  let f i jopt =
-    match jopt with
+    (phi : V.t list -> bool) (i_err_non_trivial_info : Env.non_trivial_info)
+    prev g mem =
+  let k_bias_penalty =
+    match !Config.conf.bias_method with
+    | Config.SamplingCutOff | Config.Correct | Config.MeasureOnly ->
+        fun _ -> 1.0
+    | Config.CostPenalty -> fun v -> if bias v then 1.0 else bias_penalty
+  in
+  let f i =
+    match S.Mem.get_out_idxs mem i with
     | [] -> alpha_none
     | js ->
         let one j =
-          let k_dupliate = duplicate_level gh i j in
-          let v = Hashtbl.find m j in
-          let k_bias_penalty =
-            match !Config.conf.bias_method with
-            | Config.SamplingCutOff -> 1.0
-            | Config.CostPenalty -> if bias v then 1.0 else bias_penalty
-          in
+          let k_dupliate = duplicate_level prev i j in
+          let v = S.Mem.itov mem j in
           let delta =
             let invocation_record, result = prog v in
             let alpha =
@@ -128,7 +129,7 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
                     let k_non_trivial =
                       non_trival_v2 i_err_non_trivial_info invocation_record
                     in
-                    k_non_trivial *. k_bias_penalty *. alpha_in_pre_is_err
+                    k_non_trivial *. k_bias_penalty v *. alpha_in_pre_is_err
                   else alpha_out_pre_is_err
             in
             alpha
@@ -137,7 +138,7 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
         in
         List.mean one js
   in
-  Array.meani f jump_entry
+  List.mean f g
 
 let cost_duplicate_iter jump_entry =
   let bound = Array.length jump_entry in
@@ -155,42 +156,25 @@ let k_duplicate = 0.5
 
 let k_valid = 0.5
 
-let cal_cost (bias : V.t list -> bool) (sigma : V.t list -> bool)
-    (prog : V.t list -> int list * V.t list option) (phi : V.t list -> bool)
-    (i_err_non_trivial_info : Env.non_trivial_info) (cache : cache) =
-  let sum =
-    List.fold_lefti
-      (fun sum i j ->
-        (* let cost_valid = cost_valid_iter sigma prog phi cache.datam_rev j in *)
-        (* let cost_duplicate = cost_duplicate_iter j in *)
-        (* let () = Zlog.log_write (Printf.sprintf "cost_valid[%i]: %f" i cost_valid) in *)
-        (* let () = Zlog.log_write (Printf.sprintf "cost_duplicate[%i]: %f" i cost_duplicate) in *)
+let cal_cost (conds : S.conds) prog
+    (i_err_non_trivial_info : Env.non_trivial_info) (cache : S.t) =
+  let rec aux sum = function
+    | [] -> raise @@ failwith "never happen"
+    | g :: prev ->
         let cost =
-          cost_weighted_valid_iter bias sigma prog phi i_err_non_trivial_info
-            cache.generation_hierarchy_rev cache.datam_rev j
+          cost_weighted_valid_iter conds.pre conds.sigma prog conds.phi
+            i_err_non_trivial_info prev g cache.mem
         in
-        let k_no_new gh i =
-          if i == 0 then 1.0
-          else
-            try
-              if List.nth gh i == List.nth gh (i - 1) then no_new_output_panalty
-              else 1.0
-            with _ ->
-              raise
-              @@ failwith
-                   (Printf.sprintf "never happen in cost([%s]:%i)"
-                      (List.split_by_comma string_of_int gh)
-                      i)
+        let k_no_new g =
+          if List.length g == 0 then no_new_output_panalty else 1.0
         in
-        let cost = k_no_new cache.generation_hierarchy_rev i *. cost in
+        let cost = k_no_new g *. cost in
         (* let () = Zlog.log_write (Printf.sprintf "cost[%i]: %f" i cost) in *)
-        sum +. cost)
-      0.0 cache.jump_table
+        aux (sum +. cost) prev
   in
-  sum /. float_of_int (List.length cache.jump_table)
+  aux 0.0 cache.gs /. float_of_int (List.length cache.gs)
 
-(* TODO: Try to reduce the probability of [unused;unused;unused;unused] *)
-let cost (env : Env.t) =
+let biased_cost bias (env : Env.t) =
   let open Env in
   Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
     (fun () ->
@@ -207,41 +191,15 @@ let cost (env : Env.t) =
                  (Language.Oplang.check_non_det cur_p.prog)
                  (Language.Oplang.layout cur_p.prog))
           in
-          let scache =
-            Sampling.biased_cost_sampling
-              (fun _ -> false)
-              env.tps env.init_sampling_set cur_p.prog env.sampling_rounds
-          in
-          (* let () = Zlog.log_write (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) in *)
-          let cost =
-            cal_cost
-              (fun _ -> false)
+          let conds =
+            S.mk_conds
+              (Measure.mk_measure_cond env.i_err)
               env.sigma
-              (env.client env.library_inspector)
-              env.phi env.i_err_non_trivial_info scache
-          in
-          let () = Zlog.log_write (Printf.sprintf "cost = %f\n" cost) in
-          cost)
-
-let biased_cost (bias : V.t list -> bool) (env : Env.t) =
-  let open Env in
-  Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-    (fun () ->
-      match env.cur_p with
-      | None ->
-          raise
-          @@ failwith
-               (spf "[%s:%i] the env is not initialized" __FILE__ __LINE__)
-      | Some cur_p ->
-          let () =
-            Zlog.log_write
-              (Printf.sprintf "[%s:%i] prog(non-det: %b):\n%s\n" __FILE__
-                 __LINE__
-                 (Language.Oplang.check_non_det cur_p.prog)
-                 (Language.Oplang.layout cur_p.prog))
+              (fun v -> snd @@ env.client env.library_inspector v)
+              env.phi bias
           in
           let scache =
-            Sampling.biased_cost_sampling bias env.tps env.init_sampling_set
+            S.mk_generation !Config.conf.bias_method env.init_sampling_set conds
               cur_p.prog env.sampling_rounds
           in
           (* let () = *)
@@ -250,9 +208,9 @@ let biased_cost (bias : V.t list -> bool) (env : Env.t) =
           (*        (Sampling.cache_layout scache)) *)
           (* in *)
           let cost =
-            cal_cost env.sigma bias
-              (env.client env.library_inspector)
-              env.phi env.i_err_non_trivial_info scache
+            cal_cost conds
+              (fun v -> env.client env.library_inspector v)
+              env.i_err_non_trivial_info scache
           in
           let () = Zlog.log_write (Printf.sprintf "cost = %f\n" cost) in
           cost)
@@ -370,20 +328,27 @@ let test (env : Env.t) =
       (Printf.sprintf "prog(non-det: %b):\n%s\n"
          (Language.Oplang.check_non_det f)
          (Language.Oplang.layout f));
+    let conds =
+      S.mk_conds
+        (Measure.mk_measure_cond env.i_err)
+        env.sigma
+        (fun v -> snd @@ env.client env.library_inspector v)
+        env.phi
+        (fun _ -> true)
+    in
     let scache =
-      cost_sampling_ [ Tp.IntList; Tp.IntList ] env.init_sampling_set f
+      S.mk_generation !Config.conf.bias_method env.init_sampling_set conds f
         env.sampling_rounds
     in
     (* let () = *)
     (*   Zlog.log_write *)
-    (*     (Printf.sprintf "sample cache:\n%s\n" (Sampling.cache_layout scache)) *)
+    (*     (Printf.sprintf "sample cache:\n%s\n" *)
+    (*        (Sampling.cache_layout scache)) *)
     (* in *)
     let cost =
-      cal_cost
-        (fun _ -> false)
-        env.sigma
-        (env.client env.library_inspector)
-        env.phi env.i_err_non_trivial_info scache
+      cal_cost conds
+        (fun v -> env.client env.library_inspector v)
+        env.i_err_non_trivial_info scache
     in
     let () = Zlog.log_write (Printf.sprintf "cost = %f\n" cost) in
     cost

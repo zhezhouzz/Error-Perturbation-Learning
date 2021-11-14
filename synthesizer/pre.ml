@@ -2,31 +2,38 @@ open Classify
 open Primitive
 open Basic_dt
 module V = Value
+module S = Sampling.Scache
 
-let perturbation_pre_infer (cctx : Cctx.t) (acache : Sampling.cache)
+let perturbation_pre_infer (cctx : Cctx.t) (scache : S.t)
     (sigma : V.t list -> bool) (client : V.t list -> V.t list option)
     (phi : V.t list -> bool) =
-  let valuem, io_list = Sampling.pure_sampled_input_output acache in
-  let io_list =
-    List.filter (fun (in_idx, _) -> sigma @@ Hashtbl.find valuem in_idx) io_list
-  in
-  match io_list with
+  let i_list = List.remove_duplicates @@ List.flatten scache.gs in
+  match i_list with
   | [] ->
       raise
       @@ failwith
            (Printf.sprintf "even have no initial error input in %s" __FUNCTION__)
   | _ ->
-      let to_value (in_idx, _) = Hashtbl.find valuem in_idx in
-      let to_label (_, out_idx) =
-        let i_err' = Hashtbl.find valuem out_idx in
-        match client i_err' with
-        | None -> false
-        | Some o_err' -> sigma i_err' && not (phi (i_err' @ o_err'))
+      let to_value inp_idx = S.Mem.itov scache.mem inp_idx in
+      let to_label inp_idx =
+        let inp = to_value inp_idx in
+        let outs = S.Mem.get_outs scache.mem inp_idx in
+        if List.length outs == 0 then false
+        else
+          let good, bad =
+            List.partition
+              (fun outp ->
+                match client outp with
+                | None -> false
+                | Some outp -> sigma inp && not (phi (inp @ outp)))
+              outs
+          in
+          good >= bad
       in
-      let spec = Infer.spec_infer cctx io_list to_value to_label in
+      let spec = Infer.spec_infer cctx i_list to_value to_label in
       let in_pre, out_pre =
         List.partition (fun inp -> Specification.Spec.eval spec inp)
-        @@ List.map to_value io_list
+        @@ List.map to_value i_list
       in
       let () =
         Zlog.log_write
@@ -42,7 +49,7 @@ let max_qv_num = 100
 let qv_name_space =
   [ "u"; "v"; "w" ] @ List.init max_qv_num (fun i -> Printf.sprintf "k%i" i)
 
-let pre_infer_from_env env qvnum =
+let pre_infer_from_env env init_set qvnum =
   if qvnum > max_qv_num then
     raise @@ failwith (spf "the max qv num is %i\n" max_qv_num)
   else
@@ -66,8 +73,9 @@ let pre_infer_from_env env qvnum =
           @@ Printf.sprintf "fset: %s\n" (Feature.layout_set cctx.Cctx.fset)
         in
         let scache =
-          Sampling.cost_sampling_ env.Env.tps [ env.Env.i_err ] cur_p.prog
-            env.sampling_rounds
+          S.mk_generation_measure_only
+            (Measure.mk_measure_cond env.i_err)
+            init_set cur_p.prog env.sampling_rounds
         in
         perturbation_pre_infer cctx scache env.sigma
           (fun v -> snd @@ env.client env.library_inspector v)

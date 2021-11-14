@@ -44,12 +44,6 @@ let layout
     (aux in_sigma_out_phi_num)
     (aux in_sigma_out_phi_unique_num)
 
-let no_dup_counter () = Hashtbl.create 20000
-
-let add_one tbl e = Hashtbl.add tbl e ()
-
-let get_count tbl = Hashtbl.length tbl
-
 let evaluation (num_none : int) (data : V.t list list)
     (sigma : V.t list -> bool) (client : V.t list -> V.t list option)
     (phi : V.t list -> bool) =
@@ -81,16 +75,22 @@ let evaluation (num_none : int) (data : V.t list list)
       in_sigma_data
   in
   let in_sigma_out_phi_num = List.length in_sigma_out_phi_data in
-  (* let () = *)
-  (*   Zlog.log_write *)
-  (*   @@ Printf.sprintf "in_sigma_out_phi:\n%s\n" *)
-  (*   @@ Basic_dt.List.split_by "\n" *)
-  (*     (fun (i, o) -> Printf.sprintf "%s -> %s" (V.layout_l i) (V.layout_l o)) *)
-  (*     in_sigma_out_phi_data *)
-  (* in *)
-  let c = no_dup_counter () in
-  let () = List.iter (fun idx -> add_one c arr.(idx)) in_sigma_out_phi_data in
-  let in_sigma_out_phi_unique_num = get_count c in
+  let () =
+    Zlog.log_write
+    @@ Printf.sprintf "in_sigma_out_phi:\n%s\n"
+    @@ Basic_dt.List.split_by "\n"
+         (fun idx ->
+           Printf.sprintf "%s -> %s"
+             (V.layout_l arr.(idx))
+             (match client arr.(idx) with
+             | None -> "none"
+             | Some out -> V.layout_l out))
+         in_sigma_out_phi_data
+  in
+  let in_sigma_out_phi_unique_data =
+    Value_aux.remove_duplicates_arr arr in_sigma_out_phi_data
+  in
+  let in_sigma_out_phi_unique_num = List.length in_sigma_out_phi_unique_data in
   {
     sampling_num;
     total_num;

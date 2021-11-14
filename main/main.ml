@@ -59,7 +59,8 @@ let test_mcmc env =
   let open Synthesizer in
   let env, cost =
     Mcmc.metropolis_hastings ~burn_in:300 ~sampling_steps:30
-      ~proposal_distribution:Mutate.mutate ~cost_function:Cost.cost
+      ~proposal_distribution:Mutate.mutate
+      ~cost_function:(Cost.biased_cost (fun _ -> true))
       ~init_distribution:env
   in
   let () =
@@ -100,8 +101,9 @@ let test_pre_infer env =
   let prog = Parse.parse "data/pre.prog" in
   let open Synthesizer in
   let scache =
-    Sampling.cost_sampling_ env.Env.tps [ env.Env.i_err ] prog
-      env.sampling_rounds
+    Sampling.Scache.mk_generation_measure_only
+      (Primitive.Measure.mk_measure_cond env.Env.i_err)
+      [ env.Env.i_err ] prog env.sampling_rounds
   in
   let qv = [ (Primitive.Tp.Int, "u"); (Primitive.Tp.Int, "v") ] in
   let args = prog.fin in
@@ -138,7 +140,8 @@ let batched_test source_file meta_file num_times num_burn_in num_sampling =
           (fun () ->
             Mcmc.metropolis_hastings ~burn_in:num_burn_in
               ~sampling_steps:num_sampling ~proposal_distribution:Mutate.mutate
-              ~cost_function:Cost.cost ~init_distribution:env)
+              ~cost_function:(Cost.biased_cost (fun _ -> true))
+              ~init_distribution:env)
       in
       let () =
         match env.cur_p with
@@ -486,18 +489,20 @@ let eval_result =
                   let prog =
                     Parse.parse_piecewise (sprintf "%s/0.prog" output_dir)
                   in
-                  let data, cost_time =
+                  let (none_num, data), cost_time =
                     Zlog.event_time_
                       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
                          __FUNCTION__ "sampling") (fun () ->
-                        Synthesizer.Sampling.sampling_to_data [ env.i_err ] prog
+                        Sampling.Scache.eval_sampling [ env.i_err ]
+                          ((List.map ~f:snd @@ fst prog) @ [ snd prog ])
+                          (Primitive.Measure.mk_measure_cond env.i_err)
                           num_sampling)
                   in
                   let stat =
                     Zlog.event_
                       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
                          __FUNCTION__ "evaluation") (fun () ->
-                        Evaluation.Ev.evaluation_opt data env.sigma
+                        Evaluation.Ev.evaluation none_num data env.sigma
                           (fun inp ->
                             snd @@ env.client env.library_inspector inp)
                           env.phi)
@@ -537,22 +542,10 @@ let sampling =
               Zlog.event_time_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
                    "sampling") (fun () ->
-                  (* Synthesizer.Sampling.sampling_to_data [ env.i_err ] prog *)
-                  let fs = snd prog :: List.map ~f:snd (fst prog) in
-                  Synthesizer.Sampling.det_sampling [ env.i_err ]
-                    Language.Oplang_interp.interp fs num_sampling
-                  (* match env.i_err with *)
-                  (* | [ Primitive.Value.I x0; Primitive.Value.T x1 ] -> *)
-                  (*     let num_none, data = *)
-                  (*       Synthesizer.Sampling.det_sampling' [ (x0, x1) ] *)
-                  (*         num_sampling *)
-                  (*     in *)
-                  (*     ( num_none, *)
-                  (*       List.map *)
-                  (*         ~f:(fun (x0, x1) -> *)
-                  (*           [ Primitive.Value.I x0; Primitive.Value.T x1 ]) *)
-                  (*         data ) *)
-                  (* | _ -> (0, []) *))
+                  Sampling.Scache.eval_sampling [ env.i_err ]
+                    ((List.map ~f:snd @@ fst prog) @ [ snd prog ])
+                    (Primitive.Measure.mk_measure_cond env.i_err)
+                    num_sampling)
             in
             let stat =
               Zlog.event_
@@ -581,8 +574,8 @@ let baseline =
                 (Primitive.Value.layout_l env.i_err)
             in
             let qc_conf = Zquickcheck.Qc.load_config qc_file in
-            let data =
-              Zlog.event_
+            let data, cost_time =
+              Zlog.event_time_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
                    "baseline sampling") (fun () ->
                   Zquickcheck.Qc_baseline.baseline qc_conf env.tps num)
@@ -595,7 +588,8 @@ let baseline =
                     (fun inp -> snd @@ env.client env.library_inspector inp)
                     env.phi)
             in
-            let () = Printf.printf "%s\n" @@ Evaluation.Ev.layout stat in
+            (* let () = Printf.printf "%s\n" @@ Evaluation.Ev.layout stat in *)
+            let () = layout_eval "" stat cost_time in
             ()))
 
 let command =

@@ -1,0 +1,7 @@
+IN: (x0: int, x1: int tree) {
+(x2: int, x3: int tree, x4: int tree) = tree_destruct(x1: int tree);
+(x5: int tree) = tree_rotation_right(x3: int tree);
+(x6: int tree) = tree_node(x2: int, x5: int tree, x4: int tree);
+(x7: int tree) = tree_rotation_left(x6: int tree)
+}
+OUT: (x0: int, x7: int tree)

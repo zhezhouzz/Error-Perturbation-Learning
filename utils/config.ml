@@ -7,7 +7,7 @@ type mutation_distribution = {
   arg_reassign : int;
 }
 
-type bias_method = SamplingCutOff | CostPenalty
+type bias_method = SamplingCutOff | CostPenalty | MeasureOnly | Correct
 
 type config = {
   exec_flag : exec_flag;
@@ -48,8 +48,8 @@ let load_config configfile =
   let exec_flag =
     match exec_flag with
     | "debug" ->
-      make_dir logdir;
-      Debug { logc = Core.Out_channel.create (logdir ^ "/" ^ logfile) }
+        make_dir logdir;
+        Debug { logc = Core.Out_channel.create (logdir ^ "/" ^ logfile) }
     | "opt" -> Opt
     | _ -> raise @@ failwith "config error"
   in
@@ -99,11 +99,11 @@ let refresh_logfile name =
   let flag' =
     match !conf.exec_flag with
     | Debug { logc; _ } ->
-      Core.Out_channel.close logc;
-      Core.Unix.rename
-        ~src:(logdir ^ "/" ^ logfile)
-        ~dst:(logdir ^ "/" ^ new_name);
-      Debug { logc = Core.Out_channel.create (logdir ^ "/" ^ logfile) }
+        Core.Out_channel.close logc;
+        Core.Unix.rename
+          ~src:(logdir ^ "/" ^ logfile)
+          ~dst:(logdir ^ "/" ^ new_name);
+        Debug { logc = Core.Out_channel.create (logdir ^ "/" ^ logfile) }
     | Opt -> Opt
   in
   conf := { !conf with exec_flag = flag' }

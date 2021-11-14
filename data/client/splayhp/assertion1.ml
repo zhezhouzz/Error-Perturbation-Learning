@@ -21,12 +21,7 @@ let op_pool =
 
 let libs = [| "Splayhp" |]
 
-let i_err =
-  ( 5,
-    Node
-      ( 3,
-        Node (2, Leaf, Node (1, Leaf, Leaf)),
-        Node (6, Node (4, Leaf, Leaf), Leaf) ) )
+let i_err = (5, Node (3, Node (2, Leaf, Leaf), Node (3, Leaf, Leaf)))
 
 let sampling_rounds = 6
 

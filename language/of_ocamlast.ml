@@ -40,6 +40,12 @@ let type_of_ocamltype tp =
 
 (* Literal *)
 let rec lit_of_ocamlexpr e =
+  let mk_exn constructor args =
+    failwith
+      (spf "do not support complicate literal %s --> [%s] --"
+         (Pprintast.string_of_expression constructor)
+         (List.split_by_comma V.layout args))
+  in
   match e.pexp_desc with
   | Pexp_tuple es -> List.flatten @@ List.map lit_of_ocamlexpr es
   | Pexp_construct (id, e) -> (
@@ -52,42 +58,25 @@ let rec lit_of_ocamlexpr e =
       | "()", None -> [ V.U ]
       | "Empty", None -> [ V.U ]
       | "[]", None -> [ V.L [] ]
+      | "NodeS", Some e -> (
+          match lit_of_ocamlexpr e with
+          | [ V.I x ] -> [ V.T (Tree.Node (x, Leaf, Leaf)) ]
+          | k -> raise @@ mk_exn e k)
       | "Node", Some e -> (
           match lit_of_ocamlexpr e with
           | [ V.I x; V.T a; V.T b ] -> [ V.T (Tree.Node (x, a, b)) ]
-          | k ->
-              raise
-              @@ failwith
-                   (spf "do not support complicate literal %s --> [%s] --"
-                      (Pprintast.string_of_expression e)
-                      (List.split_by_comma V.layout k)))
+          | k -> raise @@ mk_exn e k)
       | "LNode", Some e -> (
           match lit_of_ocamlexpr e with
           | [ V.B label; V.I x; V.TB a; V.TB b ] ->
               [ V.TB (LabeledTree.Node (label, x, a, b)) ]
           | [ V.I label; V.I x; V.TI a; V.TI b ] ->
               [ V.TI (LabeledTree.Node (label, x, a, b)) ]
-          | k ->
-              raise
-              @@ failwith
-                   (spf "do not support complicate literal %s --> [%s] --"
-                      (Pprintast.string_of_expression e)
-                      (List.split_by_comma V.layout k)))
+          | k -> raise @@ mk_exn e k)
       | "::", Some e -> (
           match lit_of_ocamlexpr e with
-          (* | [ V.U; V.L [] ] -> [ V.T Tree.Leaf ] *)
-          (* | [ V.I x; V.T Tree.Leaf ] -> *)
-          (*     [ V.T (Tree.Node (x, Tree.Leaf, Tree.Leaf)) ] *)
-          (* | [ V.T x; V.L [] ] -> [ V.T x ] *)
-          (* | [ V.T x; V.T y ] -> [ V.T x; V.T y ] *)
-          (* | [ V.I x; V.T a; V.T b ] -> [ V.T (Tree.Node (x, a, b)) ] *)
           | [ V.I hd; V.L tl ] -> [ V.L (hd :: tl) ]
-          | k ->
-              raise
-              @@ failwith
-                   (spf "do not support complicate literal %s --> [%s] --"
-                      (Pprintast.string_of_expression e)
-                      (List.split_by_comma V.layout k)))
+          | k -> raise @@ mk_exn e k)
       | x, None ->
           raise @@ failwith (spf "do not support complicate literal(%s) --" x)
       | x, Some es ->
@@ -233,7 +222,8 @@ let prop_of_ocamlexpr tenv expr =
                         @@ failwith
                              (spf
                                 "Method predicate does not allow nested \
-                                 predicates(%s)"
+                                 predicates %s(%s)"
+                                funcname
                              @@ Clientlang.layout_body x)
                   in
                   match StrMap.find_opt tenv name with

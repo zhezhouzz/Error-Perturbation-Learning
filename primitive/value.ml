@@ -75,8 +75,9 @@ let flatten_forall_l_unique_paddled l =
   let l = flatten_forall_l l in
   let s = List.fold_left (fun s elem -> IntSet.add elem s) IntSet.empty l in
   match IntSet.min_elt_opt s with
-  | None -> [ 0 ]
-  | Some minmial -> (minmial - 1) :: (List.of_seq @@ IntSet.to_seq s)
+  | None -> [ 0; 1 ]
+  | Some minmial ->
+      (minmial - 2) :: (minmial - 1) :: (List.of_seq @@ IntSet.to_seq s)
 
 let size = function
   | U | I _ | B _ | NotADt -> 0

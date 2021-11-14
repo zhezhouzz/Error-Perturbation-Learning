@@ -50,6 +50,12 @@ let info_table =
       "tree_append_to_right_most";
       "tree_max";
       "tree_min";
+      "tree_upper_bound";
+      "tree_lower_bound";
+      "tree_add_to_bottom_left";
+      "tree_add_to_bottom_right";
+      "tree_drop_bottom";
+      "tree_destruct";
       (* treei *)
       "treei_node";
       "treei_left_right_subtree";

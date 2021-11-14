@@ -563,6 +563,30 @@ module Tree = struct
 
   let interexn = interexn self
 
+  let destruct_opt = function Leaf -> None | Node (x, a, b) -> Some (x, a, b)
+
+  let add_to_bottom_left x tr =
+    let rec aux = function
+      | Leaf -> (1, Node (x, Leaf, Leaf))
+      | Node (y, l, r) ->
+          let ll, l' = aux l in
+          let lr, r' = aux r in
+          if lr < ll then (lr + 1, Node (y, l, r'))
+          else (ll + 1, Node (y, l', r))
+    in
+    snd @@ aux tr
+
+  let add_to_bottom_right x tr =
+    let rec aux = function
+      | Leaf -> (1, Node (x, Leaf, Leaf))
+      | Node (y, l, r) ->
+          let ll, l' = aux l in
+          let lr, r' = aux r in
+          if ll < lr then (ll + 1, Node (y, l', r))
+          else (lr + 1, Node (y, l, r'))
+    in
+    snd @@ aux tr
+
   let deep t =
     let rec aux = function
       | Leaf -> 0
@@ -573,6 +597,15 @@ module Tree = struct
     in
     aux t
 
+  let drop_bottom tr =
+    let depth = deep tr in
+    let rec aux d = function
+      | Leaf -> Leaf
+      | Node (x, l, r) ->
+          if depth == d + 1 then Leaf else Node (x, aux (d + 1) l, aux (d + 1) r)
+    in
+    aux 0 tr
+
   let rec size = function Leaf -> 0 | Node (_, a, b) -> 1 + size a + size b
 
   let flip tr = match tr with Leaf -> Leaf | Node (a, b, c) -> Node (a, c, b)
@@ -582,13 +615,13 @@ module Tree = struct
     | Leaf -> Leaf
     | Node (a, b, c) -> Node (a, rec_flip c, rec_flip b)
 
-  let rotation_left_opt tr =
+  let rotation_right_opt tr =
     match tr with
     | Leaf -> Some Leaf
     | Node (x, Node (y, a, b), c) -> Some (Node (y, a, Node (x, b, c)))
     | _ -> None
 
-  let rotation_right_opt tr =
+  let rotation_left_opt tr =
     match tr with
     | Leaf -> Some Leaf
     | Node (x, a, Node (y, b, c)) -> Some (Node (y, Node (x, a, b), c))
@@ -611,7 +644,7 @@ module Tree = struct
           let max_e =
             match max_e with
             | None -> a
-            | Some max_e -> if e_compare a max_e > 0 then max_e else a
+            | Some max_e -> if e_compare a max_e > 0 then a else max_e
           in
           aux (aux (Some max_e) b) c
     in
@@ -817,13 +850,13 @@ module TreeTailRec = struct
 
   let flip tr = match tr with Leaf -> Leaf | Node (a, b, c) -> Node (a, c, b)
 
-  let rotation_left_opt tr =
+  let rotation_right_opt tr =
     match tr with
     | Leaf -> Some Leaf
     | Node (x, Node (y, a, b), c) -> Some (Node (y, a, Node (x, b, c)))
     | _ -> None
 
-  let rotation_right_opt tr =
+  let rotation_left_opt tr =
     match tr with
     | Leaf -> Some Leaf
     | Node (x, a, Node (y, b, c)) -> Some (Node (y, Node (x, a, b), c))
@@ -1001,14 +1034,14 @@ module LabeledTree = struct
     | Leaf -> Leaf
     | Node (label, a, b, c) -> Node (label, a, rec_flip c, rec_flip b)
 
-  let rotation_left_opt tr =
+  let rotation_right_opt tr =
     match tr with
     | Leaf -> Some Leaf
     | Node (labelx, x, Node (labely, y, a, b), c) ->
         Some (Node (labely, y, a, Node (labelx, x, b, c)))
     | _ -> None
 
-  let rotation_right_opt tr =
+  let rotation_left_opt tr =
     match tr with
     | Leaf -> Some Leaf
     | Node (labelx, x, a, Node (labely, y, b, c)) ->
@@ -1180,6 +1213,8 @@ module IntList = struct
 
   let eq l0 l1 = List.eq (fun x y -> x == y) l0 l1
 
+  let sum = List.fold_left (fun sum x -> sum + x) 0
+
   let to_string l =
     List.fold_lefti
       (fun res i a ->
@@ -1236,3 +1271,10 @@ module BitVector = struct
         | _ -> raise @@ interexn "BitVector")
       (List.of_seq @@ String.to_seq str)
 end
+
+let rec fastexpt : int -> int -> int =
+ fun b n ->
+  if n = 0 then 1
+  else
+    let b2 = fastexpt b (n / 2) in
+    if n mod 2 = 0 then b2 * b2 else b * b2 * b2
