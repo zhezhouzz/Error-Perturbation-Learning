@@ -1,0 +1,6 @@
+IN: (x0: int, x1: int tree) {
+(x2: int) = plus1(x0: int);
+(x3: int tree) = tree_rotation_right(x1: int tree);
+(x4: int) = plus1(x2: int);
+(x5: int tree) = tree_rec_flip(x3: int tree)}
+OUT: (x4: int, x5: int tree)

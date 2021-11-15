@@ -68,7 +68,16 @@ module Mem = struct
 
   let reg mem inp outs = Hashtbl.add mem.jump_table inp outs
 
-  let filter mem f idxs = List.filter (fun idx -> f @@ itov mem idx) idxs
+  let filter mem f idxs =
+    List.filter
+      (fun idx ->
+        let v = itov mem idx in
+        let b = f v in
+        if not b then
+          (* Zlog.log_write @@ spf "filtered out %s" @@ Value.layout_l v; *)
+          b
+        else b)
+      idxs
 
   let jump_layout mem idxs =
     List.fold_left
@@ -159,13 +168,26 @@ let mk_generation mode init_set conds f num =
         | Some output -> [ output ] )
   in
   let rec loop n cache =
-    if n >= num then cache
+    if n >= num then raise @@ failwith "never happen"
     else
       let mem, outs = generate cache.mem cache.gs mode conds f in
-      if n >= num + 1 then cache
+      (* let () = *)
+      (*   Zlog.log_write @@ spf "outs =\n%s" *)
+      (*   @@ List.split_by_comma *)
+      (*        (fun x -> Value.layout_l @@ Mem.itov cache.mem x) *)
+      (*        outs *)
+      (* in *)
+      if n >= num - 1 then cache
+      else if List.length outs == 0 then
+        (* early stop *)
+        { mem; gs = List.init (num - n - 1) (fun _ -> []) @ cache.gs }
       else loop (n + 1) { mem; gs = outs :: cache.gs }
   in
-  loop 0 cache
+  let scache = loop 0 cache in
+  (* let () = *)
+  (*   Zlog.log_write @@ spf "len(scache.gs) = %i" @@ List.length scache.gs *)
+  (* in *)
+  scache
 
 let measure_conds measure =
   mk_conds measure
@@ -213,4 +235,10 @@ let eval_sampling (init_set : Value.t list list) fs measure bound =
       (num_none, List.map (Mem.itov mem) @@ List.sublist !res (0, bound))
     else aux mem num_none samples
   in
-  aux mem 0 @@ List.nth gs 0
+  let num_none, data = aux mem 0 @@ List.nth gs 0 in
+  let () =
+    Zlog.log_write
+    @@ spf "num_none = %i\ndata:\n%s\n" num_none
+    @@ List.split_by "\n" Value.layout_l data
+  in
+  (num_none, data)

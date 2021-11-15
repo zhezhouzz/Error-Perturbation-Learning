@@ -171,9 +171,9 @@ let synthesize_multi env max_length num_burn_in num_sampling =
             let init_set =
               Primitive.Value_aux.remove_duplicates_l (init_set @ good_list)
             in
-            let () = log_show_init_set iter init_set in
+            (* let () = log_show_init_set iter init_set in *)
             let init_set = init_set_filter init_set in
-            let () = log_show_init_set iter init_set in
+            (* let () = log_show_init_set iter init_set in *)
             loop (current @ [ new_f ]) init_set (iter + 1)
   in
   let fs : F.t list = loop [] [ env.i_err ] 0 in

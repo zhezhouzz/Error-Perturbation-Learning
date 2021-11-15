@@ -76,7 +76,13 @@ let non_trival_v2 r1 r2 =
     try List.combine r1 r2
     with _ -> raise @@ failwith "diff_invocation_record_v2"
   in
-  let a = List.mean (fun (n1, n2) -> float_of_int @@ abs @@ (n1 - n2)) r in
+  let a =
+    match
+      List.mean_opt (fun (n1, n2) -> float_of_int @@ abs @@ (n1 - n2)) r
+    with
+    | Some a -> a
+    | None -> 0.0
+  in
   let a = max 0.2 (2.0 /. (2.0 +. a)) in
   let b1, b2 =
     Sugar.map2 (fun l -> List.map (fun (x, y) -> x - y) @@ List.c_n_2 l) (r1, r2)
@@ -100,6 +106,8 @@ let non_trival_v2 r1 r2 =
 let no_new_output_panalty = 4.5
 
 let bias_penalty = 2.0
+
+let empty_generation_penalty = 1.0
 
 let cost_weighted_valid_iter (bias : V.t list -> bool)
     (sigma : V.t list -> bool) (prog : V.t list -> int list * V.t list option)
@@ -136,9 +144,17 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
           in
           delta *. k_dupliate
         in
-        List.mean one js
+        List.mean_exn one js
   in
-  List.mean f g
+  let c =
+    match List.mean_opt f g with
+    | Some c -> c
+    | None -> empty_generation_penalty
+  in
+  (* let () = *)
+  (*   Zlog.log_write @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) c *)
+  (* in *)
+  c
 
 let cost_duplicate_iter jump_entry =
   let bound = Array.length jump_entry in
@@ -159,7 +175,7 @@ let k_valid = 0.5
 let cal_cost (conds : S.conds) prog
     (i_err_non_trivial_info : Env.non_trivial_info) (cache : S.t) =
   let rec aux sum = function
-    | [] -> raise @@ failwith "never happen"
+    | [] -> sum
     | g :: prev ->
         let cost =
           cost_weighted_valid_iter conds.pre conds.sigma prog conds.phi

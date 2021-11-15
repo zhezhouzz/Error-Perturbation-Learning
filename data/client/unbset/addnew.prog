@@ -1,5 +1,5 @@
 IN: (x0: int, x1: int tree) {
 (x2: int) = tree_max(x1: int tree);
 (x3: int) = plus1(x2: int tree);
-(x4: int tree) = tree_add_to_bottom_right(x3: int, x1: int tree)}
+(x4: int tree) = tree_append_to_right_most(x3: int, x1: int tree)}
 OUT: (x0: int, x4: int tree)

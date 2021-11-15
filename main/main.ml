@@ -53,7 +53,31 @@ let mk_env_from_files source_file meta_file =
   Synthesizer.Mkenv.mk_env_v2 sigma client libs phi tps i_err op_pool preds
     sampling_rounds p_size
 
-let test_cost env = Synthesizer.Cost.test env
+let test_cost env progs =
+  let open Synthesizer.Env in
+  let measure = Primitive.Measure.mk_measure_cond env.i_err in
+  let cost name prog =
+    let () = Zlog.log_write @@ sprintf "[%s]" name in
+    let conds =
+      Sampling.Scache.mk_conds measure env.sigma
+        (fun v -> snd @@ env.client env.library_inspector v)
+        env.phi
+        (fun _ -> true)
+    in
+    let scache =
+      Sampling.Scache.mk_generation !Config.conf.bias_method [ env.i_err ] conds
+        prog env.sampling_rounds
+    in
+    let cost =
+      Synthesizer.Cost.cal_cost conds
+        (fun v -> env.client env.library_inspector v)
+        env.i_err_non_trivial_info scache
+    in
+    cost
+  in
+  List.iter
+    ~f:(fun (name, f) -> Printf.printf "%s\ncost: %f\n\n" name (cost name f))
+    progs
 
 let test_mcmc env =
   let open Synthesizer in
@@ -174,19 +198,6 @@ let test =
         Config.exec_main configfile (fun () ->
             (* event "test" (fun () -> Printf.printf "test!\n"; Language.Arg_solving.test ()) *)
             match test_name with
-            | "cost" ->
-                Zlog.event_
-                  (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
-                     "") (fun () ->
-                    Printf.printf "test!\n";
-                    let env =
-                      Zlog.event_
-                        (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
-                           __FUNCTION__ "") (fun () ->
-                          Synthesizer.Mkenv.random_init_prog
-                          @@ mk_standard_env ())
-                    in
-                    test_cost env)
             | "mcmc" ->
                 Zlog.event_
                   (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
@@ -558,6 +569,30 @@ let sampling =
             let () = layout_eval "" stat cost_time in
             ()))
 
+let costing =
+  Command.basic ~summary:"costing"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and prog_config = anon ("prog config" %: regular_file) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let env = mk_env_from_files source_file meta_file in
+            let progs =
+              let open Yojson.Basic.Util in
+              let progs = Config.load_json prog_config |> to_list in
+              let progs =
+                List.map
+                  ~f:(fun x ->
+                    (to_string x, snd @@ Parse.parse_piecewise @@ to_string x))
+                  progs
+              in
+              progs
+            in
+            let () = test_cost env progs in
+            ()))
+
 let baseline =
   Command.basic ~summary:"baseline"
     Command.Let_syntax.(
@@ -605,7 +640,8 @@ let command =
       ("synthesize", synthesize);
       ("synthesize-all", synthesize_all);
       ("eval-baseline", eval_baseline);
-      ("eval-result ", eval_result);
+      ("eval-result", eval_result);
+      ("costing", costing);
     ]
 
 let () = Command.run command

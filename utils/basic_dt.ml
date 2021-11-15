@@ -45,13 +45,17 @@ module Array = struct
     in
     r
 
-  let mean (f : 'a -> float) (l : 'a array) =
-    let r = fold_left (fun sum x -> sum +. f x) 0.0 l in
-    r /. (float_of_int @@ length l)
+  let mean_opt (f : 'a -> float) (l : 'a array) =
+    if length l == 0 then None
+    else
+      let r = fold_left (fun sum x -> sum +. f x) 0.0 l in
+      Some (r /. (float_of_int @@ length l))
 
-  let meani (f : int -> 'a -> float) (l : 'a array) =
-    let r = fold_lefti (fun sum i x -> sum +. f i x) 0.0 l in
-    r /. (float_of_int @@ length l)
+  let meani_opt (f : int -> 'a -> float) (l : 'a array) =
+    if length l == 0 then None
+    else
+      let r = fold_lefti (fun sum i x -> sum +. f i x) 0.0 l in
+      Some (r /. (float_of_int @@ length l))
 
   let set_multi (f : int -> 'a) (i : int) (j : int) (arr : 'a array) =
     let rec aux idx =
@@ -190,13 +194,23 @@ module List = struct
     let rec aux r i = function [] -> r | h :: t -> aux (f r i h) (i + 1) t in
     aux default 0 l
 
-  let mean (f : 'a -> float) (l : 'a list) =
-    let r = fold_left (fun sum x -> sum +. f x) 0.0 l in
-    r /. (float_of_int @@ length l)
+  let mean_exn (f : 'a -> float) (l : 'a list) =
+    if length l == 0 then raise @@ failwith "never happen"
+    else
+      let r = fold_left (fun sum x -> sum +. f x) 0.0 l in
+      r /. (float_of_int @@ length l)
 
-  let meani (f : int -> 'a -> float) (l : 'a list) =
-    let r = fold_lefti (fun sum i x -> sum +. f i x) 0.0 l in
-    r /. (float_of_int @@ length l)
+  let mean_opt (f : 'a -> float) (l : 'a list) =
+    if length l == 0 then None
+    else
+      let r = fold_left (fun sum x -> sum +. f x) 0.0 l in
+      Some (r /. (float_of_int @@ length l))
+
+  let meani_opt (f : int -> 'a -> float) (l : 'a list) =
+    if length l == 0 then None
+    else
+      let r = fold_lefti (fun sum i x -> sum +. f i x) 0.0 l in
+      Some (r /. (float_of_int @@ length l))
 
   let find_index_opt f l =
     fold_lefti
