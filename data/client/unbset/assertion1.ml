@@ -4,7 +4,6 @@ let op_pool =
   [|
     "tree_node";
     "tree_destruct";
-    "tree_left_right_subtree";
     "tree_flip";
     "tree_rec_flip";
     "tree_rotation_left";

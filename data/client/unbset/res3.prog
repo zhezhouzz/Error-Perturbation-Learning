@@ -1,0 +1,6 @@
+IN: (x0: int, x1: int tree) {
+(x2: int) = const0();
+(x3: int tree) = tree_drop_bottom(x1: int tree);
+(x4: int) = minus1(x0: int);
+(x5: int tree) = tree_append_to_left_most(x2: int, x3: int tree)}
+OUT: (x4: int, x5: int tree)

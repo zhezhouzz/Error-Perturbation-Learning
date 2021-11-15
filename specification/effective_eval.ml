@@ -155,7 +155,10 @@ let forall_eval (qvs, normal_ast) env qv_range =
         let rec aux i =
           if i >= len_qv_range_arr then true
           else if not @@ eval_short_circuit (fun j -> arr.(i).(j)) ast then
-            (* Printf.printf "%s:=%s rejects\n" u @@ Value.layout qv_range_arr.(i); *)
+            (* let () = *)
+            (*   Printf.printf "%s:=%s rejects\n" u *)
+            (*   @@ Value.layout qv_range_arr.(i) *)
+            (* in *)
             false
           else aux @@ (i + 1)
         in
@@ -167,7 +170,10 @@ let forall_eval (qvs, normal_ast) env qv_range =
             not
             @@ efficient_cache t (Basic_dt.StrMap.add h qv_range_arr.(i) env)
           then
-            (* Printf.printf "%s:=%s rejects\n" h @@ Value.layout qv_range_arr.(i); *)
+            (* let () = *)
+            (*   Printf.printf "%s:=%s rejects\n" h *)
+            (*   @@ Value.layout qv_range_arr.(i) *)
+            (* in *)
             false
           else aux @@ (i + 1)
         in

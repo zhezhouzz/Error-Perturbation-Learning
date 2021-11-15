@@ -1,0 +1,17 @@
+Pre
+let spec (i_0:int) (it_0:int tree)  = true
+Perturbation
+IN: (x0: int, x1: int tree) {
+(x2: int tree) = tree_append_to_left_most(x0: int, x1: int tree);
+(x3: int tree) = tree_flip(x2: int tree);
+(x4: int tree) = tree_rotation_left(x3: int tree);
+(x5: int) = tree_min(x4: int tree)}
+OUT: (x5: int, x1: int tree)
+
+Default
+IN: (x0: int, x1: int tree) {
+(x2: int) = tree_upper_bound(x1: int tree);
+(x3: int tree) = tree_append_to_right_most(x2: int, x1: int tree);
+(x4: int tree) = tree_append_to_left_most(x2: int, x3: int tree);
+(x5: int tree) = tree_drop_bottom(x4: int tree)}
+OUT: (x0: int, x5: int tree)

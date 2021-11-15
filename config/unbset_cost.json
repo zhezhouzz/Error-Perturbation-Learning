@@ -1,5 +1,9 @@
 [
 	"data/client/unbset/res1.prog",
+	"data/client/unbset/res2.prog",
+	"data/client/unbset/res2-1.prog",
+	"data/client/unbset/res2-2.prog",
+	"data/client/unbset/res3.prog",
 	"data/client/unbset/rot.prog",
 	"data/client/unbset/addnew.prog",
 	"data/client/unbset/shift.prog"
