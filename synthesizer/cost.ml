@@ -39,7 +39,7 @@ let identity_panalty len = 1.5 *. float_of_int len
 let duplicate_panalty = 2.0
 
 let duplicate_level prev i j =
-  if i == j then identity_panalty @@ List.length prev
+  if i == j then Some (identity_panalty @@ List.length prev)
   else if j < i then
     let dup = S.duplicate prev j in
     let dup_times =
@@ -49,9 +49,9 @@ let duplicate_level prev i j =
              /. float_of_int (List.length total))
       @@ List.combine dup prev
     in
-    let _ = Zlog.log_write @@ Printf.sprintf "dup_times:%f" dup_times in
-    dup_times
-  else 1.0
+    let () = Zlog.log_write @@ Printf.sprintf "dup_times:%f" dup_times in
+    Some dup_times
+  else None
 
 let delta_non_trival = 1.5
 
@@ -119,12 +119,20 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
         fun _ -> 1.0
     | Config.CostPenalty -> fun v -> if bias v then 1.0 else bias_penalty
   in
+  let no_new = ref true in
   let f i =
     match S.Mem.get_out_idxs mem i with
     | [] -> alpha_none
     | js ->
         let one j =
-          let k_dupliate = duplicate_level prev i j in
+          let k_dupliate =
+            match duplicate_level prev i j with
+            | Some k -> k
+            | None ->
+                no_new := false;
+                1.0
+          in
+          (* let () = Zlog.log_write @@ spf "\tk_dupliate: %f" k_dupliate in *)
           let v = S.Mem.itov mem j in
           let delta =
             let invocation_record, result = prog v in
@@ -151,6 +159,7 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
     | Some c -> c
     | None -> empty_generation_penalty
   in
+  let c = if !no_new then no_new_output_panalty *. c else c in
   (* let () = *)
   (*   Zlog.log_write @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) c *)
   (* in *)
@@ -181,11 +190,7 @@ let cal_cost (conds : S.conds) prog
           cost_weighted_valid_iter conds.pre conds.sigma prog conds.phi
             i_err_non_trivial_info prev g cache.mem
         in
-        let k_no_new g =
-          if List.length g == 0 then no_new_output_panalty else 1.0
-        in
-        let cost = k_no_new g *. cost in
-        (* let () = Zlog.log_write (Printf.sprintf "cost[%i]: %f" i cost) in *)
+        (* let () = Zlog.log_write (Printf.sprintf "cost-: %f" cost) in *)
         aux (sum +. cost) prev
   in
   aux 0.0 cache.gs /. float_of_int (List.length cache.gs)

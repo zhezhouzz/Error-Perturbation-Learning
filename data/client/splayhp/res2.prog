@@ -1,0 +1,7 @@
+Default
+IN: (x0: int, x1: int tree) {
+(x2: int) = tree_upper_bound(x1: int tree);
+(x3: int) = minus1(x2: int);
+(x4: int tree) = tree_append_to_right_most(x3: int, x1: int tree);
+(x5: int tree) = tree_drop_bottom(x4: int tree)}
+OUT: (x0: int, x5: int tree)
