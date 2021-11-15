@@ -3,6 +3,7 @@ let preds = [| "mem" |]
 let op_pool =
   [|
     "tree_node";
+    "tree_node_single";
     "tree_destruct";
     "tree_flip";
     "tree_rec_flip";
@@ -24,6 +25,7 @@ let op_pool =
 let libs = [| "Splayhp" |]
 
 let i_err =
+  (* (9, Node (8, NodeS 6, Node (13, Node (11, NodeS 10, NodeS 12), NodeS 14))) *)
   ( 9,
     Node
       ( 8,

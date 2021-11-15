@@ -40,6 +40,7 @@ let info_table =
       "min";
       (* tree *)
       "tree_node";
+      "tree_node_single";
       "tree_left_right_subtree";
       "tree_root";
       "tree_flip";

@@ -132,7 +132,7 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
                 no_new := false;
                 1.0
           in
-          (* let () = Zlog.log_write @@ spf "\tk_dupliate: %f" k_dupliate in *)
+          let () = Zlog.log_write @@ spf "\tk_dupliate: %f" k_dupliate in
           let v = S.Mem.itov mem j in
           let delta =
             let invocation_record, result = prog v in
@@ -160,9 +160,9 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
     | None -> empty_generation_penalty
   in
   let c = if !no_new then no_new_output_panalty *. c else c in
-  (* let () = *)
-  (*   Zlog.log_write @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) c *)
-  (* in *)
+  let () =
+    Zlog.log_write @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) c
+  in
   c
 
 let cost_duplicate_iter jump_entry =

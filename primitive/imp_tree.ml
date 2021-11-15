@@ -233,4 +233,14 @@ let table =
               Some [ I x; T a; T b ])
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
+    {
+      imp_name = "tree_node_single";
+      imp_itps = [ Int ];
+      imp_otps = [ IntTree ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ I i ] -> Some [ T (Node (i, Leaf, Leaf)) ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
   ]
