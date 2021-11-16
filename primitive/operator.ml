@@ -41,6 +41,8 @@ let info_table =
       "bottom";
       "max";
       "min";
+      "list_upper_bound";
+      "list_lower_bound";
       (* tree *)
       "tree_node";
       "tree_node_single";

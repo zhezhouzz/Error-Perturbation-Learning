@@ -1,0 +1,5 @@
+IN: (x0: int, x1: int list) {
+(x2: int) = list_upper_bound(x1: int list);
+(x3: int) = const1();
+(x4: int list) = replace(x1: int list, x3: int, x2: int)}
+OUT: (x2: int, x4: int list)

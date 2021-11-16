@@ -2,6 +2,8 @@ let preds = [| "hd"; "mem"; "ord" |]
 
 let op_pool =
   [|
+    "replace";
+    "insert";
     "cons";
     "append";
     "list_destruct";

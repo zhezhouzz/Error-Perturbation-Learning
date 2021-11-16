@@ -1,0 +1,6 @@
+IN: (x0: int, x1: int list) {
+(x2: int list) = cons(x0: int, x1: int list);
+(x3: int, x4: int list) = list_destruct(x1: int list);
+(x5: int list) = append(x4: int list, x3: int);
+(x6: int) = bottom(x2: int list)}
+OUT: (x6: int, x5: int list)

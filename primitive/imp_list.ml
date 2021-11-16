@@ -222,6 +222,32 @@ let table =
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
+      imp_name = "list_upper_bound";
+      imp_itps = [ IntList ];
+      imp_otps = [ Int ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ L l ] ->
+            Sugar.(
+              let* x = IntList.max_opt l in
+              Some [ I (x + 1) ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "list_lower_bound";
+      imp_itps = [ IntList ];
+      imp_otps = [ Int ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ L l ] ->
+            Sugar.(
+              let* x = IntList.min_opt l in
+              Some [ I (x - 1) ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
       imp_name = "is_empty";
       imp_itps = [ IntList ];
       imp_otps = [ Bool ];
