@@ -16,6 +16,13 @@ type poly_tp = Elem | Dt
 
 type poly_pred_info = { poly_tps : poly_tp list }
 
+let empty_apply = function
+  | [ V.L l ] -> ( match l with [] -> true | _ -> false)
+  | [ V.T t ] -> ( Tree.(match t with Leaf -> true | _ -> false))
+  | [ V.TI t ] -> ( LabeledTree.(match t with Leaf -> true | _ -> false))
+  | [ V.TB t ] -> ( LabeledTree.(match t with Leaf -> true | _ -> false))
+  | _ -> raise @@ failwith "member_apply"
+
 let hd_apply = function
   | [ V.L l; V.I e ] -> ( match l with [] -> false | h :: _ -> h == e)
   | [ V.T t; V.I e ] -> (
@@ -106,6 +113,39 @@ let lt_apply = function
 let eq_apply = function
   | [ V.I a; V.I b ] -> a == b
   | _ -> raise @@ failwith "eq_apply"
+
+let empty_info =
+  let poly_name = "empty" in
+  [
+    {
+      poly_name;
+      name = "list_empty";
+      tps = [ T.IntList ];
+      permu = false;
+      imp = empty_apply;
+    };
+    {
+      poly_name;
+      name = "tree_empty";
+      tps = [ T.IntTree ];
+      permu = false;
+      imp = empty_apply;
+    };
+    {
+      poly_name;
+      name = "treei_empty";
+      tps = [ T.IntTreeI ];
+      permu = false;
+      imp = empty_apply;
+    };
+    {
+      poly_name;
+      name = "treeb_empty";
+      tps = [ T.IntTreeB ];
+      permu = false;
+      imp = empty_apply;
+    };
+  ]
 
 let mem_info =
   let poly_name = "mem" in
@@ -456,7 +496,7 @@ let eq_info =
   ]
 
 let mp_table =
-  mem_info @ hd_info @ lt_info @ eq_info @ ord_info
+  empty_info @ mem_info @ hd_info @ lt_info @ eq_info @ ord_info
   @ (left_info @ right_info @ para_info)
   @ (left_adj_info @ right_adj_info @ para_adj_info)
   @ size_info @ len_info @ last_info @ once_info

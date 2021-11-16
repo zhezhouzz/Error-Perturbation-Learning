@@ -1,0 +1,6 @@
+IN: (x0: int, x1: int list, x2: int, x3: int tree) {
+(x4: int tree) = tree_drop_bottom(x3: int tree);
+(x5: int tree) = tree_append_to_left_most(x0: int, x4: int tree);
+(x6: int) = plus1(x2: int);
+(x7: int) = tree_lower_bound(x5: int tree)}
+OUT: (x7: int, x1: int list, x6: int, x5: int tree)

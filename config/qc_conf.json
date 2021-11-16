@@ -1,4 +1,4 @@
-{"list": 8,
+{"list": 20,
          "tree" : {"leaf": 1, "node": 3, "bound": 5},
          "labeled_tree" : {"leaf": 1, "node": 3, "bound": 5}
 }
