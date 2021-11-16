@@ -1,0 +1,6 @@
+IN: (x0: int, x1: int list) {
+(x2: int) = max(x1: int list);
+(x3: int list) = replace(x1: int list, x0: int, x0: int);
+(x4: int) = plus1(x2: int);
+(x5: int list) = replace(x3: int list, x0: int, x4: int)}
+OUT: (x0: int, x5: int list)

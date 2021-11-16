@@ -1,0 +1,7 @@
+Default
+IN: (x0: int list, x1: int list) {
+(x2: int) = bottom(x1: int list);
+(x3: int list, x4: int list) = list_mid_partition(x0: int list);
+(x5: int) = minus1(x2: int);
+(x6: int list) = cons(x5: int, x3: int list)}
+OUT: (x4: int list, x6: int list)
