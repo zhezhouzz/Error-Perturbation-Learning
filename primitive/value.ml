@@ -71,23 +71,16 @@ let flatten_forall_l l =
       | NotADt -> raise @@ failwith "flatten_forall_l: not a value")
     [] l
 
-let flatten_forall_l_unique_paddled l =
-  let l = flatten_forall_l l in
-  let s = List.fold_left (fun s elem -> IntSet.add elem s) IntSet.empty l in
-  match IntSet.min_elt_opt s with
-  | None -> [ 0; 1 ]
-  | Some minmial ->
-      (minmial - 2) :: (minmial - 1) :: (List.of_seq @@ IntSet.to_seq s)
-
-let size = function
-  | U | I _ | B _ | NotADt -> 0
+let len = function
+  | U | I _ | B _ -> 1
+  | NotADt -> 0
   | L il -> List.length il
   | T it -> Tree.deep it
   | TI iti -> LabeledTree.deep iti
   | TB itb -> LabeledTree.deep itb
 
-let layout_l_size l =
-  sprintf "[%s]" @@ List.split_by_comma string_of_int @@ List.map size l
+let layout_l_len l =
+  sprintf "[%s]" @@ List.split_by_comma string_of_int @@ List.map len l
 
 let get_tp v =
   match v with
@@ -99,3 +92,13 @@ let get_tp v =
   | TI _ -> Tp.IntTreeI
   | TB _ -> Tp.IntTreeB
   | NotADt -> raise @@ failwith "get_tp: not a value"
+
+let flatten_forall_l_unique_paddled l =
+  let lens = List.map len l in
+  let l = flatten_forall_l l in
+  let l = List.remove_duplicates @@ lens @ l in
+  let s = List.fold_left (fun s elem -> IntSet.add elem s) IntSet.empty l in
+  match IntSet.min_elt_opt s with
+  | None -> [ 0; 1 ]
+  | Some minmial ->
+      (minmial - 2) :: (minmial - 1) :: (List.of_seq @@ IntSet.to_seq s)

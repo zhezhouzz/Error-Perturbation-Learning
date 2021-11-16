@@ -1,3 +1,4 @@
+(* http://www.cs.cornell.edu/courses/cs4160/2020sp/sf/vfa/terse/Trie.html *)
 val ins : int -> Trie.tp -> int -> Trie.t -> Trie.t
 
 let rec ins (default : int) (i : Trie.tp) (a : int) (m : Trie.t) =

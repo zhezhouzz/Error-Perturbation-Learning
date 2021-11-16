@@ -734,6 +734,30 @@ module Tree = struct
     in
     aux [ t ]
 
+  let left_adj_child eq t u v =
+    let rec aux = function
+      | Leaf -> false
+      | Node (x, Node (y, _, _), _) when eq x u && eq y v -> true
+      | Node (_, l, r) -> aux l || aux r
+    in
+    aux t
+
+  let right_adj_child eq t u v =
+    let rec aux = function
+      | Leaf -> false
+      | Node (x, _, Node (y, _, _)) when eq x u && eq y v -> true
+      | Node (_, l, r) -> aux l || aux r
+    in
+    aux t
+
+  let parallel_adj_child eq t u v =
+    let rec aux = function
+      | Leaf -> false
+      | Node (_, Node (x, _, _), Node (y, _, _)) when eq x u && eq y v -> true
+      | Node (_, l, r) -> aux l || aux r
+    in
+    aux t
+
   let eq compare t1 t2 =
     let rec aux = function
       | Leaf, Leaf -> true
@@ -1160,6 +1184,32 @@ module LabeledTree = struct
       | Node (_, _, l, r) ->
           (exists (fun x -> eq x u) l && exists (fun x -> eq x v) r)
           || aux l || aux r
+    in
+    aux t
+
+  let left_adj_child eq t u v =
+    let rec aux = function
+      | Leaf -> false
+      | Node (_, x, Node (_, y, _, _), _) when eq x u && eq y v -> true
+      | Node (_, _, l, r) -> aux l || aux r
+    in
+    aux t
+
+  let right_adj_child eq t u v =
+    let rec aux = function
+      | Leaf -> false
+      | Node (_, x, _, Node (_, y, _, _)) when eq x u && eq y v -> true
+      | Node (_, _, l, r) -> aux l || aux r
+    in
+    aux t
+
+  let parallel_adj_child eq t u v =
+    let rec aux = function
+      | Leaf -> false
+      | Node (_, _, Node (_, x, _, _), Node (_, y, _, _)) when eq x u && eq y v
+        ->
+          true
+      | Node (_, _, l, r) -> aux l || aux r
     in
     aux t
 

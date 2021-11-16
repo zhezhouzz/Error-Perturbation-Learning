@@ -13,8 +13,7 @@ let op_pool =
     "min";
     (* tree *)
     "tree_node";
-    "tree_left_right_subtree";
-    "tree_root";
+    "tree_destruct";
     "tree_flip";
     "tree_rec_flip";
     "tree_rotation_left";
@@ -23,6 +22,9 @@ let op_pool =
     "tree_append_to_right_most";
     "tree_max";
     "tree_min";
+    "tree_upper_bound";
+    "tree_lower_bound";
+    "tree_drop_bottom";
     (* int   *)
     "plus1";
     "minus1";
@@ -33,13 +35,25 @@ let op_pool =
 let libs = [| "Trie" |]
 
 let i_err =
-  (0, [ 3; 4 ], 7, Node (2, Node (1, Leaf, Leaf), Node (3, Leaf, Leaf)))
+  ( 0,
+    [ 1; 0 ],
+    3,
+    Node (0, NodeS 0, Node (1, Node (0, NodeS 0, NodeS 1), NodeS 1)) )
 
 let sampling_rounds = 6
 
 let p_size = 4
 
+let pre (default : int) (i : Trie.tp) (a : int) (m : Trie.t) (u : int) (v : int)
+    =
+  (not (mem m a))
+  && implies (para_adj m u v) (not (u == v))
+  && implies (len m u && len i v) (v < u)
+
 let post (default : int) (i : Trie.tp) (a : int) (m : Trie.t) (nu : Trie.t)
     (u : int) (v : int) =
-  implies (mem nu u) (mem m u || u == default || u == a)
+  implies (len nu u && len m v) (u == v)
+  && implies (mem nu u) (mem m u || u == default || u == a)
+  (* && implies (left m u v) (left nu u v) *)
+  && implies (para_adj m u v) (not (u == v))
   && implies (para m u v) (para nu u v)

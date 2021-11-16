@@ -42,7 +42,14 @@ let size_apply = function
   | [ V.T t; V.I e ] -> e == Tree.size t
   | [ V.TI t; V.I e ] -> e == LabeledTree.size t
   | [ V.TB t; V.I e ] -> e == LabeledTree.size t
-  | _ -> raise @@ failwith "member_apply"
+  | _ -> raise @@ failwith "size_apply"
+
+let len_apply = function
+  | [ V.L l; V.I e ] -> e == List.length l
+  | [ V.T t; V.I e ] -> e == Tree.deep t
+  | [ V.TI t; V.I e ] -> e == LabeledTree.deep t
+  | [ V.TB t; V.I e ] -> e == LabeledTree.deep t
+  | _ -> raise @@ failwith "len_apply"
 
 let ord_apply = function
   | [ V.L l; V.I e1; V.I e2 ] -> List.order ( == ) l e1 e2
@@ -73,6 +80,24 @@ let parallel_apply = function
   | [ V.TI t; V.I e1; V.I e2 ] -> LabeledTree.parallel_child ( == ) t e1 e2
   | [ V.TB t; V.I e1; V.I e2 ] -> LabeledTree.parallel_child ( == ) t e1 e2
   | _ -> raise @@ failwith "parallel_apply"
+
+let left_adj_apply = function
+  | [ V.T t; V.I e1; V.I e2 ] -> Tree.left_adj_child ( == ) t e1 e2
+  | [ V.TI t; V.I e1; V.I e2 ] -> LabeledTree.left_adj_child ( == ) t e1 e2
+  | [ V.TB t; V.I e1; V.I e2 ] -> LabeledTree.left_adj_child ( == ) t e1 e2
+  | _ -> raise @@ failwith "left_adj_apply"
+
+let right_adj_apply = function
+  | [ V.T t; V.I e1; V.I e2 ] -> Tree.right_adj_child ( == ) t e1 e2
+  | [ V.TI t; V.I e1; V.I e2 ] -> LabeledTree.right_adj_child ( == ) t e1 e2
+  | [ V.TB t; V.I e1; V.I e2 ] -> LabeledTree.right_adj_child ( == ) t e1 e2
+  | _ -> raise @@ failwith "right_adj_apply"
+
+let parallel_adj_apply = function
+  | [ V.T t; V.I e1; V.I e2 ] -> Tree.parallel_adj_child ( == ) t e1 e2
+  | [ V.TI t; V.I e1; V.I e2 ] -> LabeledTree.parallel_adj_child ( == ) t e1 e2
+  | [ V.TB t; V.I e1; V.I e2 ] -> LabeledTree.parallel_adj_child ( == ) t e1 e2
+  | _ -> raise @@ failwith "parallel_adj_apply"
 
 let lt_apply = function
   | [ V.I a; V.I b ] -> a < b
@@ -178,6 +203,39 @@ let size_info =
       tps = [ T.IntTreeB; T.Int ];
       permu = false;
       imp = size_apply;
+    };
+  ]
+
+let len_info =
+  let poly_name = "len" in
+  [
+    {
+      poly_name;
+      name = "list_len";
+      tps = [ T.IntList; T.Int ];
+      permu = false;
+      imp = len_apply;
+    };
+    {
+      poly_name;
+      name = "tree_len";
+      tps = [ T.IntTree; T.Int ];
+      permu = false;
+      imp = len_apply;
+    };
+    {
+      poly_name;
+      name = "treei_len";
+      tps = [ T.IntTreeI; T.Int ];
+      permu = false;
+      imp = len_apply;
+    };
+    {
+      poly_name;
+      name = "treeb_len";
+      tps = [ T.IntTreeB; T.Int ];
+      permu = false;
+      imp = len_apply;
     };
   ]
 
@@ -295,6 +353,84 @@ let para_info =
     };
   ]
 
+let left_adj_info =
+  let poly_name = "left_adj" in
+  [
+    {
+      poly_name;
+      name = "tree_left_adj";
+      tps = [ T.IntTree; T.Int; T.Int ];
+      permu = false;
+      imp = left_adj_apply;
+    };
+    {
+      poly_name;
+      name = "treei_left_adj";
+      tps = [ T.IntTreeI; T.Int; T.Int ];
+      permu = false;
+      imp = left_adj_apply;
+    };
+    {
+      poly_name;
+      name = "treeb_left_adj";
+      tps = [ T.IntTreeB; T.Int; T.Int ];
+      permu = false;
+      imp = left_adj_apply;
+    };
+  ]
+
+let right_adj_info =
+  let poly_name = "right_adj" in
+  [
+    {
+      poly_name;
+      name = "tree_right_adj";
+      tps = [ T.IntTree; T.Int; T.Int ];
+      permu = false;
+      imp = right_adj_apply;
+    };
+    {
+      poly_name;
+      name = "treei_right_adj";
+      tps = [ T.IntTreeI; T.Int; T.Int ];
+      permu = false;
+      imp = right_adj_apply;
+    };
+    {
+      poly_name;
+      name = "treeb_right_adj";
+      tps = [ T.IntTreeB; T.Int; T.Int ];
+      permu = false;
+      imp = right_adj_apply;
+    };
+  ]
+
+let para_adj_info =
+  let poly_name = "para_adj" in
+  [
+    {
+      poly_name;
+      name = "tree_para_adj";
+      tps = [ T.IntTree; T.Int; T.Int ];
+      permu = false;
+      imp = parallel_adj_apply;
+    };
+    {
+      poly_name;
+      name = "treei_para_adj";
+      tps = [ T.IntTreeI; T.Int; T.Int ];
+      permu = false;
+      imp = parallel_adj_apply;
+    };
+    {
+      poly_name;
+      name = "treeb_para_adj";
+      tps = [ T.IntTreeB; T.Int; T.Int ];
+      permu = false;
+      imp = parallel_adj_apply;
+    };
+  ]
+
 let lt_info =
   let poly_name = "<" in
   [
@@ -320,8 +456,10 @@ let eq_info =
   ]
 
 let mp_table =
-  mem_info @ hd_info @ lt_info @ eq_info @ ord_info @ left_info @ right_info
-  @ para_info @ size_info @ last_info @ once_info
+  mem_info @ hd_info @ lt_info @ eq_info @ ord_info
+  @ (left_info @ right_info @ para_info)
+  @ (left_adj_info @ right_adj_info @ para_adj_info)
+  @ size_info @ len_info @ last_info @ once_info
 
 let imp_map =
   List.fold_left (fun m r -> StrMap.add r.name r.imp m) StrMap.empty mp_table

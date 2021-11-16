@@ -116,7 +116,7 @@ let synthesize_one env num_burn_in num_sampling =
 (* bias on size of the result *)
 
 let i_err_compare vl1 vl2 =
-  List.compare (fun v1 v2 -> compare (V.size v1) (V.size v2)) vl1 vl2
+  List.compare (fun v1 v2 -> compare (V.len v1) (V.len v2)) vl1 vl2
 
 let max_init_set = 5
 
@@ -132,7 +132,7 @@ let log_show_init_set iter init_set =
   in
   let () =
     Zlog.log_write @@ spf "each lenL %s\n"
-    @@ List.split_by "\n" V.layout_l_size init_set
+    @@ List.split_by "\n" V.layout_l_len init_set
   in
   let () =
     Zlog.log_write @@ spf "init_set:\n%s\n"

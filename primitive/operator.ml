@@ -18,7 +18,7 @@ let info_table =
   let known_operators =
     [
       (* bool *)
-      "random_int";
+      "random_bool";
       "neg";
       "consttrue";
       "constfalse";
