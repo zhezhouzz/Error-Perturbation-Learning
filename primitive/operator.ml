@@ -30,6 +30,9 @@ let info_table =
       "const1";
       "const2";
       (* list *)
+      "replace";
+      "insert";
+      "top";
       "cons";
       "append";
       "list_destruct";
@@ -105,7 +108,7 @@ let info_table =
   @@ List.map make_info known_operators
 
 let get_tp_one (op : string) =
-  let info = StrMap.find "operator::get_tp_one" info_table op in
+  let info = StrMap.find (spf "operator::get_tp_one (%s)" op) info_table op in
   match info.poly_tp with
   | [] -> raise @@ failwith "operator::get_tp_one"
   | h :: _ -> h
