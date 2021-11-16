@@ -1,0 +1,6 @@
+IN: (x0: int list, x1: int list) {
+(x2: int) = max(x0: int list);
+(x3: int list) = cons(x2: int, x1: int list);
+(x4: int list) = cons(x2: int, x3: int list);
+(x5: int) = const1()}
+OUT: (x0: int list, x4: int list)

@@ -4,7 +4,7 @@ open Value
 let measure = function
   | U | NotADt -> 0
   | I _ | B _ -> 1
-  | L il -> List.length il
+  | L il -> fastexpt 2 (List.length il)
   | T it -> fastexpt 2 @@ Tree.deep it
   | TI iti -> fastexpt 2 @@ LabeledTree.deep iti
   | TB itb -> fastexpt 2 @@ LabeledTree.deep itb
