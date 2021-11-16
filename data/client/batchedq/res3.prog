@@ -1,0 +1,6 @@
+IN: (x0: int list, x1: int list) {
+(x2: int list, x3: int list) = list_alter_partition(x0: int list);
+(x4: int) = bottom(x2: int list);
+(x5: int) = plus1(x4: int);
+(x6: int list) = append(x3: int list, x5: int)}
+OUT: (x6: int list, x1: int list)

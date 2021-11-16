@@ -160,14 +160,14 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
     | None -> empty_generation_penalty
   in
   let c = if !no_new then no_new_output_panalty *. c else c in
-  let () =
-    Zlog.log_write @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) c
-  in
-  let () =
-    Zlog.log_write
-    @@ spf "g: %s"
-         (List.split_by_comma (fun i -> V.layout_l @@ S.Mem.itov mem i) g)
-  in
+  (* let () = *)
+  (*   Zlog.log_write @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) c *)
+  (* in *)
+  (* let () = *)
+  (*   Zlog.log_write *)
+  (*   @@ spf "g: %s" *)
+  (*        (List.split_by_comma (fun i -> V.layout_l @@ S.Mem.itov mem i) g) *)
+  (* in *)
   c
 
 let cost_duplicate_iter jump_entry =

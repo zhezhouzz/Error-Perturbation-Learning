@@ -1,0 +1,13 @@
+(*
+	>> mcmc current id(1153) <<
+------main/main.ml:87[Dune__exe__Main.batched_test.aux]- end(exec time: 265.785314)-----
+prog(cost: 0.022917):
+*)
+IN: (x0: int list, x1: int list) {
+(x2: int) = const0();
+(x3: int) = min(x0: int list);
+(x4: int) = minus1(x3: int);
+(x5: int list) = insert(x1: int list, x2: int, x4: int)}
+OUT: (x5: int list, x1: int list)
+
+

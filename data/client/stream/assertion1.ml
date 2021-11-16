@@ -2,16 +2,16 @@ let preds = [| "hd"; "mem"; "ord" |]
 
 let op_pool =
   [|
-    "insert";
-    "replace";
     "cons";
     "append";
-    "plus1";
-    "minus1";
-    "top";
+    "list_destruct";
+    "list_mid_partition";
+    "list_alter_partition";
     "bottom";
     "max";
     "min";
+    "plus1";
+    "minus1";
     "const0";
     "const1";
   |]
