@@ -141,7 +141,6 @@ let log_show_init_set iter init_set =
   ()
 
 module S = Sampling.Scache
-open Primitive
 
 let synthesize_multi env max_length num_burn_in num_sampling =
   let rec loop current init_set iter =
@@ -153,9 +152,7 @@ let synthesize_multi env max_length num_burn_in num_sampling =
       | None -> raise @@ failwith "synthesize_f fails"
       | Some (env, new_f) ->
           let conds =
-            S.mk_conds
-              (Measure.mk_measure_cond env.i_err)
-              env.sigma
+            S.mk_conds env.measure_cond env.sigma
               (fun v -> snd @@ env.client env.library_inspector v)
               env.phi
               (fun _ -> true)

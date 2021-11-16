@@ -73,9 +73,8 @@ let pre_infer_from_env env init_set qvnum =
           @@ Printf.sprintf "fset: %s\n" (Feature.layout_set cctx.Cctx.fset)
         in
         let scache =
-          S.mk_generation_measure_only
-            (Measure.mk_measure_cond env.i_err)
-            init_set cur_p.prog env.sampling_rounds
+          S.mk_generation_measure_only env.measure_cond init_set cur_p.prog
+            env.sampling_rounds
         in
         perturbation_pre_infer cctx scache env.sigma
           (fun v -> snd @@ env.client env.library_inspector v)

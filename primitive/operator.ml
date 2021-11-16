@@ -30,11 +30,11 @@ let info_table =
       "const1";
       "const2";
       (* list *)
-      "insert";
-      "replace";
       "cons";
       "append";
-      "top";
+      "list_destruct";
+      "list_mid_partition";
+      "list_alter_partition";
       "bottom";
       "max";
       "min";

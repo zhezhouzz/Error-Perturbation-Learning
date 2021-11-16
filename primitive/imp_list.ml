@@ -8,6 +8,43 @@ let exn file line =
 let table =
   [
     {
+      imp_name = "list_destruct";
+      imp_itps = [ IntList ];
+      imp_otps = [ Int; IntList ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ L l ] ->
+            Sugar.(
+              let* h, t = List.destruct_opt l in
+              Some [ I h; L t ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "list_mid_partition";
+      imp_itps = [ IntList ];
+      imp_otps = [ IntList; IntList ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ L l ] ->
+            let l, r = List.mid_partition l in
+            Some [ L l; L r ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "list_alter_partition";
+      imp_itps = [ IntList ];
+      imp_otps = [ IntList; IntList ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ L l ] ->
+            let l, r = List.alter_partition l in
+            Some [ L l; L r ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
       imp_name = "insert";
       imp_itps = [ IntList; Int; Int ];
       imp_otps = [ IntList ];

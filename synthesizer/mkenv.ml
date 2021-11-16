@@ -76,6 +76,7 @@ let mk_env_v2_ (sigma : V.t list -> bool)
             client;
             library_inspector = inspector;
             phi;
+            measure_cond = Primitive.Measure.mk_measure_cond i_err;
             tps;
             op_pool;
             preds;

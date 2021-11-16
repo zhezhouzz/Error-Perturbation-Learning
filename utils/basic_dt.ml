@@ -72,6 +72,25 @@ module List = struct
 
   let interexn = interexn self
 
+  let destruct_opt = function [] -> None | h :: t -> Some (h, t)
+
+  let mid_partition l =
+    let mid = length l / 2 in
+    let rec aux left l =
+      if List.length left >= mid then (left, l)
+      else match l with [] -> (left, []) | h :: t -> aux (l @ [ h ]) t
+    in
+    aux [] l
+
+  let alter_partition l =
+    let rec aux (l, r, flag) = function
+      | [] -> (l, r)
+      | h :: t ->
+          if flag then aux (l @ [ h ], r, not flag) t
+          else aux (l, r @ [ h ], not flag) t
+    in
+    aux ([], [], true) l
+
   let compare e_compare l1 l2 =
     let rec aux l1 l2 =
       match (l1, l2) with

@@ -160,9 +160,9 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
     | None -> empty_generation_penalty
   in
   let c = if !no_new then no_new_output_panalty *. c else c in
-  let () =
-    Zlog.log_write @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) c
-  in
+  (* let () = *)
+  (*   Zlog.log_write @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) c *)
+  (* in *)
   c
 
 let cost_duplicate_iter jump_entry =
@@ -213,9 +213,7 @@ let biased_cost bias (env : Env.t) =
                  (Language.Oplang.layout cur_p.prog))
           in
           let conds =
-            S.mk_conds
-              (Measure.mk_measure_cond env.i_err)
-              env.sigma
+            S.mk_conds env.measure_cond env.sigma
               (fun v -> snd @@ env.client env.library_inspector v)
               env.phi bias
           in

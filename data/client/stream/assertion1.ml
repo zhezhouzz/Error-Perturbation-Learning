@@ -18,7 +18,7 @@ let op_pool =
 
 let libs = [| "Stream" |]
 
-let i_err = ([ 3; 4 ], [ 2; 1 ])
+let i_err = ([ -1; 5 ], [ -3; -5; -9 ])
 
 let sampling_rounds = 6
 

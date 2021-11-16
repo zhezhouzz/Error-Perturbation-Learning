@@ -18,7 +18,7 @@ let op_pool =
 
 let libs = [| "Uniquel" |]
 
-let i_err = (2, [ 2; 3 ])
+let i_err = (2, [ 1; 2; 3; 4 ])
 
 let sampling_rounds = 6
 

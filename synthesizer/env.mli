@@ -16,6 +16,7 @@ type t = {
   client : BB.inspector -> V.t list -> non_trivial_info * V.t list option;
   library_inspector : BB.inspector;
   phi : V.t list -> bool;
+  measure_cond : V.t list -> bool;
   tps : T.t list;
   i_err : V.t list;
   i_err_non_trivial_info : non_trivial_info;
