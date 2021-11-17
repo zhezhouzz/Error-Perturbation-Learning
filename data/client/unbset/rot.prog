@@ -1,3 +1,4 @@
+let i_err = (0, Node (3, Node (2, NodeS 1, Leaf), Node (5, NodeS 4, NodeS 6)))
 IN: (x0: int, x1: int tree) {
 (x2: int, x3: int tree, x4: int tree) = tree_destruct(x1: int tree);
 (x5: int tree) = tree_rotation_right(x3: int tree);

@@ -1,9 +1,9 @@
 (env
-   (dev
-      (flags (:standard -w -32 -w -35 -w -27 -w -33 -w -26)))
+ (dev
+  (flags (:standard -w -32 -w -35 -w -27 -w -33 -w -26)))
 )
-  (executable
-     (name main)
-     (libraries utils core language synthesizer parser classify ocaml_parser evaluation zquickcheck)
-     (preprocess (pps ppx_jane))
-  )
+(executable
+ (name main)
+ (libraries utils core language synthesizer parser classify ocaml_parser evaluation zquickcheck analysis)
+ (preprocess (pps ppx_jane))
+)

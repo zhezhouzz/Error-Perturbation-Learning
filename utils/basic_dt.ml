@@ -596,6 +596,10 @@ module Tree = struct
 
   let interexn = interexn self
 
+  let rec map f = function
+    | Leaf -> Leaf
+    | Node (x, a, b) -> Node (f x, map f a, map f b)
+
   let destruct_opt = function Leaf -> None | Node (x, a, b) -> Some (x, a, b)
 
   let add_to_bottom_left x tr =
@@ -1079,6 +1083,10 @@ module LabeledTree = struct
   let self = "LabeledTree"
 
   let interexn = interexn self
+
+  let rec map f = function
+    | Leaf -> Leaf
+    | Node (label, x, a, b) -> Node (label, f x, map f a, map f b)
 
   let deep t =
     let rec aux = function

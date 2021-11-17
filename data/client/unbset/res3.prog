@@ -1,3 +1,4 @@
+let i_err = (0, Node (3, Node (2, NodeS 1, Leaf), Node (5, NodeS 4, NodeS 6)))
 IN: (x0: int, x1: int tree) {
 (x2: int) = const0();
 (x3: int tree) = tree_drop_bottom(x1: int tree);

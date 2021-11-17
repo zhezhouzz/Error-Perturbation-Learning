@@ -171,12 +171,12 @@ let mk_generation mode init_set conds f num =
     if n >= num then raise @@ failwith "never happen"
     else
       let mem, outs = generate cache.mem cache.gs mode conds f in
-      (* let () = *)
-      (*   Zlog.log_write @@ spf "outs =\n%s" *)
-      (*   @@ List.split_by_comma *)
-      (*        (fun x -> Value.layout_l @@ Mem.itov cache.mem x) *)
-      (*        outs *)
-      (* in *)
+      let () =
+        Zlog.log_write @@ spf "outs =\n%s"
+        @@ List.split_by_comma
+             (fun x -> Value.layout_l @@ Mem.itov cache.mem x)
+             outs
+      in
       if n >= num - 1 then cache
       else if List.length outs == 0 then
         (* early stop *)
@@ -229,7 +229,12 @@ let eval_sampling (init_set : Value.t list list) fs measure bound =
     let mem, expected_n, outs = sampling_once mem f pool in
     let num_none = num_none + expected_n - List.length outs in
     let samples = next_pool mem outs Config.MeasureOnly conds in
-    if List.length samples == 0 then raise @@ failwith "sampling get stuck"
+    if List.length samples == 0 then
+      let () =
+        Zlog.log_write @@ spf "data:\n%s\n"
+        @@ List.split_by "\n" (fun x -> Value.layout_l @@ Mem.itov mem x) !res
+      in
+      raise @@ failwith "sampling get stuck"
     else res := !res @ samples;
     if num_none + List.length !res >= bound then
       (num_none, List.map (Mem.itov mem) @@ List.sublist !res (0, bound))
