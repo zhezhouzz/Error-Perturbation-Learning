@@ -4,6 +4,44 @@ open Basic_dt
 open Env
 module Spec = Specification.Spec
 
+let verify_i_err_gen_info tps client inspector sigma phi i_err =
+  let tps' = V.get_tp_l i_err in
+  if List.compare T.compare tps' tps != 0 then
+    raise @@ failwith "the i_err is not consistent with the types in client"
+  else if not (sigma i_err) then
+    raise @@ failwith "mk_env: inconsistent i_err and sigma"
+  else
+    let info, i_err' = client inspector i_err in
+    match i_err' with
+    | None ->
+        raise
+        @@ failwith
+             (spf "mk_env: inconsistent i_err(%s) and client code"
+                (V.layout_l i_err))
+    | Some i_err' ->
+        Zlog.log_write
+          (spf "i_err: %s -> %s" (V.layout_l i_err) (V.layout_l i_err'));
+        if phi (i_err @ i_err') then
+          raise
+          @@ failwith
+               (spf "mk_env: inconsistent i_err'(%s -> %s) and phi"
+                  (V.layout_l i_err) (V.layout_l i_err'))
+        else info
+
+let update_i_err env i_err =
+  if List.compare V.compare i_err env.i_err == 0 then env
+  else
+    let i_err_non_trivial_info =
+      verify_i_err_gen_info env.tps env.client env.library_inspector env.sigma
+        env.phi i_err
+    in
+    let () =
+      Zlog.log_write
+      @@ spf "update i_err: %s ---> %s" (V.layout_l env.i_err)
+           (V.layout_l i_err)
+    in
+    { env with i_err; i_err_non_trivial_info }
+
 let update_prog env prog =
   let open Language in
   let tps = Oplang.extract_tps prog in
@@ -52,41 +90,23 @@ let mk_env_v2_ (sigma : V.t list -> bool)
     (inspector : Language.Bblib.inspector) (phi : V.t list -> bool)
     (tps : T.t list) (i_err : V.t list) (op_pool : string list)
     (preds : string list) (sampling_rounds : int) (p_size : int) =
-  if not (sigma i_err) then
-    raise @@ failwith "mk_env: inconsistent i_err and sigma"
-  else
-    let info, i_err' = client inspector i_err in
-    match i_err' with
-    | None ->
-        raise
-        @@ failwith
-             (spf "mk_env: inconsistent i_err(%s) and client code"
-                (V.layout_l i_err))
-    | Some i_err' ->
-        Zlog.log_write
-          (spf "i_err: %s -> %s" (V.layout_l i_err) (V.layout_l i_err'));
-        if phi (i_err @ i_err') then
-          raise
-          @@ failwith
-               (spf "mk_env: inconsistent i_err'(%s -> %s) and phi"
-                  (V.layout_l i_err) (V.layout_l i_err'))
-        else
-          {
-            sigma;
-            client;
-            library_inspector = inspector;
-            phi;
-            measure_cond = Primitive.Measure.mk_measure_cond i_err;
-            tps;
-            op_pool;
-            preds;
-            i_err;
-            i_err_non_trivial_info = info;
-            init_sampling_set = [ i_err ];
-            sampling_rounds;
-            p_size;
-            cur_p = None;
-          }
+  let info = verify_i_err_gen_info tps client inspector sigma phi i_err in
+  {
+    sigma;
+    client;
+    library_inspector = inspector;
+    phi;
+    measure_cond = Primitive.Measure.mk_measure_cond i_err;
+    tps;
+    op_pool;
+    preds;
+    i_err;
+    i_err_non_trivial_info = info;
+    init_sampling_set = [ i_err ];
+    sampling_rounds;
+    p_size;
+    cur_p = None;
+  }
 
 let mk_env_v2 (sigma : Spec.t) (client : Language.Tinyocaml.func)
     (libraries : string list) (phi : Spec.t) (tps : T.t list) (i_err : V.t list)

@@ -55,8 +55,9 @@ let mk_env_from_files source_file meta_file =
 
 let test_cost env progs =
   let open Synthesizer.Env in
-  let measure = Primitive.Measure.mk_measure_cond env.i_err in
-  let cost name prog =
+  let cost i_err name prog =
+    let env = Synthesizer.Mkenv.update_i_err env i_err in
+    let measure = Primitive.Measure.mk_measure_cond env.i_err in
     let () = Zlog.log_write @@ sprintf "[%s]" name in
     let conds =
       Sampling.Scache.mk_conds measure env.sigma
@@ -76,7 +77,8 @@ let test_cost env progs =
     cost
   in
   List.iter
-    ~f:(fun (name, f) -> Printf.printf "%s\ncost: %f\n\n" name (cost name f))
+    ~f:(fun (i_err, (name, f)) ->
+      Printf.printf "%s\ncost: %f\n\n" name (cost i_err name f))
     progs
 
 let test_mcmc env =
@@ -260,13 +262,15 @@ let parse_result =
       and source_file = anon ("source file" %: regular_file) in
       fun () ->
         Config.exec_main configfile (fun () ->
-            let prog =
+            let i_err, prog =
               Zlog.event_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
                 (fun () ->
-                  Language.Piecewise.layout @@ Parse.parse_piecewise source_file)
+                  let i_err, prog = Parse.parse_piecewise source_file in
+                  ( Primitive.Value.formal_layout_l i_err,
+                    Language.Piecewise.layout prog ))
             in
-            Printf.printf "%s\n" prog))
+            Printf.printf "let i_err = %s\n%s\n" i_err prog))
 
 let parse_result_one =
   Command.basic ~summary:"parse-result-one"
@@ -338,7 +342,7 @@ let syn source_file meta_file max_length num_burn_in num_sampling =
         (*   num_sampling *)
         Synthesizer.Syn.synthesize_multi env max_length num_burn_in num_sampling)
   in
-  result
+  (env.i_err, result)
 
 let synthesize =
   Command.basic ~summary:"synthesize"
@@ -351,11 +355,12 @@ let synthesize =
       and num_sampling = anon ("num sampling" %: int) in
       fun () ->
         Config.exec_main configfile (fun () ->
-            let result =
+            let i_err, result =
               syn source_file meta_file max_length num_burn_in num_sampling
             in
             let () =
-              Printf.printf "result:\n%s\n" @@ Language.Piecewise.layout result
+              Printf.printf "%s\n"
+              @@ Language.Piecewise.layout_with_i_err i_err result
             in
             ()))
 
@@ -403,14 +408,15 @@ let synthesize_all =
               for i = 0 to num_syn - 1 do
                 Config.make_dir output_dir;
                 Config.exec_main configfile (fun () ->
-                    let result =
+                    let i_err, result =
                       syn source_file meta_file max_length num_burn_in
                         num_sampling
                     in
                     let output_file = sprintf "%s/%i.prog" output_dir i in
                     let () =
                       Core.Out_channel.write_all output_file
-                        ~data:(Language.Piecewise.layout result)
+                        ~data:
+                          (Language.Piecewise.layout_with_i_err i_err result)
                     in
                     let () =
                       Config.refresh_logfile (sprintf "%s_%i" benchname i)
@@ -497,9 +503,10 @@ let eval_result =
                          num_sampling,
                          output_dir ) ->
                   let env = mk_env_from_files source_file meta_file in
-                  let prog =
+                  let i_err, prog =
                     Parse.parse_piecewise (sprintf "%s/0.prog" output_dir)
                   in
+                  let env = Synthesizer.Mkenv.update_i_err env i_err in
                   let (none_num, data), cost_time =
                     Zlog.event_time_
                       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
@@ -548,7 +555,8 @@ let sampling =
             (*   () *)
             (* in *)
             let env = mk_env_from_files source_file meta_file in
-            let prog = Parse.parse_piecewise prog_file in
+            let i_err, prog = Parse.parse_piecewise prog_file in
+            let env = Synthesizer.Mkenv.update_i_err env i_err in
             let (num_none, data), cost_time =
               Zlog.event_time_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
@@ -585,7 +593,8 @@ let costing =
               let progs =
                 List.map
                   ~f:(fun x ->
-                    (to_string x, snd @@ Parse.parse_piecewise @@ to_string x))
+                    let i_err, prog = Parse.parse_piecewise @@ to_string x in
+                    (i_err, (to_string x, snd @@ prog)))
                   progs
               in
               progs

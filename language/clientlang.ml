@@ -28,6 +28,11 @@ let layout_body =
   in
   aux
 
+let rec to_lits = function
+  | Tuple vs -> List.flatten @@ List.map to_lits vs
+  | Lit lit -> lit
+  | _ -> raise @@ failwith "to_lits: not a lit"
+
 let layout_env env =
   Printf.sprintf "{%s}"
   @@ List.split_by_comma (fun (name, value) ->

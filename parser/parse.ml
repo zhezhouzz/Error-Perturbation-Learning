@@ -53,11 +53,35 @@ let parse_string str = parse_ @@ Lexing.from_string str
 
 type parsing_res = ParseDefault | ParsePre of string | ParseF of string
 
+let i_err_name = "i_err"
+
 let parse_raw_piecewise filename =
   let open Stdlib in
   let ic = open_in filename in
   let close tmp current =
     match current with ParseF "" -> tmp | _ -> tmp @ [ current ]
+  in
+  let i_err =
+    try
+      let line = input_line ic in
+      let name, lit =
+        Language.Of_ocamlast.load_literal
+        @@ Ocaml_parser.Frontend.parse_string line
+      in
+      if String.equal name i_err_name then lit
+      else
+        raise @@ failwith
+        @@ spf
+             "wrong format of piecewise perturbation function, initial error \
+              should have name \"%s\""
+             i_err_name
+    with
+    | Failure x -> raise @@ failwith x
+    | _ ->
+        raise
+        @@ failwith
+             "wrong format of piecewise perturbation function, expect a \
+              initial error"
   in
   let rec loop tmp current =
     try
@@ -77,7 +101,7 @@ let parse_raw_piecewise filename =
       tmp @ [ current ]
   in
   let res = loop [] ParseDefault in
-  res
+  (i_err, res)
 
 let solve_piecewise (c : parsing_res list) =
   (* let () = Printf.printf "len(c) = %i\n" @@ List.length c in *)
@@ -126,4 +150,6 @@ let solve_piecewise (c : parsing_res list) =
       in
       (aux ([], None) c, default_f)
 
-let parse_piecewise filename = solve_piecewise @@ parse_raw_piecewise filename
+let parse_piecewise filename =
+  let i_err, c = parse_raw_piecewise filename in
+  (i_err, solve_piecewise c)

@@ -12,7 +12,7 @@ type t =
   | NotADt
 
 let layout = function
-  | U -> "tt"
+  | U -> "()"
   | L l -> sprintf "[%s]" (IntList.to_string l)
   | T tr -> Tree.layout string_of_int tr
   | I i -> string_of_int i
@@ -22,6 +22,18 @@ let layout = function
   | NotADt -> "_"
 
 let layout_l l = sprintf "[%s]" @@ List.split_by_comma layout l
+
+let formal_layout = function
+  | U -> "tt"
+  | L l -> sprintf "[%s]" (IntList.to_string l)
+  | T tr -> Tree.formal_layout string_of_int tr
+  | I i -> string_of_int i
+  | B b -> string_of_bool b
+  | TI tr -> LabeledTree.formal_layout string_of_int string_of_int tr
+  | TB tr -> LabeledTree.formal_layout string_of_bool string_of_int tr
+  | NotADt -> "_"
+
+let formal_layout_l l = sprintf "(%s)" @@ List.split_by_comma formal_layout l
 
 let eq x y =
   let aux = function
@@ -92,6 +104,8 @@ let get_tp v =
   | TI _ -> Tp.IntTreeI
   | TB _ -> Tp.IntTreeB
   | NotADt -> raise @@ failwith "get_tp: not a value"
+
+let get_tp_l = List.map get_tp
 
 let flatten_forall_l_unique_paddled l =
   let lens = List.map len l in

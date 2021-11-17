@@ -482,3 +482,8 @@ let load_client_and_meta source_client source_assertions =
 let load_precondition args source_assertion =
   let assertion = assertion_of_ocamlstruct @@ get_p source_assertion 0 in
   pre_to_spec args assertion
+
+(* Perturbation Function Precondition *)
+let load_literal source =
+  let { clientname; clientbody; _ } = client_of_ocamlstruct @@ get_p source 0 in
+  (clientname, Clientlang.to_lits clientbody)

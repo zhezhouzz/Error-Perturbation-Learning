@@ -693,6 +693,15 @@ module Tree = struct
     in
     aux [ t ]
 
+  let formal_layout f tr =
+    let rec aux = function
+      | Leaf -> "Leaf"
+      | Node (a, Leaf, Leaf) -> spf "SNode %s" (f a)
+      | Node (a, l, r) ->
+          Printf.sprintf "Node (%s, %s, %s)" (f a) (aux l) (aux r)
+    in
+    aux tr
+
   let layout f tr =
     let rec aux = function
       | Leaf -> "."
@@ -1147,6 +1156,17 @@ module LabeledTree = struct
         | Node (_, e, l, r) -> if f e then true else aux (aux before l) r
     in
     aux false t
+
+  let formal_layout flabel f tr =
+    let rec aux = function
+      | Leaf -> "Leaf"
+      | Node (label, a, Leaf, Leaf) ->
+          spf "SLNode (%s, %s)" (flabel label) (f a)
+      | Node (label, a, l, r) ->
+          Printf.sprintf "LNode (%s, %s, %s, %s)" (flabel label) (f a) (aux l)
+            (aux r)
+    in
+    aux tr
 
   let layout f tr =
     let rec aux = function

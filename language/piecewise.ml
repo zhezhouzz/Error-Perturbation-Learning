@@ -14,6 +14,10 @@ let layout (cases, default) =
   in
   spf "%sDefault\n%s\n" cases_str (F.layout default)
 
+let layout_with_i_err i_err (cases, default) =
+  spf "\nlet i_err = %s\n%s\n" (Primitive.Value.formal_layout_l i_err)
+  @@ layout (cases, default)
+
 let eval (cases, default) inps =
   let rec loop = function
     | [] -> FInterp.interp default inps
