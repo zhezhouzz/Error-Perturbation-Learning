@@ -6,6 +6,7 @@
  zlog
  sugar
  config
+ qc_config
  )
- (libraries core yojson z3)
+ (libraries datatype core yojson z3)
 )

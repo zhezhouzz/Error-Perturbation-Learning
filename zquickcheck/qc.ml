@@ -2,108 +2,80 @@ open Primitive
 open Basic_dt
 module V = Value
 module T = Tp
+open Qc_config
+open QCheck
 
-type tree_config = { leaf : int; node : int; bound : int }
+let bool_gen = Gen.oneofl [ true; false ]
 
-type quick_check_config = {
-  list : int;
-  tree : tree_config;
-  labeled_tree : tree_config;
-}
+let int_gen conf =
+  match conf with
+  | SmallUnsign -> Gen.small_signed_int
+  | LowUpper (l, u) -> Gen.int_range l u
 
-let to_tree_config j =
-  let open Yojson.Basic.Util in
-  let leaf = j |> member "leaf" |> to_int in
-  let node = j |> member "node" |> to_int in
-  let bound = j |> member "bound" |> to_int in
-  { leaf; node; bound }
+let list_gen conf =
+  let elem_conf, size_conf = conf in
+  let elem_gen = int_gen elem_conf in
+  match size_conf with
+  | SmallNat -> Gen.list elem_gen
+  | SizeBound n -> Gen.(list_size (int_bound n) elem_gen)
 
-let load_config fname =
-  let open Yojson.Basic.Util in
-  let j =
-    try Yojson.Basic.from_file fname
-    with _ ->
-      raise @@ failwith (Printf.sprintf "cannot find json file(%s)" fname)
-  in
-  try
-    let list = j |> member "list" |> to_int in
-    let tree = j |> member "tree" |> to_tree_config in
-    let labeled_tree = j |> member "labeled_tree" |> to_tree_config in
-    { list; tree; labeled_tree }
-  with _ -> raise @@ failwith "cannot load config::quich check"
-
-let bool_gen = QCheck.Gen.oneofl [ true; false ]
-
-let int_gen (chooses : int list) = QCheck.Gen.oneofl chooses
-
-let list_gen qc_conf (chooses : int list) =
-  QCheck.Gen.(list_size (int_bound qc_conf.list) (oneofl chooses))
-
-let tree_gen qc_conf (chooses : int list) =
+let tree_gen conf =
+  let elem_conf, size_conf, fq = conf in
+  let elem_gen = int_gen elem_conf in
   let node a l r = Tree.Node (a, l, r) in
-  QCheck.Gen.(
-    sized_size (int_bound qc_conf.tree.bound)
-    @@ fix (fun self n ->
-        match n with
-        | 0 -> oneofl [ Tree.Leaf ]
-        | n ->
-          frequency
-            [
-              (qc_conf.tree.leaf, oneofl [ Tree.Leaf ]);
-              ( qc_conf.tree.node,
-                QCheck.Gen.map3 node (oneofl chooses)
-                  (self (n - 1))
-                  (self (n - 1)) );
-            ]))
+  let body =
+    Gen.(
+      fix (fun self n ->
+          match n with
+          | 0 -> oneofl [ Tree.Leaf ]
+          | n ->
+              frequency
+                [
+                  (fq.fq_leaf, return Tree.Leaf);
+                  ( fq.fq_node,
+                    QCheck.Gen.map3 node elem_gen (self (n - 1)) (self (n - 1))
+                  );
+                ]))
+  in
+  match size_conf with
+  | SmallNat -> Gen.sized body
+  | SizeBound n -> Gen.(sized_size (int_bound n) body)
 
-let treei_gen qc_conf (chooses : int list) =
+let labeled_tree_gen conf label_gen =
+  let elem_conf, size_conf, fq = conf in
+  let elem_gen = int_gen elem_conf in
   let node i a l r = LabeledTree.Node (i, a, l, r) in
-  QCheck.Gen.(
-    let map4 f x y z k st = f (x st) (y st) (z st) (k st) in
-    sized_size (int_bound qc_conf.labeled_tree.bound)
-    @@ fix (fun self n ->
-        match n with
-        | 0 -> oneofl [ LabeledTree.Leaf ]
-        | n ->
-          frequency
-            [
-              (qc_conf.labeled_tree.leaf, oneofl [ LabeledTree.Leaf ]);
-              ( qc_conf.labeled_tree.node,
-                map4 node (oneofl chooses) (oneofl chooses)
-                  (self (n - 1))
-                  (self (n - 1)) );
-            ]))
+  let map4 f x y z k st = f (x st) (y st) (z st) (k st) in
+  let body =
+    Gen.(
+      fix (fun self n ->
+          match n with
+          | 0 -> oneofl [ LabeledTree.Leaf ]
+          | n ->
+              frequency
+                [
+                  (fq.fq_leaf, return LabeledTree.Leaf);
+                  ( fq.fq_node,
+                    map4 node label_gen elem_gen (self (n - 1)) (self (n - 1))
+                  );
+                ]))
+  in
+  match size_conf with
+  | SmallNat -> Gen.sized body
+  | SizeBound n -> Gen.(sized_size (int_bound n) body)
 
-let treeb_gen qc_conf (chooses : int list) =
-  let node b a l r = LabeledTree.Node (b, a, l, r) in
-  QCheck.Gen.(
-    let map4 f x y z k st = f (x st) (y st) (z st) (k st) in
-    sized_size (int_bound qc_conf.labeled_tree.bound)
-    @@ fix (fun self n ->
-        match n with
-        | 0 -> oneofl [ LabeledTree.Leaf ]
-        | n ->
-          frequency
-            [
-              (qc_conf.labeled_tree.leaf, oneofl [ LabeledTree.Leaf ]);
-              ( qc_conf.labeled_tree.node,
-                map4 node bool_gen (oneofl chooses)
-                  (self (n - 1))
-                  (self (n - 1)) );
-            ]))
-
-let choose_gen qc_conf chooses tp =
+let choose_gen conf tp =
   match tp with
-  | T.Unit -> QCheck.Gen.pure V.U
-  | T.Int -> QCheck.Gen.map (fun x -> V.I x) (int_gen chooses)
-  | T.IntList -> QCheck.Gen.map (fun x -> V.L x) (list_gen qc_conf chooses)
-  | T.IntTree -> QCheck.Gen.map (fun x -> V.T x) (tree_gen qc_conf chooses)
-  | T.IntTreeI -> QCheck.Gen.map (fun x -> V.TI x) (treei_gen qc_conf chooses)
-  | T.IntTreeB -> QCheck.Gen.map (fun x -> V.TB x) (treeb_gen qc_conf chooses)
+  | T.Unit -> QCheck.Gen.return V.U
+  | T.Int -> QCheck.Gen.map (fun x -> V.I x) (int_gen conf.int_conf)
+  | T.IntList -> QCheck.Gen.map (fun x -> V.L x) (list_gen conf.list_conf)
+  | T.IntTree -> QCheck.Gen.map (fun x -> V.T x) (tree_gen conf.tree_conf)
+  | T.IntTreeI ->
+      QCheck.Gen.map
+        (fun x -> V.TI x)
+        (labeled_tree_gen conf.treei_conf (int_gen conf.int_conf))
+  | T.IntTreeB ->
+      QCheck.Gen.map
+        (fun x -> V.TB x)
+        (labeled_tree_gen conf.treeb_conf bool_gen)
   | T.Bool -> QCheck.Gen.map (fun x -> V.B x) bool_gen
-
-let small_nums = List.init 19 (fun i -> i - 10)
-
-let small_gen ~qc_conf ~num ~tps =
-  QCheck.Gen.generate ~n:num @@ QCheck.Gen.flatten_l
-  @@ List.map (choose_gen qc_conf small_nums) tps

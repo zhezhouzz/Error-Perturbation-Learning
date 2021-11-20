@@ -1,0 +1,13 @@
+(library
+ (name datatype)
+ (wrapped true)
+ (modules
+   zarray
+   zlabeled_tree
+   zlist
+   zmap
+   zset
+   ztree
+   ztailcall
+ )
+)

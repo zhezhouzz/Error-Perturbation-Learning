@@ -1,8 +1,8 @@
 (library
-   (name zquickcheck)
-   (libraries utils primitive qcheck yojson)
-   (modules
-      qc
-      qc_baseline
-   )
+ (name zquickcheck)
+ (libraries utils primitive qcheck yojson)
+ (modules
+   qc
+   qc_baseline
+ )
 )

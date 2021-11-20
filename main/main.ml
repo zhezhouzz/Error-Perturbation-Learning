@@ -427,17 +427,6 @@ let synthesize_all =
         in
         ())
 
-let layout_eval benchname stat cost_time =
-  let open Evaluation.Ev in
-  let avg_time =
-    match stat.in_sigma_out_phi_unique_num with
-    | 0 -> "inf"
-    | n -> sprintf "%f" (cost_time *. 1000000.0 /. float_of_int n)
-  in
-  Printf.printf "%s:\ncost time:%f(s)\navg time:%s(us/instance)\n%s\n" benchname
-    cost_time avg_time
-  @@ Evaluation.Ev.layout stat
-
 let eval_baseline =
   Command.basic ~summary:"eval-baseline"
     Command.Let_syntax.(
@@ -447,7 +436,7 @@ let eval_baseline =
       and num_baseline = anon ("baseline sampling number" %: int)
       and num = anon ("sampling number" %: int) in
       fun () ->
-        let qc_conf = Zquickcheck.Qc.load_config qc_file in
+        let qc_conf = Qc_config.load_config qc_file in
         let benchmarks = parse_benchmark_config source_configfile in
         let () =
           Config.exec_main configfile (fun () ->
@@ -477,7 +466,10 @@ let eval_baseline =
                             snd @@ env.client env.library_inspector inp)
                           env.phi)
                   in
-                  let () = layout_eval benchname stat cost_time in
+                  let () =
+                    Printf.printf "%s\n"
+                    @@ Evaluation.Ev.layout_eval benchname stat cost_time
+                  in
                   ())
                 benchmarks)
         in
@@ -505,7 +497,7 @@ let analysis =
               Printf.printf "init err: %s\n"
                 (Primitive.Value.layout_l env.i_err)
             in
-            let qc_conf = Zquickcheck.Qc.load_config qc_file in
+            let qc_conf = Qc_config.load_config qc_file in
             let baseline_data, cost_time =
               Zlog.event_time_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
@@ -562,7 +554,7 @@ let eval_result =
       and qc_file = anon ("quickcheck config file" %: regular_file)
       and num = anon ("sampling number" %: int) in
       fun () ->
-        let qc_conf = Zquickcheck.Qc.load_config qc_file in
+        let qc_conf = Qc_config.load_config qc_file in
         let benchmarks = parse_benchmark_config source_configfile in
         let () =
           Config.exec_main configfile (fun () ->
@@ -598,7 +590,10 @@ let eval_result =
                             snd @@ env.client env.library_inspector inp)
                           env.phi)
                   in
-                  let () = layout_eval benchname stat cost_time in
+                  let () =
+                    Printf.printf "%s\n"
+                    @@ Evaluation.Ev.layout_eval benchname stat cost_time
+                  in
                   ())
                 benchmarks)
         in
@@ -660,7 +655,10 @@ let sampling =
                     (fun inp -> snd @@ env.client env.library_inspector inp)
                     env.phi)
             in
-            let () = layout_eval "" stat cost_time in
+            let () =
+              Printf.printf "%s\n"
+              @@ Evaluation.Ev.layout_eval "" stat cost_time
+            in
             ()))
 
 let costing =
@@ -703,7 +701,7 @@ let baseline =
               Printf.printf "init err: %s\n"
                 (Primitive.Value.layout_l env.i_err)
             in
-            let qc_conf = Zquickcheck.Qc.load_config qc_file in
+            let qc_conf = Qc_config.load_config qc_file in
             let data, cost_time =
               Zlog.event_time_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
@@ -719,7 +717,47 @@ let baseline =
                     env.phi)
             in
             (* let () = Printf.printf "%s\n" @@ Evaluation.Ev.layout stat in *)
-            let () = layout_eval "" stat cost_time in
+            let () =
+              Printf.printf "%s\n"
+              @@ Evaluation.Ev.layout_eval "" stat cost_time
+            in
+            ()))
+
+let baseline_time =
+  Command.basic ~summary:"baseline-time"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and qc_file = anon ("quickcheck config file" %: regular_file)
+      and time_in_second = anon ("total_time in second" %: int) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let env = mk_env_from_files source_file meta_file in
+            let () =
+              Printf.printf "init err: %s\n"
+                (Primitive.Value.layout_l env.i_err)
+            in
+            let qc_conf = Qc_config.load_config qc_file in
+            let gen num =
+              (0, Zquickcheck.Qc_baseline.baseline qc_conf env.tps num)
+            in
+            let measure = Primitive.Measure.mk_measure_cond env.i_err in
+            let stat, cost_time =
+              Zlog.event_
+                (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
+                   "baseline evaluation") (fun () ->
+                  Evaluation.Ev.timed_evaluation
+                    (float_of_int time_in_second)
+                    gen measure env.sigma
+                    (fun inp -> snd @@ env.client env.library_inspector inp)
+                    env.phi)
+            in
+
+            let () =
+              Printf.printf "%s\n"
+              @@ Evaluation.Ev.layout_eval "" stat cost_time
+            in
             ()))
 
 let command =
@@ -727,6 +765,7 @@ let command =
     [
       ("test", test);
       ("baseline", baseline);
+      ("baseline-time", baseline_time);
       ("analysis-baseline", analysis);
       ("batched-test", batched_test);
       ("parse-input", parse_input);

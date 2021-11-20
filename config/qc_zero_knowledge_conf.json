@@ -1,0 +1,33 @@
+{
+    "int_conf": {
+        "element": "SmallUnsign"
+    },
+    "list_conf": {
+        "element": "SmallUnsign",
+        "size": "SmallNat"
+    },
+    "tree_conf": {
+        "element": "SmallUnsign",
+        "size": "SmallNat",
+        "fq": {
+            "fq_leaf": 1,
+            "fq_node": 1
+        }
+    },
+    "treei_conf": {
+        "element": "SmallUnsign",
+        "size": "SmallNat",
+        "fq": {
+            "fq_leaf": 1,
+            "fq_node": 1
+        }
+    },
+    "treeb_conf": {
+        "element": "SmallUnsign",
+        "size": "SmallNat",
+        "fq": {
+            "fq_leaf": 1,
+            "fq_node": 1
+        }
+    }
+}

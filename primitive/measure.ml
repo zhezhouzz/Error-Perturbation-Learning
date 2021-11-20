@@ -5,9 +5,9 @@ let measure = function
   | U | NotADt -> 0
   | I _ | B _ -> 1
   | L il -> fastexpt 2 (List.length il)
-  | T it -> fastexpt 2 @@ Tree.deep it
-  | TI iti -> fastexpt 2 @@ LabeledTree.deep iti
-  | TB itb -> fastexpt 2 @@ LabeledTree.deep itb
+  | T it -> fastexpt 2 @@ TreeTailCall.deep it
+  | TI iti -> fastexpt 2 @@ LabeledTreeTailCall.deep iti
+  | TB itb -> fastexpt 2 @@ LabeledTreeTailCall.deep itb
 
 let bound_min = 100
 

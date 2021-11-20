@@ -19,6 +19,27 @@ type evaluation_stat = {
   in_sigma_out_phi_unique_num : int;
 }
 
+let stat_empty =
+  {
+    sampling_num = 0;
+    total_num = 0;
+    succ_num = 0;
+    in_sigma_num = 0;
+    in_sigma_out_phi_num = 0;
+    in_sigma_out_phi_unique_num = 0;
+  }
+
+let stat_merge s1 s2 =
+  {
+    sampling_num = s1.sampling_num + s2.sampling_num;
+    total_num = s1.total_num + s2.total_num;
+    succ_num = s1.succ_num + s2.succ_num;
+    in_sigma_num = s1.in_sigma_num + s2.in_sigma_num;
+    in_sigma_out_phi_num = s1.in_sigma_out_phi_num + s2.in_sigma_out_phi_num;
+    in_sigma_out_phi_unique_num =
+      s1.in_sigma_out_phi_unique_num + s2.in_sigma_out_phi_unique_num;
+  }
+
 let layout
     {
       sampling_num;
@@ -44,16 +65,26 @@ let layout
     (aux in_sigma_out_phi_num)
     (aux in_sigma_out_phi_unique_num)
 
+let layout_eval benchname stat cost_time =
+  let avg_time =
+    match stat.in_sigma_out_phi_unique_num with
+    | 0 -> "inf"
+    | n -> Printf.sprintf "%f" (cost_time *. 1000000.0 /. float_of_int n)
+  in
+  Printf.sprintf "%s:\ncost time:%f(s)\navg time:%s(us/instance)\n%s\n"
+    benchname cost_time avg_time
+  @@ layout stat
+
 let evaluation (num_none : int) (data : V.t list list)
     (sigma : V.t list -> bool) (client : V.t list -> V.t list option)
     (phi : V.t list -> bool) =
   let sampling_num = num_none + List.length data in
-  let () = Printf.printf "sampling num: %i\n" sampling_num in
+  let () = Zlog.log_write @@ Printf.sprintf "sampling num: %i\n" sampling_num in
   let arr = Array.of_list data in
   let total = List.init (List.length data) (fun i -> i) in
   (* let c = ref 0 in *)
   let total_num = List.length total in
-  let () = Printf.printf "total num: %i\n" total_num in
+  (* let () = Printf.printf "total num: %i\n" total_num in *)
   (* let () = raise @@ failwith "end" in *)
   let succ_data =
     List.filter_map
@@ -62,10 +93,10 @@ let evaluation (num_none : int) (data : V.t list list)
       total
   in
   let succ_num = List.length succ_data in
-  let () = Printf.printf "succ num: %i\n" succ_num in
+  (* let () = Printf.printf "succ num: %i\n" succ_num in *)
   let in_sigma_data = List.filter (fun idx -> sigma arr.(idx)) succ_data in
   let in_sigma_num = List.length in_sigma_data in
-  let () = Printf.printf "in_sigma_num: %i\n" in_sigma_num in
+  (* let () = Printf.printf "in_sigma_num: %i\n" in_sigma_num in *)
   let in_sigma_out_phi_data =
     List.filter
       (fun idx ->
@@ -109,3 +140,35 @@ let evaluation_opt (data : V.t list option list) (sigma : V.t list -> bool)
       (0, []) data
   in
   evaluation num_none data sigma client phi
+
+let gen_num = 5000
+
+let measured_num = 10
+
+let timed_evaluation expected_time (gen : int -> int * V.t list list)
+    (measure : V.t list -> bool) (sigma : V.t list -> bool)
+    (client : V.t list -> V.t list option) (phi : V.t list -> bool) =
+  let rec loop (stat, cost_time) =
+    let rec aux (n, res) =
+      if List.length res > measured_num then (n, res)
+      else
+        let none_num, tmp = gen gen_num in
+        let tmp = List.filter measure tmp in
+        aux (n + none_num, res @ tmp)
+    in
+    let (none_num, data), d_time =
+      Zlog.event_time_ "timed_evaluation" (fun () -> aux (0, []))
+    in
+    let stat_one = evaluation none_num data sigma client phi in
+    let () = Zlog.log_write @@ layout_eval "" stat_one d_time in
+    let () =
+      Zlog.log_write
+      @@ Printf.sprintf "expected_time: %f\ncost_time: %f" expected_time
+           cost_time
+    in
+    let stat = stat_merge stat stat_one in
+    let cost_time = cost_time +. d_time in
+    if expected_time > cost_time then loop (stat, cost_time)
+    else (stat, cost_time)
+  in
+  loop (stat_empty, 0.0)

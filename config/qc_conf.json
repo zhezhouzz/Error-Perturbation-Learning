@@ -1,4 +1,33 @@
-{"list": 20,
-         "tree" : {"leaf": 1, "node": 3, "bound": 5},
-         "labeled_tree" : {"leaf": 1, "node": 3, "bound": 5}
+{
+    "int_conf": {
+        "element": "-10,19"
+    },
+    "list_conf": {
+        "element": "-10,19",
+        "size": "20"
+    },
+    "tree_conf": {
+        "element": "-10,19",
+        "size": "5",
+        "fq": {
+            "fq_leaf": 1,
+            "fq_node": 3
+        }
+    },
+    "treei_conf": {
+        "element": "-10,19",
+        "size": "5",
+        "fq": {
+            "fq_leaf": 1,
+            "fq_node": 3
+        }
+    },
+    "treeb_conf": {
+        "element": "-10,19",
+        "size": "5",
+        "fq": {
+            "fq_leaf": 1,
+            "fq_node": 3
+        }
+    }
 }

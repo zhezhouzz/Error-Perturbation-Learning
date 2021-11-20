@@ -1,0 +1,8 @@
+let i_err = ([1;2], [3;4])
+Default
+IN: (x0: int list, x1: int list) {
+(x2: int) = const0();
+(x3: int list) = replace(x0: int list, x2: int, x2: int);
+(x4: int) = max(x0: int list);
+(x5: int) = minus1(x4: int)}
+OUT: (x1: int list, x3: int list)
