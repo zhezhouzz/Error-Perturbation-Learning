@@ -1,17 +1,21 @@
 open Basic_dt
 open Value
 
+let tree_max_depth = 14
+
+let size_measure = fastexpt 2
+
 let measure = function
   | U | NotADt -> 0
   | I _ | B _ -> 1
-  | L il -> fastexpt 2 (List.length il)
-  | T it -> fastexpt 2 @@ TreeTailCall.deep it
-  | TI iti -> fastexpt 2 @@ LabeledTreeTailCall.deep iti
-  | TB itb -> fastexpt 2 @@ LabeledTreeTailCall.deep itb
+  | L il -> size_measure (List.length il)
+  | T it -> size_measure @@ TreeTailCall.deep it
+  | TI iti -> size_measure @@ LabeledTreeTailCall.deep iti
+  | TB itb -> size_measure @@ LabeledTreeTailCall.deep itb
 
 let bound_min = 100
 
-let bound_max = 400
+let bound_max = 2000
 
 let coef = 3
 

@@ -450,7 +450,7 @@ let eval_baseline =
                          num_sampling,
                          output_dir ) ->
                   let env = mk_env_from_files source_file meta_file in
-                  let data, cost_time =
+                  let (none_num, data), cost_time =
                     Zlog.event_time_
                       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
                          __FUNCTION__ "baseline sampling") (fun () ->
@@ -461,7 +461,7 @@ let eval_baseline =
                     Zlog.event_
                       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
                          __FUNCTION__ "baseline evaluation") (fun () ->
-                        Evaluation.Ev.evaluation 0 data env.sigma
+                        Evaluation.Ev.evaluation none_num data env.sigma
                           (fun inp ->
                             snd @@ env.client env.library_inspector inp)
                           env.phi)
@@ -498,7 +498,7 @@ let analysis =
                 (Primitive.Value.layout_l env.i_err)
             in
             let qc_conf = Qc_config.load_config qc_file in
-            let baseline_data, cost_time =
+            let (none_num, baseline_data), cost_time =
               Zlog.event_time_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
                    "baseline sampling") (fun () ->
@@ -702,7 +702,7 @@ let baseline =
                 (Primitive.Value.layout_l env.i_err)
             in
             let qc_conf = Qc_config.load_config qc_file in
-            let data, cost_time =
+            let (none_num, data), cost_time =
               Zlog.event_time_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
                    "baseline sampling") (fun () ->
@@ -712,7 +712,7 @@ let baseline =
               Zlog.event_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
                    "baseline evaluation") (fun () ->
-                  Evaluation.Ev.evaluation 0 data env.sigma
+                  Evaluation.Ev.evaluation none_num data env.sigma
                     (fun inp -> snd @@ env.client env.library_inspector inp)
                     env.phi)
             in
@@ -740,7 +740,7 @@ let baseline_time =
             in
             let qc_conf = Qc_config.load_config qc_file in
             let gen num =
-              (0, Zquickcheck.Qc_baseline.baseline qc_conf env.tps num)
+              Zquickcheck.Qc_baseline.baseline qc_conf env.tps num
             in
             let measure = Primitive.Measure.mk_measure_cond env.i_err in
             let stat, cost_time =
@@ -760,12 +760,60 @@ let baseline_time =
             in
             ()))
 
+let baseline_time_all =
+  Command.basic ~summary:"baseline-time-all"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_configfile = anon ("source config file" %: regular_file)
+      and qc_file = anon ("quickcheck config file" %: regular_file)
+      and output_dir = anon ("output dir" %: string)
+      and time_in_second = anon ("total_time in second" %: int) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let benchmarks = parse_benchmark_config source_configfile in
+            let aux benchname source_file meta_file =
+              let env = mk_env_from_files source_file meta_file in
+              let () =
+                Printf.printf "init err: %s\n"
+                  (Primitive.Value.layout_l env.i_err)
+              in
+              let qc_conf = Qc_config.load_config qc_file in
+              let gen num =
+                Zquickcheck.Qc_baseline.baseline qc_conf env.tps num
+              in
+              let measure = Primitive.Measure.mk_measure_cond env.i_err in
+              let stat, cost_time =
+                Zlog.event_
+                  (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
+                     "baseline evaluation") (fun () ->
+                    Evaluation.Ev.timed_evaluation
+                      (float_of_int time_in_second)
+                      gen measure env.sigma
+                      (fun inp -> snd @@ env.client env.library_inspector inp)
+                      env.phi)
+              in
+              let output_file = sprintf "%s/%s.baseline" output_dir benchname in
+              let () =
+                Core.Out_channel.write_all output_file
+                  ~data:(Evaluation.Ev.layout_eval benchname stat cost_time)
+              in
+              ()
+            in
+            let () =
+              List.iter
+                ~f:(fun (benchname, source_file, meta_file, _, _, _, _) ->
+                  aux benchname source_file meta_file)
+                benchmarks
+            in
+            ()))
+
 let command =
   Command.group ~summary:"Error Perturbation Learning"
     [
       ("test", test);
       ("baseline", baseline);
       ("baseline-time", baseline_time);
+      ("baseline-time-all", baseline_time_all);
       ("analysis-baseline", analysis);
       ("batched-test", batched_test);
       ("parse-input", parse_input);

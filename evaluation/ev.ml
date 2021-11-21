@@ -106,18 +106,18 @@ let evaluation (num_none : int) (data : V.t list list)
       in_sigma_data
   in
   let in_sigma_out_phi_num = List.length in_sigma_out_phi_data in
-  let () =
-    Zlog.log_write
-    @@ Printf.sprintf "in_sigma_out_phi:\n%s\n"
-    @@ Basic_dt.List.split_by "\n"
-         (fun idx ->
-           Printf.sprintf "%s -> %s"
-             (V.layout_l arr.(idx))
-             (match client arr.(idx) with
-             | None -> "none"
-             | Some out -> V.layout_l out))
-         in_sigma_out_phi_data
-  in
+  (* let () = *)
+  (*   Zlog.log_write *)
+  (*   @@ Printf.sprintf "in_sigma_out_phi:\n%s\n" *)
+  (*   @@ Basic_dt.List.split_by "\n" *)
+  (*        (fun idx -> *)
+  (*          Printf.sprintf "%s -> %s" *)
+  (*            (V.layout_l arr.(idx)) *)
+  (*            (match client arr.(idx) with *)
+  (*            | None -> "none" *)
+  (*            | Some out -> V.layout_l out)) *)
+  (*        in_sigma_out_phi_data *)
+  (* in *)
   let in_sigma_out_phi_unique_data =
     Value_aux.remove_duplicates_arr arr in_sigma_out_phi_data
   in
@@ -141,9 +141,9 @@ let evaluation_opt (data : V.t list option list) (sigma : V.t list -> bool)
   in
   evaluation num_none data sigma client phi
 
-let gen_num = 5000
+let gen_num = 50000
 
-let measured_num = 10
+let measured_num = 100
 
 let timed_evaluation expected_time (gen : int -> int * V.t list list)
     (measure : V.t list -> bool) (sigma : V.t list -> bool)
@@ -152,8 +152,9 @@ let timed_evaluation expected_time (gen : int -> int * V.t list list)
     let rec aux (n, res) =
       if List.length res > measured_num then (n, res)
       else
-        let none_num, tmp = gen gen_num in
+        let _, tmp = gen gen_num in
         let tmp = List.filter measure tmp in
+        let none_num = gen_num - List.length tmp in
         aux (n + none_num, res @ tmp)
     in
     let (none_num, data), d_time =
