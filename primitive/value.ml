@@ -87,9 +87,9 @@ let len = function
   | U | I _ | B _ -> 1
   | NotADt -> 0
   | L il -> List.length il
-  | T it -> Tree.deep it
-  | TI iti -> LabeledTree.deep iti
-  | TB itb -> LabeledTree.deep itb
+  | T it -> TreeTailCall.deep it
+  | TI iti -> LabeledTreeTailCall.deep iti
+  | TB itb -> LabeledTreeTailCall.deep itb
 
 let layout_l_len l =
   sprintf "[%s]" @@ List.split_by_comma string_of_int @@ List.map len l
