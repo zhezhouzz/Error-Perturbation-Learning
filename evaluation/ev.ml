@@ -88,13 +88,13 @@ let evaluation (num_none : int) (data : V.t list list)
   let total_num = List.length total in
   (* let () = Printf.printf "total num: %i\n" total_num in *)
   (* let () = raise @@ failwith "end" in *)
-  let _ =
-    List.iter
-      (fun idx ->
-        Zlog.log_write @@ spf "%s"
-        @@ List.split_by_comma (fun v -> string_of_int @@ V.len v) arr.(idx))
-      total
-  in
+  (* let _ = *)
+  (*   List.iter *)
+  (*     (fun idx -> *)
+  (*       Zlog.log_write @@ spf "%s" *)
+  (*       @@ List.split_by_comma (fun v -> string_of_int @@ V.len v) arr.(idx)) *)
+  (*     total *)
+  (* in *)
   let succ_data =
     List.filter_map
       (fun idx ->

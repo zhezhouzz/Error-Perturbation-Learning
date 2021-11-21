@@ -1,7 +1,7 @@
 open Basic_dt
 open Value
 
-let tree_max_depth = 100
+let tree_max_depth = 600
 
 let size_measure = fastexpt 2
 
@@ -13,7 +13,7 @@ let measure = function
   | TI iti -> LabeledTreeTailCall.deep iti
   | TB itb -> LabeledTreeTailCall.deep itb
 
-let bound_min = 40
+let bound_min = 50
 
 let bound_max = 100
 
