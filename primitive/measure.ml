@@ -1,7 +1,7 @@
 open Basic_dt
 open Value
 
-let tree_max_depth = 14
+let tree_max_depth = 20
 
 let size_measure = fastexpt 2
 

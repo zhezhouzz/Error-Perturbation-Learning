@@ -26,7 +26,7 @@ let tree_gen conf =
   let body =
     Gen.(
       fun n ->
-        if Measure.size_measure n > Measure.tree_max_depth then return None
+        if n > Measure.tree_max_depth then return None
         else
           map (fun x -> Some x)
           @@ fix
@@ -56,7 +56,7 @@ let labeled_tree_gen conf label_gen =
   let body =
     Gen.(
       fun n ->
-        if Measure.size_measure n > Measure.tree_max_depth then return None
+        if n > Measure.tree_max_depth then return None
         else
           map (fun x -> Some x)
           @@ (fix (fun self n ->
