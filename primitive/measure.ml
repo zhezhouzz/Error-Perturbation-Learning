@@ -13,9 +13,9 @@ let measure = function
   | TI iti -> LabeledTreeTailCall.deep iti
   | TB itb -> LabeledTreeTailCall.deep itb
 
-let bound_min = 20
+let bound_min = 40
 
-let bound_max = 50
+let bound_max = 100
 
 let coef = 2
 
