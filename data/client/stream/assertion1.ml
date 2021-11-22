@@ -20,9 +20,9 @@ let op_pool =
 
 let libs = [| "Stream" |]
 
-let i_err = ([ -1; 5 ], [ -3; -5; -9 ])
+let i_err = ([ -1; 5; 6; 10; 11 ], [ -3; -5; -9; -10; -11 ])
 
-let sampling_rounds = 6
+let sampling_rounds = 20
 
 let p_size = 4
 
