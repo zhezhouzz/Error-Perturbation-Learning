@@ -9,15 +9,15 @@ let measure = function
   | U | NotADt -> 0
   | I _ | B _ -> 1
   | L il -> List.length il
-  | T it -> TreeTailCall.deep it
-  | TI iti -> LabeledTreeTailCall.deep iti
-  | TB itb -> LabeledTreeTailCall.deep itb
+  | T it -> 2 * TreeTailCall.deep it
+  | TI iti -> 2 * LabeledTreeTailCall.deep iti
+  | TB itb -> 2 * LabeledTreeTailCall.deep itb
 
-let bound_min = 50
+let bound_min = 20
 
-let bound_max = 100
+let bound_max = 60
 
-let coef = 2
+let coef = 3
 
 let mk_measure_cond input =
   let size x =
