@@ -11,7 +11,9 @@ def to_avg_time(d):
         "{:f}".format((float(d)))
 
 def baseline_show(path):
-    for fil in os.listdir(path):
+    files = os.listdir(path)
+    files.sort()
+    for fil in files:
         full_path = os.path.join(path, fil)
         if full_path.endswith(".baseline"):
             with open(full_path) as f:
