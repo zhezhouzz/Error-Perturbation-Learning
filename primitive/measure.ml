@@ -17,7 +17,7 @@ let bound_min = 20
 
 let bound_max = 60
 
-let coef = 3
+let coef = 2
 
 let mk_measure_cond input =
   let size x =
