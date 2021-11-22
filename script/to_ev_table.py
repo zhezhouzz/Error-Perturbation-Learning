@@ -1,15 +1,6 @@
 import os
 import re
 
-def to_percent(d):
-    "{:.2f}".format(d)
-
-def to_avg_time(d):
-    if d == "inf":
-        "inf"
-    else:
-        "{:f}".format((float(d)))
-
 def baseline_show(path):
     files = os.listdir(path)
     files.sort()
@@ -23,7 +14,7 @@ def baseline_show(path):
                 sigma_qc = float(re.sub(r".*\(|%\)", "", lines[6], 0, re.MULTILINE | re.DOTALL))
                 neg_qc = float(re.sub(r".*\(|%\)", "", lines[7], 0, re.MULTILINE | re.DOTALL))
                 uniq_qc = float(re.sub(r".*\(|%\)", "", lines[8], 0, re.MULTILINE | re.DOTALL))
-                print("{} & ${:.2f}\%$ & ${:.2f}\%$ & ${:.2f}\%$ & ${:.2f}$ \\\\".
+                print("{} & ${:.3f}\%$ & ${:.3f}\%$ & ${:.3f}\%$ & ${:.3f}$ \\\\".
                       format(benchname, sigma_qc, neg_qc, uniq_qc, avg_time))
 
 import sys
