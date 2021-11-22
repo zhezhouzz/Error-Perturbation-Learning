@@ -1,0 +1,13 @@
+(library
+ (name commands)
+ (libraries utils core language synthesizer parser classify ocaml_parser evaluation zquickcheck analysis)
+ (modules
+   caux
+   ctest
+   csyn
+   cparse
+   cev
+   cbaseline
+ )
+ (preprocess (pps ppx_jane))
+)

@@ -4,6 +4,6 @@
 )
 (executable
  (name main)
- (libraries utils core language synthesizer parser classify ocaml_parser evaluation zquickcheck analysis)
+ (libraries core commands)
  (preprocess (pps ppx_jane))
 )

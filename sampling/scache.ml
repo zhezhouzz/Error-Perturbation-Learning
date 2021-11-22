@@ -171,12 +171,12 @@ let mk_generation mode init_set conds f num =
     if n >= num then raise @@ failwith "never happen"
     else
       let mem, outs = generate cache.mem cache.gs mode conds f in
-      let () =
-        Zlog.log_write @@ spf "outs =\n%s"
-        @@ List.split_by_comma
-             (fun x -> Value.layout_l @@ Mem.itov cache.mem x)
-             outs
-      in
+      (* let () = *)
+      (*   Zlog.log_write @@ spf "outs =\n%s" *)
+      (*   @@ List.split_by_comma *)
+      (*        (fun x -> Value.layout_l @@ Mem.itov cache.mem x) *)
+      (*        outs *)
+      (* in *)
       if n >= num - 1 then cache
       else if List.length outs == 0 then
         (* early stop *)
