@@ -7,9 +7,9 @@ let op_pool =
     "cons";
     "append";
     "list_destruct";
+    "list_last_destruct";
     "list_mid_partition";
     "list_alter_partition";
-    "bottom";
     "max";
     "min";
     "plus1";

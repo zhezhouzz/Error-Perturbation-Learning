@@ -21,6 +21,19 @@ let table =
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
+      imp_name = "list_last_destruct";
+      imp_itps = [ IntList ];
+      imp_otps = [ IntList; Int ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ L l ] ->
+            Sugar.(
+              let* t, h = List.last_destruct_opt l in
+              Some [ I h; L t ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
       imp_name = "list_mid_partition";
       imp_itps = [ IntList ];
       imp_otps = [ IntList; IntList ];
