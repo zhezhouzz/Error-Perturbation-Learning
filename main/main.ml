@@ -17,6 +17,7 @@ let command =
       ("parse-result-one", Cparse.parse_result_one);
       ("sampling", Cev.sampling);
       ("synthesize", Csyn.synthesize);
+      ("synthesize-time", Csyn.synthesize_time);
       ("synthesize-all", Csyn.synthesize_all);
       ("eval-baseline", Cev.eval_baseline);
       ("eval-result", Cev.eval_result);

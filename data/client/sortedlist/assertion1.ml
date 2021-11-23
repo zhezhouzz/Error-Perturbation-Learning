@@ -20,9 +20,9 @@ let op_pool =
 
 let libs = [| "List" |]
 
-let i_err = ([ 1; 2 ], [ 3; 4 ])
+let i_err = ([ -1; 1; 2; 5; 7; 9 ], [ 0; 3; 4; 6; 8 ])
 
-let sampling_rounds = 6
+let sampling_rounds = 14
 
 let p_size = 4
 
