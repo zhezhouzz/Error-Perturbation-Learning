@@ -53,6 +53,7 @@ let parse_string str = parse_ @@ Lexing.from_string str
 
 type parsing_res = ParseDefault | ParsePre of string | ParseF of string
 
+(* TODO: multiple line i_err *)
 let i_err_name = "i_err"
 
 let parse_raw_piecewise filename =

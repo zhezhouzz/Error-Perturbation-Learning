@@ -241,9 +241,9 @@ let eval_sampling (init_set : Value.t list list) fs measure bound =
     else aux mem num_none samples
   in
   let num_none, data = aux mem 0 @@ List.nth gs 0 in
-  let () =
-    Zlog.log_write
-    @@ spf "num_none = %i\ndata:\n%s\n" num_none
-    @@ List.split_by "\n" Value.layout_l data
-  in
+  (* let () = *)
+  (*   Zlog.log_write *)
+  (*   @@ spf "num_none = %i\ndata:\n%s\n" num_none *)
+  (*   @@ List.split_by "\n" Value.layout_l data *)
+  (* in *)
   (num_none, data)

@@ -72,8 +72,8 @@ let run_time_all source_configfile time_in_second test_output_dir gen_gen ev_tp
     let env, gen = gen_gen bench env in
     let stat, cost_time =
       Zlog.event_
-        (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
-           "baseline evaluation") (fun () ->
+        (Printf.sprintf "%s:%i[%s]-%s evaluation" __FILE__ __LINE__ __FUNCTION__
+           benchname) (fun () ->
           Evaluation.Ev.timed_evaluation
             (float_of_int time_in_second)
             gen measure env.sigma
@@ -118,6 +118,7 @@ let baseline_time_all =
             run_time_all source_configfile time_in_second output_dir gen_gen
               Evaluation.Ev.Qc))
 
+(* TODO: mkdir if not exists *)
 let sampling_time_all =
   Command.basic ~summary:"sampling-time-all"
     Command.Let_syntax.(

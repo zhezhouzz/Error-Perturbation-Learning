@@ -58,7 +58,10 @@ let compare x y =
     | TI x, TI y -> LabeledTree.compare compare x y
     | TB x, TB y -> LabeledTree.compare compare x y
     | NotADt, NotADt -> 0
-    | _, _ -> raise @@ failwith "two values cannot be compared"
+    | _, _ ->
+        raise
+        @@ failwith
+             (spf "two values(%s, %s) cannot be compared" (layout x) (layout y))
   in
   aux (x, y)
 

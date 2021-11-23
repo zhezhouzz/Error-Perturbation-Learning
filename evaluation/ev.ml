@@ -152,9 +152,9 @@ let evaluation_opt (data : V.t list option list) (sigma : V.t list -> bool)
 
 type ev_tp = Perturb | Qc
 
-let gen_num = function Qc -> 50000 | Perturb -> 10000
+let gen_num = function Qc -> 50000 | Perturb -> 5000
 
-let measured_num = function Qc -> 100 | Perturb -> 9000
+let measured_num = function Qc -> 100 | Perturb -> 4000
 
 let timed_evaluation expected_time (gen : int -> int * V.t list list)
     (measure : V.t list -> bool) (sigma : V.t list -> bool)
