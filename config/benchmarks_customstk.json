@@ -1,0 +1,13 @@
+{
+    "output_dir": ".result",
+    "benchmarks": [
+        {
+            "name": "customstk",
+            "source_file": "data/client/customstk/concat.ml",
+            "meta_file": "data/client/customstk/assertion1.ml",
+            "max_length": 1,
+            "num_burn_in": 1500,
+            "num_sampling": 500,
+            "time_bound": 300
+        }]
+}
