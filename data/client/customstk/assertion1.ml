@@ -20,10 +20,10 @@ let op_pool =
 
 let libs = [| "Customstk" |]
 
-(* let i_err = ([ -10; -5; -4; 0; 3 ], [ -8; -5; 4 ]) *)
-let i_err = ([ 1; 2 ], [ 3; 4 ])
+let i_err = ([ -10; -5; -4; 0; 3 ], [ -8; -5; 4; 5 ])
+(* let i_err = ([ 1; 2 ], [ 3; 4 ]) *)
 
-let sampling_rounds = 6
+let sampling_rounds = 14
 
 let p_size = 4
 
