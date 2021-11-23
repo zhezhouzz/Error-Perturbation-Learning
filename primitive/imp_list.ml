@@ -30,7 +30,7 @@ let table =
         | [ L l ] ->
             Sugar.(
               let* t, h = List.last_destruct_opt l in
-              Some [ I h; L t ])
+              Some [ L t; I h ])
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
