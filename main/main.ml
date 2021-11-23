@@ -6,8 +6,10 @@ let command =
     [
       ("test", Ctest.test);
       ("baseline", Cbaseline.baseline);
-      ("baseline-time", Cbaseline.baseline_time);
-      ("baseline-time-all", Cbaseline.baseline_time_all);
+      ("baseline-time", Ctime.baseline_time);
+      ("baseline-time-all", Ctime.baseline_time_all);
+      ("sampling-time", Ctime.sampling_time);
+      ("sampling-time-all", Ctime.sampling_time_all);
       ("analysis-baseline", Cev.analysis);
       ("batched-test", Ctest.batched_test);
       ("parse-input", Cparse.parse_input);

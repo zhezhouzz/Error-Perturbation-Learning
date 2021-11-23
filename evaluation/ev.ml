@@ -150,20 +150,23 @@ let evaluation_opt (data : V.t list option list) (sigma : V.t list -> bool)
   in
   evaluation num_none data sigma client phi
 
-let gen_num = 50000
+type ev_tp = Perturb | Qc
 
-let measured_num = 100
+let gen_num = function Qc -> 50000 | Perturb -> 10000
+
+let measured_num = function Qc -> 100 | Perturb -> 9000
 
 let timed_evaluation expected_time (gen : int -> int * V.t list list)
     (measure : V.t list -> bool) (sigma : V.t list -> bool)
-    (client : V.t list -> V.t list option) (phi : V.t list -> bool) =
+    (client : V.t list -> V.t list option) (phi : V.t list -> bool)
+    (ev_tp : ev_tp) =
   let rec loop (stat, cost_time) =
     let rec aux (n, res) =
-      if List.length res > measured_num then (n, res)
+      if List.length res > measured_num ev_tp then (n, res)
       else
-        let _, tmp = gen gen_num in
+        let _, tmp = gen @@ gen_num ev_tp in
         let tmp = List.filter measure tmp in
-        let none_num = gen_num - List.length tmp in
+        let none_num = gen_num ev_tp - List.length tmp in
         aux (n + none_num, res @ tmp)
     in
     let (none_num, data), d_time =

@@ -60,11 +60,22 @@ let regular_file =
       | `No -> failwith "Not a regular file"
       | `Unknown -> failwith "Could not determine if this was a regular file")
 
+type bench_config = {
+  benchname : string;
+  source_file : string;
+  meta_file : string;
+  max_length : int;
+  num_burn_in : int;
+  num_sampling : int;
+  time_bound : float;
+  output_dir : string;
+}
+
 let parse_benchmark_config source_configfile =
   let open Yojson.Basic.Util in
-  let cases =
-    Config.load_json source_configfile |> member "benchmarks" |> to_list
-  in
+  let j = Config.load_json source_configfile in
+  let output_dir = j |> member "output_dir" |> to_string in
+  let cases = j |> member "benchmarks" |> to_list in
   let get_setting j =
     let benchname = j |> member "name" |> to_string in
     let source_file = j |> member "source_file" |> to_string in
@@ -72,13 +83,16 @@ let parse_benchmark_config source_configfile =
     let max_length = j |> member "max_length" |> to_int in
     let num_burn_in = j |> member "num_burn_in" |> to_int in
     let num_sampling = j |> member "num_sampling" |> to_int in
-    let output_dir = j |> member "output_dir" |> to_string in
-    ( benchname,
-      source_file,
-      meta_file,
-      max_length,
-      num_burn_in,
-      num_sampling,
-      output_dir )
+    let time_bound = j |> member "time_bound" |> to_int |> float_of_int in
+    {
+      benchname;
+      source_file;
+      meta_file;
+      max_length;
+      num_burn_in;
+      num_sampling;
+      time_bound;
+      output_dir = sprintf "%s/%s" output_dir benchname;
+    }
   in
   List.map ~f:get_setting cases

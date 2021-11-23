@@ -31,16 +31,24 @@ let force_converge current =
       Zlog.log_write ~log_level:LWarning @@ Printf.sprintf "force_converge!";
       (cases, f)
 
-let synthesize_f bias samples num_burn_in num_sampling env =
+type syn_bound = TimeBound of float | IterBound of int * int
+
+let synthesize_f bias samples bound env =
   let env' = Mkenv.random_init_prog env in
   let env' = Mkenv.update_init_sampling_set env' samples in
   let env, cost =
     Zlog.event_
       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
       (fun () ->
-        Mcmc.metropolis_hastings ~burn_in:num_burn_in
-          ~sampling_steps:num_sampling ~proposal_distribution:Mutate.mutate
-          ~cost_function:(Cost.biased_cost bias) ~init_distribution:env')
+        match bound with
+        | IterBound (num_burn_in, num_sampling) ->
+            Mcmc.metropolis_hastings ~burn_in:num_burn_in
+              ~sampling_steps:num_sampling ~proposal_distribution:Mutate.mutate
+              ~cost_function:(Cost.biased_cost bias) ~init_distribution:env'
+        | TimeBound time_bound ->
+            Mcmc.metropolis_hastings_time ~time_bound
+              ~proposal_distribution:Mutate.mutate
+              ~cost_function:(Cost.biased_cost bias) ~init_distribution:env')
   in
   match env.cur_p with
   | None ->
@@ -74,6 +82,7 @@ let synthesize_pre env init_set =
     FIsOK (pre, samples)
 
 let synthesize_piecewise env max_length num_burn_in num_sampling =
+  let bound = IterBound (num_burn_in, num_sampling) in
   let rec loop current iter =
     if iter >= iter_bound || length current >= max_length then
       force_converge current
@@ -82,18 +91,14 @@ let synthesize_piecewise env max_length num_burn_in num_sampling =
         match current with
         | InitF env ->
             ( [],
-              synthesize_f
-                (fun _ -> true)
-                [ env.i_err ] num_burn_in num_sampling env,
+              synthesize_f (fun _ -> true) [ env.i_err ] bound env,
               [ env.i_err ] )
         | NextF (cases, f, pre, samples, env) ->
             let pres = List.map fst cases in
             let bias x =
               not @@ List.for_all (fun pre -> Spec.eval pre x) (pres @ [ pre ])
             in
-            ( cases @ [ (pre, f) ],
-              synthesize_f bias samples num_burn_in num_sampling env,
-              samples )
+            (cases @ [ (pre, f) ], synthesize_f bias samples bound env, samples)
       in
       match f with
       | None -> loop current (iter + 1)
@@ -142,13 +147,11 @@ let log_show_init_set iter init_set =
 
 module S = Sampling.Scache
 
-let synthesize_multi env max_length num_burn_in num_sampling =
+let synthesize_multi_core env max_length bound =
   let rec loop current init_set iter =
     if iter >= iter_bound || List.length current >= max_length then current
     else
-      match
-        synthesize_f (fun _ -> true) init_set num_burn_in num_sampling env
-      with
+      match synthesize_f (fun _ -> true) init_set bound env with
       | None -> raise @@ failwith "synthesize_f fails"
       | Some (env, new_f) ->
           let conds =
@@ -177,3 +180,9 @@ let synthesize_multi env max_length num_burn_in num_sampling =
   match fs with
   | [] -> raise @@ failwith "no perturbation function"
   | h :: t -> (List.map (fun f -> (Spec.dummy_pre env.tps, f)) t, h)
+
+let synthesize_multi env max_length num_burn_in num_sampling =
+  synthesize_multi_core env max_length (IterBound (num_burn_in, num_sampling))
+
+let synthesize_multi_time env max_length time_bound =
+  synthesize_multi_core env max_length (TimeBound time_bound)

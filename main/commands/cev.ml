@@ -21,13 +21,16 @@ let eval_baseline =
           Config.exec_main configfile (fun () ->
               List.iter
                 ~f:
-                  (fun ( benchname,
-                         source_file,
-                         meta_file,
-                         max_length,
-                         num_burn_in,
-                         num_sampling,
-                         output_dir ) ->
+                  (fun {
+                         benchname;
+                         source_file;
+                         meta_file;
+                         max_length;
+                         num_burn_in;
+                         num_sampling;
+                         time_bound;
+                         output_dir;
+                       } ->
                   let env = mk_env_from_files source_file meta_file in
                   let (none_num, data), cost_time =
                     Zlog.event_time_
@@ -139,13 +142,16 @@ let eval_result =
           Config.exec_main configfile (fun () ->
               List.iter
                 ~f:
-                  (fun ( benchname,
-                         source_file,
-                         meta_file,
-                         max_length,
-                         num_burn_in,
-                         num_sampling,
-                         output_dir ) ->
+                  (fun {
+                         benchname;
+                         source_file;
+                         meta_file;
+                         max_length;
+                         num_burn_in;
+                         num_sampling;
+                         time_bound;
+                         output_dir;
+                       } ->
                   let env = mk_env_from_files source_file meta_file in
                   let i_err, prog =
                     Parse.parse_piecewise (sprintf "%s/0.prog" output_dir)
