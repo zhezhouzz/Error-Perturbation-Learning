@@ -1,0 +1,12 @@
+(library
+ (name ifc)
+ (libraries utils primitive)
+ (modules
+   instructions
+   rules
+   machine
+   indist
+   driver
+   errors
+ )
+)

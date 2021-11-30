@@ -7,6 +7,13 @@ module List = struct
 
   let destruct_opt = function [] -> None | h :: t -> Some (h, t)
 
+  let update_opt l idx x =
+    if List.length l <= idx || idx < 0 then None
+    else
+      let arr = Array.of_list l in
+      Array.set arr idx x;
+      Some (Array.to_list arr)
+
   let mid_partition l =
     let mid = length l / 2 in
     let rec aux left l =
