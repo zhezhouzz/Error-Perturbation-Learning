@@ -54,7 +54,15 @@ let sigma st1 st2 =
 
 let client (t : table) st1 st2 =
   match (exec t st1, exec t st2) with
-  | None, _ | _, None -> None
+  | None, None ->
+      (* Printf.printf "both get stuck\n"; *)
+      None
+  | None, _ ->
+      (* Printf.printf "fst get stuck\n"; *)
+      None
+  | _, None ->
+      (* Printf.printf "snd get stuck\n"; *)
+      None
   | Some st1', Some st2' -> Some (st1', st2')
 
 let phi st1 st2 st1' st2' =

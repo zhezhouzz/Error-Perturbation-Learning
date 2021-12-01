@@ -1,5 +1,6 @@
 open Basic_dt
 open Printf
+open Ifc_instruction
 
 type t =
   | U
@@ -9,6 +10,10 @@ type t =
   | B of bool
   | TI of (int, int) LabeledTree.t
   | TB of (int, bool) LabeledTree.t
+  | IInstr of instruction
+  | IInstrL of instruction list
+  | IBL of (int * bool) list
+  | BIBL of (bool * int * bool) list
   | NotADt
 
 let layout = function
@@ -19,6 +24,15 @@ let layout = function
   | B b -> string_of_bool b
   | TI tr -> LabeledTree.layout string_of_int tr
   | TB tr -> LabeledTree.layout string_of_int tr
+  | IInstr instr -> layout_instruction instr
+  | IInstrL instrl ->
+      sprintf "[%s]" @@ List.split_by ";" layout_instruction instrl
+  | IBL ibl ->
+      sprintf "[%s]"
+      @@ List.split_by ";" (fun (i, b) -> sprintf "%i,%b" i b) ibl
+  | BIBL bibl ->
+      sprintf "[%s]"
+      @@ List.split_by ";" (fun (b1, i, b2) -> sprintf "%b,%i,%b" b1 i b2) bibl
   | NotADt -> "_"
 
 let layout_l l = sprintf "[%s]" @@ List.split_by_comma layout l
@@ -31,6 +45,15 @@ let formal_layout = function
   | B b -> string_of_bool b
   | TI tr -> LabeledTree.formal_layout string_of_int string_of_int tr
   | TB tr -> LabeledTree.formal_layout string_of_bool string_of_int tr
+  | IInstr instr -> layout_instruction instr
+  | IInstrL instrl ->
+      sprintf "[%s]" @@ List.split_by ";" layout_instruction instrl
+  | IBL ibl ->
+      sprintf "[%s]"
+      @@ List.split_by ";" (fun (i, b) -> sprintf "%i,%b" i b) ibl
+  | BIBL bibl ->
+      sprintf "[%s]"
+      @@ List.split_by ";" (fun (b1, i, b2) -> sprintf "%b,%i,%b" b1 i b2) bibl
   | NotADt -> "_"
 
 let formal_layout_l l = sprintf "(%s)" @@ List.split_by_comma formal_layout l
@@ -44,6 +67,15 @@ let eq x y =
     | T x, T y -> Tree.eq (fun x y -> x == y) x y
     | TI x, TI y -> LabeledTree.eq (fun x y -> x == y) (fun x y -> x == y) x y
     | TB x, TB y -> LabeledTree.eq (fun x y -> x == y) (fun x y -> x == y) x y
+    | IInstr x, IInstr y -> eq_instruction x y
+    | IInstrL x, IInstrL y -> List.eq eq_instruction x y
+    | IBL ibl1, IBL ibl2 ->
+        List.eq (fun (i1, b1) (i2, b2) -> i1 == i2 && b1 == b2) ibl1 ibl2
+    | BIBL bibl1, BIBL bibl2 ->
+        List.eq
+          (fun (b1, i1, b1') (b2, i2, b2') ->
+            i1 == i2 && b1 == b2 && b1' == b2')
+          bibl1 bibl2
     | _, _ -> false
   in
   aux (x, y)
@@ -57,6 +89,21 @@ let compare x y =
     | T x, T y -> Tree.compare compare x y
     | TI x, TI y -> LabeledTree.compare compare x y
     | TB x, TB y -> LabeledTree.compare compare x y
+    | IInstr x, IInstr y -> compare_instruction x y
+    | IInstrL x, IInstrL y -> List.compare compare_instruction x y
+    | IBL ibl1, IBL ibl2 ->
+        List.compare
+          (fun (i1, b1) (i2, b2) ->
+            let x = compare i1 i2 in
+            if x == 0 then compare b1 b2 else x)
+          ibl1 ibl2
+    | BIBL bibl1, BIBL bibl2 ->
+        List.compare
+          (fun (b1, i1, b1') (b2, i2, b2') ->
+            let x = compare b1 b2 in
+            let y = compare i1 i2 in
+            if x == 0 then if y == 0 then compare b1' b2' else y else x)
+          bibl1 bibl2
     | NotADt, NotADt -> 0
     | _, _ ->
         raise
@@ -65,9 +112,13 @@ let compare x y =
   in
   aux (x, y)
 
+(* TODO: shuold I flatten instructions? *)
 let flatten_forall = function
-  | U | I _ | B _ | NotADt -> raise @@ failwith "flatten_forall: not a datatype"
+  | U | I _ | B _ | IInstr _ | IInstrL _ | NotADt ->
+      raise @@ failwith "flatten_forall: not a datatype"
   | L il -> List.flatten_forall il
+  | IBL ibl -> List.flatten_forall @@ List.map fst ibl
+  | BIBL bibl -> List.flatten_forall @@ List.map (fun (_, x, _) -> x) bibl
   | T it -> Tree.flatten_forall it
   | TI iti -> LabeledTree.flatten_forall iti
   | TB itb -> LabeledTree.flatten_forall itb
@@ -76,10 +127,13 @@ let flatten_forall_l l =
   List.fold_left
     (fun r v ->
       match v with
-      | U -> []
+      | U | IInstr _ | IInstrL _ -> []
       | I i -> i :: r
       | B _ -> r
       | L il -> List.flatten_forall il @ r
+      | IBL ibl -> (List.flatten_forall @@ List.map fst ibl) @ r
+      | BIBL bibl ->
+          (List.flatten_forall @@ List.map (fun (_, x, _) -> x) bibl) @ r
       | T it -> Tree.flatten_forall it @ r
       | TI iti -> LabeledTree.flatten_forall iti @ r
       | TB itb -> LabeledTree.flatten_forall itb @ r
@@ -87,12 +141,15 @@ let flatten_forall_l l =
     [] l
 
 let len = function
-  | U | I _ | B _ -> 1
+  | U | I _ | B _ | IInstr _ -> 1
   | NotADt -> 0
   | L il -> List.length il
+  | IBL ibl -> List.length ibl
+  | BIBL bibl -> List.length bibl
   | T it -> TreeTailCall.deep it
   | TI iti -> LabeledTreeTailCall.deep iti
   | TB itb -> LabeledTreeTailCall.deep itb
+  | IInstrL l -> List.length l
 
 let layout_l_len l =
   sprintf "[%s]" @@ List.split_by_comma string_of_int @@ List.map len l
@@ -106,6 +163,10 @@ let get_tp v =
   | T _ -> Tp.IntTree
   | TI _ -> Tp.IntTreeI
   | TB _ -> Tp.IntTreeB
+  | IInstr _ -> IfcInstr
+  | IInstrL _ -> IfcInstrList
+  | IBL _ -> IntBoolList
+  | BIBL _ -> BoolIntBoolList
   | NotADt -> raise @@ failwith "get_tp: not a value"
 
 let get_tp_l = List.map get_tp

@@ -36,7 +36,7 @@ let assignment_remove_duplicates l =
 let spf = Printf.sprintf
 
 let to_tvar (tp, place, source) =
-  (tp, spf "h!%s!%i_%i" (Tp.layout tp) place source)
+  (Tp.Int, spf "h!%s!%i_%i" (Tp.layout tp) place source)
 
 (* TODO: improve cache *)
 type cache = {
@@ -115,7 +115,10 @@ let must_used_to_z3 ctx cs (_, v1) =
 
 let must_boolean_to_z3 ctx total (v0, v1) =
   let vs = List.map (fun v -> tpedvar_to_z3 ctx @@ to_tvar v) total in
-  let aux v = mk_or ctx [ mk_eq ctx v v0; mk_eq ctx v v1 ] in
+  let aux v =
+    (* Printf.printf "v := %s\n" (Expr.to_string v); *)
+    mk_or ctx [ mk_eq ctx v v0; mk_eq ctx v v1 ]
+  in
   (vs, mk_and ctx (List.map aux vs))
 
 let make_constraint prog =

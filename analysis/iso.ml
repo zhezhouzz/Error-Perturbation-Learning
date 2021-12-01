@@ -5,9 +5,11 @@ module V = Value
 let value_int_map v f =
   let open V in
   match v with
-  | B _ | U | NotADt -> v
+  | B _ | U | IInstr _ | IInstrL _ | NotADt -> v
   | I i -> I (f i)
   | L l -> L (List.map f l)
+  | IBL l -> IBL (List.map (fun (n, l) -> (f n, l)) l)
+  | BIBL l -> BIBL (List.map (fun (l1, n, l2) -> (l1, f n, l2)) l)
   | T tr -> T (Tree.map f tr)
   | TI tr -> TI (LabeledTree.map f tr)
   | TB tr -> TB (LabeledTree.map f tr)

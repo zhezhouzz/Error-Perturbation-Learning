@@ -4,11 +4,22 @@ module T = Tp
 module Lang = Oplang
 open Basic_dt
 
-let to_tp l =
-  match l with
-  | [ "int" ] -> T.Int
-  | [ "int"; "list" ] -> T.IntList
-  | [ "int"; "tree" ] -> T.IntTree
+let to_basic_tp = function
+  | "bool" -> T.Bool
+  | "int" -> T.Int
+  | "instr" -> T.IfcInstr
+  | _ -> raise @@ failwith "parse: wrong tp"
+
+let to_tp (elem, l) =
+  let elem = List.map to_basic_tp elem in
+  match (elem, l) with
+  | [ x ], [] -> x
+  | _, [] -> raise @@ failwith "parse: wrong tp"
+  | [ T.Int ], [ "list" ] -> T.IntList
+  | [ T.Int; T.Bool ], [ "list" ] -> T.IntBoolList
+  | [ T.Bool; T.Int; T.Bool ], [ "list" ] -> T.BoolIntBoolList
+  | [ T.IfcInstr ], [ "list" ] -> T.IfcInstrList
+  | [ T.Int ], [ "tree" ] -> T.IntTree
   | _ ->
       raise
       @@ failwith

@@ -6,8 +6,33 @@ let bool_gen = QCheck.Gen.oneofl [ true; false ]
 
 let int_gen (chooses : int list) = QCheck.Gen.oneofl chooses
 
+let instruction_gen (chooses : int list) =
+  let open Ifc_instruction in
+  QCheck.Gen.(
+    map2
+      (fun x y ->
+        match x with
+        | 0 -> Nop
+        | 1 -> Push y
+        | 2 -> BCall y
+        | 3 -> BRet
+        | 4 -> Add
+        | 5 -> Load
+        | _ -> Store)
+      (int_bound 6) (oneofl chooses))
+
+let instruction_list_gen (chooses : int list) (bound : int) =
+  QCheck.Gen.(list_size (int_bound bound) (instruction_gen chooses))
+
 let list_gen (chooses : int list) (bound : int) =
   QCheck.Gen.(list_size (int_bound bound) (oneofl chooses))
+
+let iblist_gen (chooses : int list) (bound : int) =
+  QCheck.Gen.(list_size (int_bound bound) (pair (oneofl chooses) bool_gen))
+
+let biblist_gen (chooses : int list) (bound : int) =
+  QCheck.Gen.(
+    list_size (int_bound bound) (triple bool_gen (oneofl chooses) bool_gen))
 
 let tree_gen (chooses : int list) (bound : int) =
   let node a l r = Tree.Node (a, l, r) in
@@ -71,6 +96,13 @@ let choose_gen chooses bound tp =
   | T.IntTreeI -> QCheck.Gen.map (fun x -> V.TI x) (treei_gen chooses bound)
   | T.IntTreeB -> QCheck.Gen.map (fun x -> V.TB x) (treeb_gen chooses bound)
   | T.Bool -> QCheck.Gen.map (fun x -> V.B x) bool_gen
+  | T.IfcInstr -> QCheck.Gen.map (fun x -> V.IInstr x) (instruction_gen chooses)
+  | T.IfcInstrList ->
+      QCheck.Gen.map (fun x -> V.IInstrL x) (instruction_list_gen chooses bound)
+  | T.IntBoolList ->
+      QCheck.Gen.map (fun x -> V.IBL x) (iblist_gen chooses bound)
+  | T.BoolIntBoolList ->
+      QCheck.Gen.map (fun x -> V.BIBL x) (biblist_gen chooses bound)
 
 let gens ~chooses ~num ~tps ~bound =
   let gens = List.map (choose_gen chooses bound) tps in

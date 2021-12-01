@@ -13,8 +13,11 @@ let tp_to_sort ctx =
     function
     | Unit -> raise @@ failwith "unit should not be encoded as z3"
     | Int -> Integer.mk_sort ctx
+    | IfcInstr -> Integer.mk_sort ctx
     | Bool -> Boolean.mk_sort ctx
-    | IntList | IntTree | IntTreeI | IntTreeB -> Integer.mk_sort ctx)
+    | IntList | IntTree | IntTreeI | IntTreeB | IntBoolList | BoolIntBoolList
+    | IfcInstrList ->
+        Integer.mk_sort ctx)
 
 let z3func ctx funcname inptps outtp =
   FuncDecl.mk_func_decl ctx
@@ -43,8 +46,11 @@ let tpedvar_to_z3 ctx (tp, name) =
     match tp with
     | Unit -> raise @@ failwith "unit should not be encoded as z3"
     | Int -> Integer.mk_const_s ctx name
+    | IfcInstr -> Integer.mk_const_s ctx name
     | Bool -> Boolean.mk_const_s ctx name
-    | IntList | IntTree | IntTreeI | IntTreeB -> Integer.mk_const_s ctx name)
+    | IntList | IntTree | IntTreeI | IntTreeB | IntBoolList | BoolIntBoolList
+    | IfcInstrList ->
+        Integer.mk_const_s ctx name)
 
 type imp_version = V1 | V2
 

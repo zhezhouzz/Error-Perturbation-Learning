@@ -7,8 +7,11 @@ let size_measure = fastexpt 2
 
 let measure = function
   | U | NotADt -> 0
-  | I _ | B _ -> 1
+  | I _ | B _ | IInstr _ -> 1
   | L il -> List.length il
+  | IBL il -> List.length il
+  | BIBL il -> List.length il
+  | IInstrL il -> List.length il
   | T it -> 2 * TreeTailCall.deep it
   | TI iti -> 2 * LabeledTreeTailCall.deep iti
   | TB itb -> 2 * LabeledTreeTailCall.deep itb

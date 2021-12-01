@@ -19,6 +19,42 @@ let list_gen conf =
   | SmallNat -> Gen.list elem_gen
   | SizeBound n -> Gen.(list_size (int_bound n) elem_gen)
 
+let instruction_gen config =
+  let open Ifc_instruction in
+  QCheck.Gen.(
+    map2
+      (fun x y ->
+        match x with
+        | 0 -> Nop
+        | 1 -> Push y
+        | 2 -> BCall y
+        | 3 -> BRet
+        | 4 -> Add
+        | 5 -> Load
+        | _ -> Store)
+      (int_bound 6) (int_gen config))
+
+let instruction_list_gen conf =
+  let elem_conf, size_conf = conf in
+  let elem_gen = instruction_gen elem_conf in
+  match size_conf with
+  | SmallNat -> Gen.list elem_gen
+  | SizeBound n -> Gen.(list_size (int_bound n) elem_gen)
+
+let iblist_gen conf =
+  let elem_conf, size_conf = conf in
+  let elem_gen = Gen.pair (int_gen elem_conf) bool_gen in
+  match size_conf with
+  | SmallNat -> Gen.list elem_gen
+  | SizeBound n -> Gen.(list_size (int_bound n) elem_gen)
+
+let biblist_gen conf =
+  let elem_conf, size_conf = conf in
+  let elem_gen = Gen.triple bool_gen (int_gen elem_conf) bool_gen in
+  match size_conf with
+  | SmallNat -> Gen.list elem_gen
+  | SizeBound n -> Gen.(list_size (int_bound n) elem_gen)
+
 let tree_gen conf =
   let elem_conf, size_conf, fq = conf in
   let elem_gen = int_gen elem_conf in
@@ -96,3 +132,15 @@ let choose_gen conf tp =
         (function None -> None | Some x -> Some (V.TB x))
         (labeled_tree_gen conf.treeb_conf bool_gen)
   | T.Bool -> QCheck.Gen.map (fun x -> Some (V.B x)) bool_gen
+  | T.IfcInstr ->
+      QCheck.Gen.map
+        (fun x -> Some (V.IInstr x))
+        (instruction_gen conf.int_conf)
+  | T.IfcInstrList ->
+      QCheck.Gen.map
+        (fun x -> Some (V.IInstrL x))
+        (instruction_list_gen conf.list_conf)
+  | T.IntBoolList ->
+      QCheck.Gen.map (fun x -> Some (V.IBL x)) (iblist_gen conf.list_conf)
+  | T.BoolIntBoolList ->
+      QCheck.Gen.map (fun x -> Some (V.BIBL x)) (biblist_gen conf.list_conf)

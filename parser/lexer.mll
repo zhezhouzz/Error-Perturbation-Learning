@@ -49,6 +49,7 @@ rule next_token = parse
   | ";" { SEMICOLON }
   | ":" { COLON }
   | "," { COMMA }
+  | "*" { STAR }
 (* lex identifiers last, so keywords are not lexed as identifiers *)
 (* | number as number { NUMBER (int_of_string number) } *)
   | ident as ident { IDENT ident }

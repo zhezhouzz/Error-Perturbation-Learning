@@ -43,6 +43,12 @@ let info_table =
       "min";
       "list_upper_bound";
       "list_lower_bound";
+      (* iblist *)
+      "iblist_destruct";
+      "iblist_cons";
+      (* biblist *)
+      "biblist_destruct";
+      "biblist_cons";
       (* tree *)
       "tree_node";
       "tree_node_single";

@@ -9,6 +9,7 @@
    cev
    cbaseline
    ctime
+   cifc
  )
  (preprocess (pps ppx_jane))
 )

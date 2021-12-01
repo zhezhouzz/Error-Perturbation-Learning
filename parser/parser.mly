@@ -3,7 +3,7 @@
     (* open Grammar *)
     %}
 (* tokens *)
-%token EOF LPAR RPAR LBRACK RBRACK
+%token EOF LPAR RPAR LBRACK RBRACK STAR
 (* keywords *)
 %token SEMICOLON COLON COMMA EQ IN OUT
 %token <string> IDENT
@@ -35,7 +35,11 @@ args:
 arg:
   | x=IDENT COLON t=tp {($startpos, x, t)}
 tp:
+  | x=IDENT {[x], []}
+  | LPAR t=tptuple RPAR {t, []}
+  | x=tp y=IDENT {let elem, cs = x in elem, cs @ [y]}
+tptuple:
   | x=IDENT {[x]}
-  | x=tp y=IDENT {x @ [y]}
+  | x=IDENT STAR y=tptuple {x :: y}
 ;
 %%

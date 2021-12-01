@@ -48,7 +48,7 @@ type allow_modify = {
   ********)
 
 let mk_eval_var (vs : label list) (pc : label) : lab -> label =
- fun lv -> if lv <= 1 then List.nth vs lv else pc
+ fun lv -> if lv >= 1 then List.nth vs (lv - 1) else pc
 
 let rec eval_expr (eval_var : lab -> label) (e : rule_expr) : label =
   match e with
@@ -63,7 +63,13 @@ let rec eval_cond (eval_var : lab -> label) (c : rule_scond) : bool =
   | A_True -> true
   | A_And (c1, c2) -> eval_cond eval_var c1 && eval_cond eval_var c2
   | A_Or (c1, c2) -> eval_cond eval_var c1 || eval_cond eval_var c2
-  | A_LE (e1, e2) -> flows_to (eval_expr eval_var e1) (eval_expr eval_var e2)
+  | A_LE (e1, e2) ->
+      let l1 = eval_expr eval_var e1 in
+      let l2 = eval_expr eval_var e2 in
+      let res = flows_to l1 l2 in
+      (* Printf.printf "checking... %s <= %s: %b\n" (layout_label l1) *)
+      (*   (layout_label l2) res; *)
+      res
 
 (** apply_rule applies the allow-modify r to the given parameters.=
     Returns the (optional) result value label and result PC label,

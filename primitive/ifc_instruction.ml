@@ -29,3 +29,25 @@ let opcode_of_instr (i : instruction) : op_code =
   | Add -> OpAdd
   | Load -> OpLoad
   | Store -> OpStore
+
+let eq_instruction x y =
+  match (x, y) with
+  | Nop, Nop -> true
+  | Push n, Push n' -> n == n'
+  | BCall n, BCall n' -> n == n'
+  | BRet, BRet -> true
+  | Add, Add -> true
+  | Load, Load -> true
+  | Store, Store -> true
+  | _ -> false
+
+let i_to_int = function
+  | Nop -> 0
+  | Push n -> (n * 10) + 1
+  | BCall n -> (n * 10) + 2
+  | BRet -> 3
+  | Add -> 4
+  | Load -> 5
+  | Store -> 6
+
+let compare_instruction x y = compare (i_to_int x) (i_to_int y)

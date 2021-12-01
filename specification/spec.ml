@@ -12,20 +12,7 @@ let dummy_pre tps =
   }
 
 let get_ints env =
-  let c =
-    StrMap.fold
-      (fun _ v c ->
-        match v with
-        | V.U -> []
-        | V.I i -> i :: c
-        | V.B _ -> c
-        | V.L il -> il @ c
-        | V.T tr -> Tree.flatten tr @ c
-        | V.TI tr -> LabeledTree.flatten tr @ c
-        | V.TB tr -> LabeledTree.flatten tr @ c
-        | V.NotADt -> c)
-      env []
-  in
+  let c = StrMap.fold (fun _ v c -> V.flatten_forall v @ c) env [] in
   match List.remove_duplicates c with
   | [] -> [ 0 ]
   | _ as c -> (
