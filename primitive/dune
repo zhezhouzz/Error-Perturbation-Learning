@@ -16,5 +16,6 @@
  randomgen
  method_predicate
  measure
+ ifc_instruction
  )
 )

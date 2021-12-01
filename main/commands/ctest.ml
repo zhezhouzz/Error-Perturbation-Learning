@@ -109,6 +109,10 @@ let batched_test source_file meta_file num_times num_burn_in num_sampling =
   in
   aux 0
 
+let test_ifc () =
+  let () = Ifc.Test.test () in
+  ()
+
 let test =
   Command.basic ~summary:"test."
     Command.Let_syntax.(
@@ -157,6 +161,12 @@ let test =
                           @@ mk_standard_env ())
                     in
                     test_pre_infer env)
+            | "ifc" ->
+                Zlog.event_
+                  (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
+                     "") (fun () ->
+                    Printf.printf "test!\n";
+                    test_ifc ())
             | _ -> raise @@ failwith "unknown test name"))
 
 let batched_test =

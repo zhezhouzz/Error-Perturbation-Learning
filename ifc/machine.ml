@@ -1,4 +1,5 @@
-open Instructions
+open Primitive
+open Ifc_instruction
 open Rules
 open Basic_dt
 
@@ -9,13 +10,22 @@ let zreplicate (n : int) a =
 
 type atom = int * label
 
+let layout_atom (n, l) = Printf.sprintf "(%i, %s)" n @@ layout_label l
+
 let pc_lab (pc : atom) : label =
   let _, l = pc in
   l
 
 type stack_elem = Satom of atom | Sret of atom
 
+let layout_stack_elem = function
+  | Satom x -> Printf.sprintf "Satom %s" @@ layout_atom x
+  | Sret x -> Printf.sprintf "Sret %s" @@ layout_atom x
+
 type stack = stack_elem list
+
+let layout_stack l =
+  Printf.sprintf "[%s]" @@ List.split_by "; " layout_stack_elem l
 
 let app_stack (l : atom list) (s : stack) : stack =
   List.map (fun a -> Satom a) l @ s
@@ -33,6 +43,14 @@ type state = {
   (* operand stack *)
   st_pc : atom; (* program counter *)
 }
+
+let layout_state state =
+  Printf.sprintf "{\nst_imem = %s;\nst_mem = %s;\nst_stack = %s;\nst_pc = %s\n}"
+    (Printf.sprintf "[%s]"
+    @@ List.split_by "; " layout_instruction state.st_imem)
+    (Printf.sprintf "[%s]" @@ List.split_by "; " layout_atom state.st_mem)
+    (layout_stack state.st_stack)
+    (layout_atom state.st_pc)
 
 (* How many lables in a op *)
 let labelCount (c : op_code) : int =

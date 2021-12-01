@@ -1,5 +1,7 @@
 type label = L | H
 
+let layout_label = function L -> "L" | H -> "H"
+
 let label_eq (l1 : label) (l2 : label) : bool =
   match (l1, l2) with L, L -> true | H, H -> true | _, _ -> false
 

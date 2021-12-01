@@ -45,3 +45,33 @@ let ssni (t : table) st1 st2 =
             | _ -> (*collect "L,H,FAIL" true *) true)
       else (* collect "Not indist!" true*) true
   | _ -> true
+
+let sigma st1 st2 =
+  match lookupInstr st1 with
+  | None -> false
+  | _ -> (
+      match lookupInstr st2 with None -> false | _ -> indist_state st1 st2)
+
+let client (t : table) st1 st2 =
+  match (exec t st1, exec t st2) with
+  | None, _ | _, None -> None
+  | Some st1', Some st2' -> Some (st1', st2')
+
+let phi st1 st2 st1' st2' =
+  let l1 = snd st1.st_pc in
+  let l2 = snd st2.st_pc in
+  match (l1, l2) with
+  | L, L -> indist_state st1' st2'
+  | H, H ->
+      if is_atom_low st1'.st_pc && is_atom_low st2'.st_pc then
+        (* whenFail ("Initial states: " ++ nl ++ show_pair st1 st2 ++ nl
+                  ++ "Final states: " ++ nl ++ show_pair st1' st2' ++nl) *)
+        (* collect ("H -> L")*) indist_state st1' st2'
+      else if is_atom_low st1'.st_pc then
+        (* whenFail ("states: " ++ nl ++ show_pair st2 st2' ++ nl )*)
+        (* collect ("H -> H")*) indist_state st2 st2'
+      else
+        (*            whenFail ("states: " ++ nl ++ show_pair st1 st1' ++ nl )*)
+        (* collect ("H -> H")*) indist_state st1 st1'
+  | H, _ -> indist_state st1 st1'
+  | _, H -> indist_state st2 st2'

@@ -1,6 +1,7 @@
+open Primitive
+open Ifc_instruction
 open Machine
 open Rules
-open Instructions
 
 let errors =
   [
