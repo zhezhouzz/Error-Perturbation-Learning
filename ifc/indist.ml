@@ -8,7 +8,9 @@ let indist_atom a1 a2 =
   let x2, l2 = a2 in
   match (l1, l2) with L, L -> x1 == x2 | H, H -> true | _, _ -> false
 
-let indist_mem m1 m2 = List.for_all2 indist_atom m1 m2
+let indist_mem m1 m2 =
+  if List.length m1 != List.length m2 then false
+  else List.for_all2 indist_atom m1 m2
 
 let rec cropTop (s : stack) : stack =
   match s with
