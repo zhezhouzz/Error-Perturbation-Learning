@@ -6,7 +6,7 @@ open Ifc_instruction
 let state1 =
   {
     st_imem = [ Store ];
-    st_mem = [ (1, L); (1, H); (1, H) ];
+    st_mem = [ (1, L); (1, H) ];
     st_stack = [ Satom (0, L); Satom (1, H); Satom (2, L) ];
     st_pc = (0, L);
   }
@@ -14,7 +14,7 @@ let state1 =
 let state2 =
   {
     st_imem = [ Store ];
-    st_mem = [ (1, L); (0, H); (0, H) ];
+    st_mem = [ (1, L); (0, H) ];
     st_stack = [ Satom (0, L); Satom (0, H); Satom (2, L) ];
     st_pc = (0, L);
   }

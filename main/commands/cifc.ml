@@ -11,9 +11,8 @@ let mk_default_env () =
       "biblist_destruct";
       "biblist_cons";
       "plus1";
-      "minus1";
     ]
-    [] 10 5
+    [] 15 5
 
 let ifc_sampling_ progfile num_sampling =
   let prog = Parse.parse progfile in
