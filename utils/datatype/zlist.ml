@@ -5,6 +5,8 @@ module List = struct
 
   let spf = Printf.sprintf
 
+  let nth_opt l x = try nth_opt l x with _ -> None
+
   let destruct_opt = function [] -> None | h :: t -> Some (h, t)
 
   let update_opt l idx x =

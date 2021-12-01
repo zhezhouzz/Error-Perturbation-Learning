@@ -9,5 +9,5 @@
         "op_deny": 0,
         "arg_reassign": 1
     },
-    "arg_solve_bound": 35
+    "arg_solve_bound": 100
 }
