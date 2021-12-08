@@ -1,4 +1,4 @@
-let preds = [| "hd"; "mem"; "ord"; "<" |]
+let preds = [| "last"; "mem"; "ord"; "<" |]
 
 let op_pool =
   [|
@@ -27,7 +27,7 @@ let sampling_rounds = 14
 let p_size = 4
 
 let pre (x : int) (l : List.t) (u : int) (v : int) =
-  (not (mem l x)) && implies (ord l u v && not (hd l u)) (u < v)
+  implies ((not (last l u)) && ord l u v) (u < v)
 
 let post (x : int) (l : List.t) (nu : List.t) (u : int) (v : int) =
   implies (ord nu u v) (u < v)
