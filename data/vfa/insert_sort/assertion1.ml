@@ -20,7 +20,7 @@ let libs = [| "List" |]
 
 let i_err = (7, [ 0; 3; 4; 6; 5 ])
 
-let sampling_rounds = 14
+let sampling_rounds = 20
 
 let p_size = 4
 

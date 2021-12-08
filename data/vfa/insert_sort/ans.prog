@@ -1,0 +1,8 @@
+let i_err = (7, [0;3;4;6;5])
+Default
+IN: (x0: int, x1: int list) {
+(x2: int) = minus1(x0: int);
+(x3: int list) = append(x1: int list, x2: int);
+(x4: int) = min(x3: int list);
+(x5: int) = minus1(x4: int)}
+OUT: (x5: int, x1: int list)
