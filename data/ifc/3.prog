@@ -1,0 +1,7 @@
+IN: (x0: instr list, x1: (int * bool) list, x2: (bool * int * bool) list, x3: int, x4: bool, x5: instr list, x6: (int * bool) list, x7: (bool * int * bool) list, x8: int, x9: bool) {
+(x10: int, x11: bool, x12: (int * bool) list) = iblist_destruct(x1: (int * bool) list);
+(x13: (int * bool) list) = iblist_cons(x3: int, x4: bool, x6: (int * bool) list);
+(x14: (int * bool) list) = iblist_cons(x8: int, x4: bool, x13: (int * bool) list);
+(x15: (bool * int * bool) list) = biblist_cons(x4: bool, x10: int, x9: bool, x2: (bool * int * bool) list);
+(x16: int, x17: bool, x18: (int * bool) list) = iblist_destruct(x14: (int * bool) list)}
+OUT: (x0: instr list, x18: (int * bool) list, x15: (bool * int * bool) list, x16: int, x17: bool, x5: instr list, x12: (int * bool) list, x7: (bool * int * bool) list, x8: int, x11: bool)
