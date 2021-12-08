@@ -20,7 +20,7 @@ let op_pool =
 
 let libs = [| "List" |]
 
-let i_err = (1, [ 0; 3; 4; 6; 8 ])
+let i_err = (1, [ 0; 3; 4; 6; 5 ])
 
 let sampling_rounds = 14
 
