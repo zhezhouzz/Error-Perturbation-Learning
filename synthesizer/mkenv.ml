@@ -69,7 +69,7 @@ let random_init_prog env =
   in
   let counter = ref 0 in
   let rec loop () =
-    if !counter > 20 then raise @@ failwith "mkenv too many init"
+    if !counter > 100 then raise @@ failwith "mkenv too many init"
     else
       let ops = QCheck.Gen.generate1 gen in
       let _ =

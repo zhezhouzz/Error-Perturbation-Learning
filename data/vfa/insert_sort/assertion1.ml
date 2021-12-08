@@ -2,8 +2,6 @@ let preds = [| "last"; "mem"; "ord"; "<" |]
 
 let op_pool =
   [|
-    "replace";
-    "insert";
     "cons";
     "append";
     "list_destruct";
@@ -20,7 +18,7 @@ let op_pool =
 
 let libs = [| "List" |]
 
-let i_err = (1, [ 0; 3; 4; 6; 5 ])
+let i_err = (7, [ 0; 3; 4; 6; 5 ])
 
 let sampling_rounds = 14
 
