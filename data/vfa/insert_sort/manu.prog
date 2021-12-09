@@ -1,0 +1,9 @@
+let i_err = (7, [0;3;4;6;5])
+Default
+IN: (x0: int, x1: int list) {
+(x2: int list, x3: int) = list_last_destruct(x1: int list);
+(x4: int, x5: int list) = list_destruct(x2: int list);
+(x6: int) = list_upper_bound(x1: int list);
+(x7: int) = list_append(x5: int list, x6: int);
+(x8: int) = list_append(x7: int list, x4: int)}
+OUT: (x0: int, x8: int list)

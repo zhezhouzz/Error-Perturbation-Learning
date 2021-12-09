@@ -4,10 +4,23 @@ module V = Value
 
 type t = { args : Tp.tvar list; qv : Tp.tvar list; body : Specast.t }
 
+let fvnum_to_qv = function
+  | 0 -> []
+  | 1 -> [ (Tp.Int, "u") ]
+  | 2 -> [ (Tp.Int, "u"); (Tp.Int, "v") ]
+  | _ -> raise @@ failwith "qv num is too large"
+
 let dummy_pre tps =
   {
     args = List.combine tps @@ Tp.Naming.auto_name tps;
     qv = [];
+    body = Specast.True;
+  }
+
+let mk_true tps qvnum =
+  {
+    args = List.combine tps @@ Tp.Naming.auto_name tps;
+    qv = fvnum_to_qv qvnum;
     body = Specast.True;
   }
 

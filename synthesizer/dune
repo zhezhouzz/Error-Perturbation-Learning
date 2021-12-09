@@ -1,7 +1,7 @@
 (library
  (name synthesizer)
  (modules_without_implementation env)
- (libraries primitive language utils qcheck classify sampling)
+ (libraries primitive language utils qcheck classify sampling zquickcheck)
  (modules
  mutate
  ; sampling

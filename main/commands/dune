@@ -10,6 +10,7 @@
    cbaseline
    ctime
    cifc
+   cverify
  )
  (preprocess (pps ppx_jane))
 )

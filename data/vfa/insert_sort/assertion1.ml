@@ -8,8 +8,8 @@ let op_pool =
     "list_last_destruct";
     "list_mid_partition";
     "list_alter_partition";
-    "max";
-    "min";
+    "list_upper_bound";
+    "list_lower_bound";
     "plus1";
     "minus1";
     "const0";
