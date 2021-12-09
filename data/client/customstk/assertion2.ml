@@ -10,8 +10,6 @@ let op_pool =
     "list_alter_partition";
     "list_upper_bound";
     "list_lower_bound";
-    "max";
-    "min";
     "plus1";
     "minus1";
     "const0";
@@ -24,7 +22,7 @@ let i_err = ([ -10; -7; -6; -5 ], [ -5; 0; 4; 5; 7; 8 ])
 
 let sampling_rounds = 14
 
-let p_size = 4
+let p_size = 5
 
 let pre (l1 : List.t) (l2 : List.t) (u : int) (v : int) =
   implies (ord l1 u v) (u < v)
