@@ -37,6 +37,13 @@ let hd_apply = function
       | LabeledTree.Node (_, root, _, _) -> root == e)
   | _ -> raise @@ failwith "head_apply"
 
+let last_apply = function
+  | [ V.L l; V.I e ] -> (
+      match List.last_destruct_opt l with
+      | Some (_, e') -> e == e'
+      | None -> false)
+  | _ -> raise @@ failwith "last_apply"
+
 let mem_apply = function
   | [ V.L l; V.I e ] -> List.exists (fun x -> x == e) l
   | [ V.T t; V.I e ] -> Tree.exists (fun x -> x == e) t
@@ -61,10 +68,6 @@ let len_apply = function
 let ord_apply = function
   | [ V.L l; V.I e1; V.I e2 ] -> List.order ( == ) l e1 e2
   | _ -> raise @@ failwith "ord_apply"
-
-let last_apply = function
-  | [ V.L l; V.I e ] -> ( try List.last l == e with _ -> false)
-  | _ -> raise @@ failwith "last_apply"
 
 let once_apply = function
   | [ V.L l; V.I e ] -> List.once ( = ) l e
@@ -213,6 +216,18 @@ let hd_info =
     };
   ]
 
+let last_info =
+  let poly_name = "last" in
+  [
+    {
+      poly_name;
+      name = "list_last";
+      tps = [ T.IntList; T.Int ];
+      permu = false;
+      imp = last_apply;
+    };
+  ]
+
 let size_info =
   let poly_name = "size" in
   [
@@ -300,18 +315,6 @@ let once_info =
       tps = [ T.IntList; T.Int ];
       permu = false;
       imp = once_apply;
-    };
-  ]
-
-let last_info =
-  let poly_name = "last" in
-  [
-    {
-      poly_name;
-      name = "list_last";
-      tps = [ T.IntList; T.Int ];
-      permu = false;
-      imp = last_apply;
     };
   ]
 

@@ -17,7 +17,7 @@ let mk_default_env () =
 let ifc_sampling_ progfile num_sampling =
   let prog = Parse.parse progfile in
   let env = mk_default_env () in
-  let (num_none, data), cost_time =
+  let (_, num_none, data), cost_time =
     Zlog.event_time_
       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "sampling")
       (fun () ->

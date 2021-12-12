@@ -150,27 +150,26 @@ let evaluation_opt (data : V.t list option list) (sigma : V.t list -> bool)
   in
   evaluation num_none data sigma client phi
 
-type ev_tp = Perturb | Qc
+module E = Sampling.Engine
 
-let gen_num = function Qc -> 50000 | Perturb -> 5000
+let gen_num = function E.QCState _ -> 50000 | E.PerbState _ -> 5000
 
-let measured_num = function Qc -> 100 | Perturb -> 4000
+let measured_num = function E.QCState _ -> 100 | E.PerbState _ -> 4000
 
-let timed_evaluation expected_time (gen : int -> int * V.t list list)
+let timed_evaluation expected_time (engine : E.state)
     (measure : V.t list -> bool) (sigma : V.t list -> bool)
-    (client : V.t list -> V.t list option) (phi : V.t list -> bool)
-    (ev_tp : ev_tp) =
-  let rec loop (stat, cost_time) =
-    let rec aux (n, res) =
-      if List.length res > measured_num ev_tp then (n, res)
+    (client : V.t list -> V.t list option) (phi : V.t list -> bool) =
+  let rec loop (engine, stat, cost_time) =
+    let rec aux (engine, n, res) =
+      if List.length res > measured_num engine then (engine, n, res)
       else
-        let _, tmp = gen @@ gen_num ev_tp in
+        let engine, _, tmp = E.sampling (gen_num engine) engine in
         let tmp = List.filter measure tmp in
-        let none_num = gen_num ev_tp - List.length tmp in
-        aux (n + none_num, res @ tmp)
+        let none_num = gen_num engine - List.length tmp in
+        aux (engine, n + none_num, res @ tmp)
     in
-    let (none_num, data), d_time =
-      Zlog.event_time_ "timed_evaluation" (fun () -> aux (0, []))
+    let (engine, none_num, data), d_time =
+      Zlog.event_time_ "timed_evaluation" (fun () -> aux (engine, 0, []))
     in
     let stat_one = evaluation none_num data sigma client phi in
     let () = Zlog.log_write @@ layout_eval "" stat_one d_time in
@@ -181,7 +180,8 @@ let timed_evaluation expected_time (gen : int -> int * V.t list list)
     in
     let stat = stat_merge stat stat_one in
     let cost_time = cost_time +. d_time in
-    if expected_time > cost_time then loop (stat, cost_time)
-    else (stat, cost_time)
+    if expected_time > cost_time then loop (engine, stat, cost_time)
+    else (engine, stat, cost_time)
   in
-  loop (stat_empty, 0.0)
+  let _, stat, cost_time = loop (engine, stat_empty, 0.0) in
+  (stat, cost_time)

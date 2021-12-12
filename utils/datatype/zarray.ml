@@ -30,7 +30,8 @@ end
 module Bitarray = struct
   type t = { len : int; buf : bytes }
 
-  let create len x =
+  let create len =
+    let x = false in
     let init = if x = true then '\255' else '\000' in
     let buf = Bytes.make ((len / 8) + 1) init in
     { len; buf }
@@ -46,4 +47,31 @@ module Bitarray = struct
     let mask = 1 lsl (i land 7) in
     let new_ch = if b then ch lor mask else ch land lnot mask in
     Bytes.set t.buf index @@ char_of_int new_ch
+
+  let equal ba1 ba2 =
+    if ba1.len != ba2.len then false else Bytes.equal ba1.buf ba2.buf
+
+  (* HACK: hash will fial when bitarray with different length mixed up *)
+  let hash { buf; _ } = Hashtbl.hash (Bytes.to_string buf)
+
+  let to_bool_list { len; buf } =
+    List.init len (fun idx -> get { len; buf } idx)
+
+  let to_bool_array { len; buf } =
+    Array.init len (fun idx -> get { len; buf } idx)
+
+  let of_bool_list l =
+    let ba = create @@ List.length l in
+    List.iteri (fun idx v -> set ba idx v) l;
+    ba
+
+  let init len f =
+    let ba = create len in
+    let rec aux idx =
+      if idx >= len then ba
+      else (
+        set ba idx (f idx);
+        aux idx)
+    in
+    aux 0
 end

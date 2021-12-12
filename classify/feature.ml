@@ -63,7 +63,7 @@ let mk_set args qv mps =
   let dtargs, elemargs = List.partition (fun (tp, _) -> T.is_dt tp) args in
   let mk_feature mp =
     match mp with
-    | "mem" | "hd" ->
+    | "mem" | "hd" | "last" ->
         List.map (fun (dt, elem) -> Pr (mp, [ dt; elem ]))
         @@ List.cross dtargs qv
     | "left" | "right" | "ord" ->

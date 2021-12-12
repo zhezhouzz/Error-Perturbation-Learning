@@ -1,10 +1,10 @@
 (library
  (name classify)
- (libraries utils primitive specification ml prover qcheck core)
+ (libraries utils primitive specification ml prover qcheck core sampling)
  (modules
    cctx
    feature
-   feature_vector
+   gather
    dtree
    infer
    label

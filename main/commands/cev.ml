@@ -103,7 +103,7 @@ let analysis =
             let () = print_data_to_log "baseline_data'" baseline_data' in
             let i_err, prog = Parse.parse_piecewise prog_file in
             let env = Synthesizer.Mkenv.update_i_err env i_err in
-            let (num_none, pertur_data), cost_time =
+            let (_, num_none, pertur_data), cost_time =
               Zlog.event_time_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
                    "sampling") (fun () ->
@@ -157,7 +157,7 @@ let eval_result =
                     Parse.parse_piecewise (sprintf "%s/0.prog" output_dir)
                   in
                   let env = Synthesizer.Mkenv.update_i_err env i_err in
-                  let (none_num, data), cost_time =
+                  let (_, none_num, data), cost_time =
                     Zlog.event_time_
                       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
                          __FUNCTION__ "sampling") (fun () ->
@@ -197,7 +197,7 @@ let sampling =
             let env = mk_env_from_files source_file meta_file in
             let i_err, prog = Parse.parse_piecewise prog_file in
             let env = Synthesizer.Mkenv.update_i_err env i_err in
-            let (num_none, data), cost_time =
+            let (_, num_none, data), cost_time =
               Zlog.event_time_
                 (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
                    "sampling") (fun () ->

@@ -219,6 +219,8 @@ let mk_generation_measure_only measure init_set f num =
   in
   loop 0 cache
 
+let max_pool_num = 100
+
 let eval_sampling (init_set : Value.t list list) fs measure bound =
   let conds = measure_conds measure in
   let { mem; gs } = init init_set in
@@ -235,15 +237,23 @@ let eval_sampling (init_set : Value.t list list) fs measure bound =
         @@ List.split_by "\n" (fun x -> Value.layout_l @@ Mem.itov mem x) !res
       in
       raise @@ failwith "sampling get stuck"
-    else res := !res @ samples;
-    if num_none + List.length !res >= bound then
-      (num_none, List.map (Mem.itov mem) @@ List.sublist !res (0, bound))
-    else aux mem num_none samples
+    else
+      let () = res := !res @ samples in
+      let samples =
+        if List.length samples > max_pool_num then
+          List.sublist samples (0, max_pool_num)
+        else samples
+      in
+      if num_none + List.length !res >= bound then
+        ( List.map (Mem.itov mem) samples,
+          num_none,
+          List.map (Mem.itov mem) @@ List.sublist !res (0, bound) )
+      else aux mem num_none samples
   in
-  let num_none, data = aux mem 0 @@ List.nth gs 0 in
+  let pool, num_none, data = aux mem 0 @@ List.nth gs 0 in
   (* let () = *)
   (*   Zlog.log_write *)
   (*   @@ spf "num_none = %i\ndata:\n%s\n" num_none *)
   (*   @@ List.split_by "\n" Value.layout_l data *)
   (* in *)
-  (num_none, data)
+  (pool, num_none, data)

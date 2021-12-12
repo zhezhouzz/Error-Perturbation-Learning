@@ -165,3 +165,7 @@ let solve_piecewise (c : parsing_res list) =
 let parse_piecewise filename =
   let i_err, c = parse_raw_piecewise filename in
   (i_err, solve_piecewise c)
+
+let parse_verified_sigma args filename =
+  Language.Of_ocamlast.load_precondition args
+  @@ Ocaml_parser.Frontend.parse ~sourcefile:filename

@@ -1,6 +1,6 @@
 (library
    (name evaluation)
-   (libraries utils primitive)
+   (libraries utils primitive sampling)
    (modules
       ev
    )

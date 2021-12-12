@@ -80,89 +80,24 @@ let pre_infer_from_env env init_set qvnum =
           (fun v -> snd @@ env.client env.library_inspector v)
           env.phi
 
-let fvtable_init_size = 10000
+module E = Sampling.Engine
 
-let mk_neg_engine env init_set prog candidate num =
-  let open Env in
-  let _, data =
-    S.eval_sampling init_set prog (Measure.mk_measure_cond env.i_err) (2 * num)
-  in
-  let client inp = snd @@ env.client env.library_inspector inp in
-  let data =
-    List.filter
-      (fun inp ->
-        if not (env.sigma inp) then false
-        else
-          match client inp with
-          | None -> false
-          | Some outp -> not @@ env.phi (inp @ outp))
-      data
-  in
-  if List.length data < num then raise @@ failwith "low quality prog"
-  else List.filter (fun inp -> Specification.Spec.eval candidate inp) data
+let inference_num_sampling = 100
 
-let test_num = 10000
-
-let mk_pos_engine env qc_conf candidate num =
-  let open Env in
-  let rec aux res =
-    if List.length res > num then res
-    else
-      let _, data = Zquickcheck.Qc_baseline.baseline qc_conf env.tps test_num in
-      let client inp = snd @@ env.client env.library_inspector inp in
-      let data =
-        List.filter
-          (fun inp ->
-            if not (env.sigma inp) then false
-            else
-              match client inp with
-              | None -> false
-              | Some outp -> env.phi (inp @ outp))
-          data
-      in
-      aux (res @ data)
-  in
-  let data = aux [] in
-  List.filter (fun inp -> not @@ Specification.Spec.eval candidate inp) data
-
-let infer_verified_pre env qc_conf qvnum =
+let infer_verified_pre env qc_conf prog qvnum =
   if qvnum > max_qv_num then
     raise @@ failwith (spf "the max qv num is %i\n" max_qv_num)
   else
     let qv = List.init qvnum (fun i -> (Tp.Int, List.nth qv_name_space i)) in
     let open Env in
-    match env.cur_p with
-    | None ->
-        raise
-        @@ failwith
-             "Precondition Inference: the perturbation function does not \
-              exists."
-    | Some cur_p ->
-        let args =
-          List.map
-            (fun (tp, idx) -> (tp, Language.Oplang.layout_var (tp, idx)))
-            cur_p.prog.fin
-        in
-        let pos_engine = mk_pos_engine env qc_conf in
-        let neg_engine = mk_neg_engine env [ env.i_err ] [ cur_p.prog ] in
-        let gather_neg_fv = raise @@ failwith "unimp" in
-        let gather_pos_fv = raise @@ failwith "unimp" in
-        let classify = raise @@ failwith "unimp" in
-        let fset = [] in
-        let rec aux (fvtable, candidate) =
-          match pos_engine candidate test_num with
-          | [] -> (
-              match neg_engine candidate test_num with
-              | [] -> candidate
-              | neg_cexs ->
-                  let () = gather_neg_fv fset fvtable neg_cexs in
-                  let candidate' = classify fset fvtable in
-                  aux (fvtable, candidate'))
-          | pos_cexs ->
-              let () = gather_pos_fv fset fvtable pos_cexs in
-              let candidate' = classify fset fvtable in
-              aux (fvtable, candidate')
-        in
-        let fvtable = Hashtbl.create fvtable_init_size in
-        let candidate = Specification.Spec.mk_true env.tps qvnum in
-        aux (fvtable, candidate)
+    let args =
+      List.map
+        (fun (tp, idx) -> (tp, Language.Oplang.layout_var (tp, idx)))
+        (snd prog).Language.Oplang.fin
+    in
+    let pos_engine = E.mk_qc_engine env.tps qc_conf in
+    let neg_engine =
+      E.mk_perb_engine [ env.i_err ] (Measure.mk_measure_cond env.i_err) prog
+    in
+    let cctx = Cctx.mk_cctx args qv env.preds in
+    Infer.spec_infer_loop ~cctx ~pos_engine ~neg_engine inference_num_sampling

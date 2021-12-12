@@ -24,6 +24,7 @@ let command =
       ("costing", Cev.costing);
       ("ifc-sampling", Cifc.ifc_sampling);
       ("ifc-syn", Cifc.ifc_syn);
+      ("verify", Cverify.verify);
     ]
 
 let () = Command.run command
