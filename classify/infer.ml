@@ -7,12 +7,14 @@ open Basic_dt
 let infer_ ctx =
   (* let () = Zlog.log_write @@ spf "fvctx:\n%s\n" @@ Cctx.layout_fvctx ctx in *)
   let dt, _ = Dtree.classify ctx in
-  (* let body = Specification.Simplify.simplify_ite @@ Dtree.to_prop dt in *)
   let body = Dtree.to_prop dt in
   let _ =
     Zlog.log_write
-    @@ Printf.sprintf "spec: %s\n" (Specification.Prop.pretty_layout_prop body)
+    @@ Printf.sprintf "spec: %s\n"
+         (Specification.Prop.pretty_layout_prop
+         @@ Specification.Simplify.simplify_ite body)
   in
+  (* let body = Specification.Simplify.simplify_ite @@ Dtree.to_prop dt in *)
   (* let _ = raise @@ failwith "end" in *)
   Specification.Spec.{ args = ctx.Cctx.args; qv = ctx.Cctx.qv; body }
 
@@ -55,19 +57,28 @@ let spec_infer ctx (data : 'a list) (to_values : 'a -> V.t list)
 let max_loop_num = 10
 
 module E = Sampling.Engine
+module Spec = Specification.Spec
 
-let spec_infer_loop ~cctx ~pos_engine ~neg_engine ~pos_filter ~neg_filter
-    num_sampling =
+let spec_refine_loop ~cctx ~pos_engine ~neg_engine ~pos_filter ~neg_filter
+    ~init_body num_sampling =
+  let with_init_body spec =
+    let open Spec in
+    {
+      args = spec.args;
+      qv = spec.qv;
+      body = Specification.Specast.(And [ spec.body; init_body ]);
+    }
+  in
   let infer_counter = ref 0 in
   let pos_counter = ref 0 in
   let neg_counter = ref 0 in
   let do_infer cctx =
     Zlog.event_ (spf "infer: %i(%i)" !neg_counter !infer_counter) (fun () ->
         infer_counter := !infer_counter + 1;
-        let _ =
-          if !infer_counter >= 3 then raise @@ failwith (spf "infer end")
-          else ()
-        in
+        (* let _ = *)
+        (*   if !infer_counter >= 3 then raise @@ failwith (spf "infer end") *)
+        (*   else () *)
+        (* in *)
         infer_ cctx)
   in
   let rec neg_loop (candidate, ne) =
@@ -83,7 +94,7 @@ let spec_infer_loop ~cctx ~pos_engine ~neg_engine ~pos_filter ~neg_filter
             let ne, neg_values = E.sampling_num neg_filter num_sampling ne in
             ( ne,
               List.filter
-                (fun v -> Specification.Spec.eval candidate v)
+                (fun v -> Specification.Spec.eval (with_init_body candidate) v)
                 neg_values ))
       in
       (* let _ = *)
@@ -113,7 +124,8 @@ let spec_infer_loop ~cctx ~pos_engine ~neg_engine ~pos_filter ~neg_filter
             let pe, pos_values = E.sampling_num pos_filter num_sampling pe in
             ( pe,
               List.filter
-                (fun v -> not @@ Specification.Spec.eval candidate v)
+                (fun v ->
+                  not @@ Specification.Spec.eval (with_init_body candidate) v)
                 pos_values ))
       in
       (* let _ = *)
@@ -158,12 +170,23 @@ let spec_infer_loop ~cctx ~pos_engine ~neg_engine ~pos_filter ~neg_filter
           pos_counter := !pos_counter + 1;
           pos_loop (candidate, pe, ne)))
   in
-  pos_loop
-    ( Specification.Spec.
-        {
-          args = cctx.Cctx.args;
-          qv = cctx.Cctx.qv;
-          body = Specification.Specast.(Not True);
-        },
-      pos_engine,
-      neg_engine )
+  let spec =
+    with_init_body
+    @@ pos_loop
+         ( Specification.Spec.
+             {
+               args = cctx.Cctx.args;
+               qv = cctx.Cctx.qv;
+               body = Specification.Specast.(Not True);
+             },
+           pos_engine,
+           neg_engine )
+  in
+  let _ = Zlog.log_write @@ spf "cctx:\n%s" @@ Cctx.layout_fvctx cctx in
+  let () =
+    Zlog.log_write
+    @@ Printf.sprintf "refined spec: %s\n"
+         (Specification.Prop.pretty_layout_prop
+         @@ Specification.Simplify.simplify_ite spec.Specification.Spec.body)
+  in
+  spec

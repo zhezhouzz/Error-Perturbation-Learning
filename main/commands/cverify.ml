@@ -10,9 +10,6 @@ module S = Specification.Specast
 module Sepc = Specification.Spec
 open Primitive
 
-(* HACK: hardcoded  *)
-let qv_num = 2
-
 let verify_ source_file meta_file prog_file qc_file verified_sigma_file =
   let prog = Ocaml_parser.Frontend.parse ~sourcefile:source_file in
   let meta = Ocaml_parser.Frontend.parse ~sourcefile:meta_file in
@@ -38,8 +35,8 @@ let verify_ source_file meta_file prog_file qc_file verified_sigma_file =
   let verified_sigma =
     Parse.parse_verified_sigma sigma.Spec.args verified_sigma_file
   in
-  let spec = Synthesizer.Pre.infer_verified_pre env qc_conf prog qv_num in
-  let res = Spec.check_verified ~verified_sigma ~sigma ~spec in
+  let spec = Synthesizer.Pre.infer_verified_pre env qc_conf prog sigma in
+  let res = Spec.check_verified ~verified_sigma ~spec in
   let () =
     Printf.printf "Verify Result: (Sound? %b) (Complete? %b)\n" (fst res)
       (snd res)

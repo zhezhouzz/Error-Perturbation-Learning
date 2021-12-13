@@ -25,7 +25,7 @@ let sampling_rounds = 20
 let p_size = 4
 
 let pre (x : int) (l : List.t) (u : int) (v : int) =
-  implies ((not (last l v)) && ord l u v) (u < v)
+  (not (mem l x)) && implies ((not (last l v)) && ord l u v) (u < v)
 
 let post (x : int) (l : List.t) (nu : List.t) (u : int) (v : int) =
   implies (ord nu u v) (u < v)

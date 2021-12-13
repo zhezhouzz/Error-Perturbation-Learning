@@ -18,12 +18,14 @@ let values_to_vec_ { args; qv; fset; _ } values =
       Array.of_list @@ List.map (fun feature -> F.eval feature m) fset)
     values
 
-let values_mk_qv_space ctx args_values =
-  let qv_elem_values = List.map (fun i -> V.I i) Randomgen.paddled_small_nums in
+let values_mk_qv_space ctx args_value =
+  let qv_elem_value =
+    List.map (fun i -> V.I i) @@ V.flatten_forall_l_unique_paddled args_value
+  in
   let qv_values =
     (List.map (fun i -> V.I i)
-    @@ List.remove_duplicates (List.map V.len @@ List.flatten args_values))
-    @ qv_elem_values
+    @@ List.remove_duplicates (List.map V.len args_value))
+    @ qv_elem_value
   in
   let qvs_values = List.choose_n qv_values (List.length ctx.qv) in
   qvs_values
@@ -93,37 +95,36 @@ let rule_out cex_extraction ht fvss input_label =
   | Minial -> minimal_rule_out ht input_label fvss
 
 let pos_gather cctx args_values =
-  let qv_sapce = values_mk_qv_space cctx args_values in
   List.iter
     (fun args_value ->
+      let qv_sapce = values_mk_qv_space cctx args_value in
       add_vecs_always cctx.fvtab
       @@ List.map (fun x -> (x, Label.Pos))
       @@ value_to_vec cctx qv_sapce args_value)
     args_values
 
 let neg_gather cctx args_values =
-  let qv_sapce = values_mk_qv_space cctx args_values in
-  let aux data fvs =
+  let aux data qv_sapce fvs =
     let x = rule_out Gready cctx.fvtab fvs Label.Neg in
     match x with
     | Indistinguishable ->
+        let lines = List.combine qv_sapce fvs in
         Zlog.log_write @@ spf "rule out fail: %s" (V.layout_l data);
         Zlog.log_write @@ spf "%s" (Feature.layout_set cctx.fset);
-        Zlog.log_write
-        @@ spf "rule out fail: %s"
-             (layout_vecs (List.map (fun k -> (k, Label.Neg)) fvs));
+        Zlog.log_write @@ spf "neg rule out fail: %s" @@ layout_qv_vecs lines;
         x
     | _ -> x
   in
   let state =
     List.fold_left
       (fun state args_value ->
+        let qv_sapce = values_mk_qv_space cctx args_value in
         let fvs = value_to_vec cctx qv_sapce args_value in
         match state with
         | Indistinguishable -> Indistinguishable
-        | DoNothing -> aux args_value fvs
+        | DoNothing -> aux args_value qv_sapce fvs
         | Updated n -> (
-            match aux args_value fvs with
+            match aux args_value qv_sapce fvs with
             | Indistinguishable -> Indistinguishable
             | DoNothing -> Updated n
             | Updated n' -> Updated (n + n')))

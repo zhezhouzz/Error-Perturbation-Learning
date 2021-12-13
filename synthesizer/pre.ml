@@ -81,38 +81,29 @@ let pre_infer_from_env env init_set qvnum =
           env.phi
 
 module E = Sampling.Engine
+module Spec = Specification.Spec
 
-let inference_num_sampling = 100
+let inference_num_sampling = 1000
 
-let infer_verified_pre env qc_conf prog qvnum =
-  if qvnum > max_qv_num then
-    raise @@ failwith (spf "the max qv num is %i\n" max_qv_num)
-  else
-    let qv = List.init qvnum (fun i -> (Tp.Int, List.nth qv_name_space i)) in
-    let open Env in
-    let args =
-      List.map
-        (fun (tp, idx) -> (tp, Language.Oplang.layout_var (tp, idx)))
-        (snd prog).Language.Oplang.fin
-    in
-    let pos_engine = E.mk_qc_engine env.tps qc_conf in
-    let neg_engine =
-      E.mk_perb_engine [ env.i_err ] (Measure.mk_measure_cond env.i_err) prog
-    in
-    let cctx = Cctx.mk_cctx args qv env.preds in
-    let pos_filter inp =
-      if not @@ env.sigma inp then false
-      else
-        let _, outp = env.client env.library_inspector inp in
-        match outp with None -> false | Some outp -> env.phi (inp @ outp)
-    in
-    let neg_filter inp =
-      if not @@ env.sigma inp then false
-      else
-        let _, outp = env.client env.library_inspector inp in
-        match outp with
-        | None -> false
-        | Some outp -> not @@ env.phi (inp @ outp)
-    in
-    Infer.spec_infer_loop ~cctx ~pos_engine ~neg_engine ~pos_filter ~neg_filter
-      inference_num_sampling
+let infer_verified_pre env qc_conf prog sigma =
+  let open Env in
+  let args = sigma.Spec.args in
+  let pos_engine = E.mk_qc_engine env.tps qc_conf in
+  let neg_engine =
+    E.mk_perb_engine [ env.i_err ] (Measure.mk_measure_cond env.i_err) prog
+  in
+  let cctx = Cctx.mk_cctx args sigma.Spec.qv env.preds in
+  let pos_filter inp =
+    if not @@ env.sigma inp then false
+    else
+      let _, outp = env.client env.library_inspector inp in
+      match outp with None -> false | Some outp -> env.phi (inp @ outp)
+  in
+  let neg_filter inp =
+    if not @@ env.sigma inp then false
+    else
+      let _, outp = env.client env.library_inspector inp in
+      match outp with None -> false | Some outp -> not @@ env.phi (inp @ outp)
+  in
+  Infer.spec_refine_loop ~cctx ~pos_engine ~neg_engine ~pos_filter ~neg_filter
+    ~init_body:sigma.Spec.body inference_num_sampling

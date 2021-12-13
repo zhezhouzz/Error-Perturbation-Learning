@@ -128,19 +128,17 @@ let is_false { body; _ } =
 
 let spec_body_to_z3 ctx { qv; body; _ } = forallformula_to_z3 ctx (qv, body)
 
-let check_verified ~verified_sigma ~sigma ~spec =
+let check_verified ~verified_sigma ~spec =
   match !Config.conf.z3_ctx with
   | None -> raise @@ failwith "no z3 ctx"
   | Some ctx ->
       let args = verified_sigma.args in
       let verified_f = (verified_sigma.qv, verified_sigma.body) in
-      let sigma_f = apply sigma args in
       let spec_f = apply spec args in
       (* let args_z3 = List.map (Prover.Z3aux.tpedvar_to_z3 ctx) args in *)
-      let verified_sigma_z3, sigma_z3, spec_z3 =
-        Sugar.map3 (forallformula_to_z3 ctx) (verified_f, sigma_f, spec_f)
+      let verified_sigma_z3, spec_z3 =
+        Sugar.map2 (forallformula_to_z3 ctx) (verified_f, spec_f)
       in
-      let sigma' = Z3.Boolean.mk_and ctx [ sigma_z3; spec_z3 ] in
       let mk_vc a b = Z3.Boolean.mk_not ctx @@ Z3.Boolean.mk_implies ctx a b in
       let checkb a b =
         match Prover.Reflect.check ctx @@ mk_vc a b with
@@ -149,4 +147,4 @@ let check_verified ~verified_sigma ~sigma ~spec =
         | Prover.Reflect.Timeout ->
             raise @@ failwith "check_spec_implies: time out"
       in
-      (checkb sigma' verified_sigma_z3, checkb verified_sigma_z3 sigma')
+      (checkb spec_z3 verified_sigma_z3, checkb verified_sigma_z3 spec_z3)

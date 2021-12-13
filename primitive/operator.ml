@@ -14,6 +14,8 @@ let unused = "unused"
 
 let is_unused op = String.equal unused op
 
+(* TODO: unify the name of operators *)
+
 let info_table =
   let known_operators =
     [
@@ -122,7 +124,7 @@ let get_tp_one (op : string) =
   | h :: _ -> h
 
 let get_imp (op : string) =
-  let info = StrMap.find "operator::get_imp" info_table op in
+  let info = StrMap.find (spf "operator::get_imp: %s" op) info_table op in
   info.imp
 
 let check_non_det (op : string) =
