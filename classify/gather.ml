@@ -15,7 +15,7 @@ let values_to_vec_ { args; qv; fset; _ } values =
   List.map
     (fun value ->
       let m = make_env vars value in
-      BitArray.of_bool_list @@ List.map (fun feature -> F.eval feature m) fset)
+      Array.of_list @@ List.map (fun feature -> F.eval feature m) fset)
     values
 
 let values_mk_qv_space ctx args_values =
@@ -33,17 +33,17 @@ let value_to_vec ctx qvs_values args_value =
   values_to_vec_ ctx values
 
 let add_vecs_always fvtab vecs =
-  List.iter (fun (v, label) -> Fvtab.add fvtab v label) vecs
+  List.iter (fun (v, label) -> Hashtbl.replace fvtab v label) vecs
 
 let add_vecs_if_new fvtab vecs =
   List.fold_left
     (fun (dup, updated) (v, label) ->
-      match Fvtab.find_opt fvtab v with
+      match Hashtbl.find_opt fvtab v with
       | Some label' ->
           if Label.eq_label label' label then (dup + 1, updated)
           else (dup, updated)
       | None ->
-          Fvtab.add fvtab v label;
+          Hashtbl.add fvtab v label;
           (dup, updated + 1))
     (0, 0) vecs
 
@@ -52,7 +52,7 @@ type cex_extraction = Gready | Minial
 type rule_out_result = Indistinguishable | DoNothing | Updated of int
 
 let minimal_rule_out ht input_label fvs =
-  let fvs_label = List.map (fun fv -> Fvtab.find_opt ht fv) fvs in
+  let fvs_label = List.map (fun fv -> Hashtbl.find_opt ht fv) fvs in
   if
     List.exists
       (function
@@ -77,7 +77,7 @@ let minimal_rule_out ht input_label fvs =
           try List.nth key_fvs @@ Random.int (List.length key_fvs)
           with _ -> raise @@ failwith "random bound error, never happen"
         in
-        Fvtab.add ht fv input_label;
+        Hashtbl.add ht fv input_label;
         Updated 1
 
 let gready_rule_out ht input_label fvs =
@@ -103,16 +103,27 @@ let pos_gather cctx args_values =
 
 let neg_gather cctx args_values =
   let qv_sapce = values_mk_qv_space cctx args_values in
-  let aux fvs = rule_out Gready cctx.fvtab fvs Label.Neg in
+  let aux data fvs =
+    let x = rule_out Gready cctx.fvtab fvs Label.Neg in
+    match x with
+    | Indistinguishable ->
+        Zlog.log_write @@ spf "rule out fail: %s" (V.layout_l data);
+        Zlog.log_write @@ spf "%s" (Feature.layout_set cctx.fset);
+        Zlog.log_write
+        @@ spf "rule out fail: %s"
+             (layout_vecs (List.map (fun k -> (k, Label.Neg)) fvs));
+        x
+    | _ -> x
+  in
   let state =
     List.fold_left
       (fun state args_value ->
         let fvs = value_to_vec cctx qv_sapce args_value in
         match state with
         | Indistinguishable -> Indistinguishable
-        | DoNothing -> aux fvs
+        | DoNothing -> aux args_value fvs
         | Updated n -> (
-            match aux fvs with
+            match aux args_value fvs with
             | Indistinguishable -> Indistinguishable
             | DoNothing -> Updated n
             | Updated n' -> Updated (n + n')))

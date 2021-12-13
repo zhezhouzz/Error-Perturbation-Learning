@@ -421,6 +421,26 @@ module List = struct
     else if n == 0 then [ [] ]
     else aux (List.map (fun x -> [ x ]) l) (n - 1)
 
+  let choose_n_neq l n =
+    let arr = Array.of_list l in
+    let len = Array.length arr in
+    let used = Array.make len false in
+    let res = ref [] in
+    let rec aux curidx rest_len prefix =
+      if rest_len == 0 then res := prefix :: !res
+      else if curidx >= len then ()
+      else
+        match used.(curidx) with
+        | true -> aux (curidx + 1) rest_len prefix
+        | false ->
+            used.(curidx) <- true;
+            aux 0 (rest_len - 1) (curidx :: prefix);
+            used.(curidx) <- false;
+            aux (curidx + 1) rest_len prefix
+    in
+    aux 0 n [];
+    List.map (fun idxs -> List.map (fun idx -> arr.(idx)) idxs) !res
+
   let choose_n_eq l n = choose_n (remove_duplicates l) n
 
   let choose_eq_all l =

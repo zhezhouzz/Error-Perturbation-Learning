@@ -101,6 +101,22 @@ let tps_eq a b = try List.for_all2 eq a b with _ -> false
 
 let tvar_eq (tp1, name1) (tp2, name2) = eq tp1 tp2 && String.equal name1 name2
 
+module TvarVectorSet = Set.Make (struct
+  let compare = List.compare compare_tvar
+
+  type t = tvar list
+end)
+
+module TvarMap = Map.Make (struct
+  let compare = compare_tvar
+
+  type t = tvar
+end)
+
+let remove_duplicates_tvars l =
+  let s = TvarVectorSet.add_seq (List.to_seq l) TvarVectorSet.empty in
+  List.of_seq @@ TvarVectorSet.to_seq s
+
 module Naming = struct
   open Basic_dt
 

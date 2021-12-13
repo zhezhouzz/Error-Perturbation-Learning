@@ -24,6 +24,19 @@ let mk_true tps qvnum =
     body = Specast.True;
   }
 
+let apply { args; qv; body } args' =
+  if List.length args != List.length args' then
+    raise @@ failwith "spec apply args mismatch"
+  else
+    let m =
+      List.fold_left (fun m (k, v) -> Tp.TvarMap.add k v m) Tp.TvarMap.empty
+      @@ List.combine args args'
+    in
+    let update x =
+      match Tp.TvarMap.find_opt x m with None -> x | Some x' -> x'
+    in
+    (qv, Prop.subst update body)
+
 let get_ints env =
   let c = StrMap.fold (fun _ v c -> V.flatten_forall v @ c) env [] in
   match List.remove_duplicates c with
@@ -116,27 +129,19 @@ let is_false { body; _ } =
 let spec_body_to_z3 ctx { qv; body; _ } = forallformula_to_z3 ctx (qv, body)
 
 let check_verified ~verified_sigma ~sigma ~spec =
-  let args_unify args1 args2 =
-    if not @@ List.equal (fun x y -> Tp.tvar_eq x y) args1 args2 then
-      raise @@ failwith "check_spec_implies: spec with different agrs"
-    else args1
-  in
   match !Config.conf.z3_ctx with
   | None -> raise @@ failwith "no z3 ctx"
   | Some ctx ->
-      let args =
-        args_unify spec.args @@ args_unify verified_sigma.args sigma.args
-      in
-      let args_z3 = List.map (Prover.Z3aux.tpedvar_to_z3 ctx) args in
+      let args = verified_sigma.args in
+      let verified_f = (verified_sigma.qv, verified_sigma.body) in
+      let sigma_f = apply sigma args in
+      let spec_f = apply spec args in
+      (* let args_z3 = List.map (Prover.Z3aux.tpedvar_to_z3 ctx) args in *)
       let verified_sigma_z3, sigma_z3, spec_z3 =
-        Sugar.map3 (spec_body_to_z3 ctx) (verified_sigma, sigma, spec)
+        Sugar.map3 (forallformula_to_z3 ctx) (verified_f, sigma_f, spec_f)
       in
       let sigma' = Z3.Boolean.mk_and ctx [ sigma_z3; spec_z3 ] in
-      let mk_vc a b =
-        Prover.Z3aux.make_forall ctx args_z3
-          (Z3.Boolean.mk_not ctx @@ Z3.Boolean.mk_implies ctx a b)
-          Prover.Z3aux.V2
-      in
+      let mk_vc a b = Z3.Boolean.mk_not ctx @@ Z3.Boolean.mk_implies ctx a b in
       let checkb a b =
         match Prover.Reflect.check ctx @@ mk_vc a b with
         | Prover.Reflect.SmtUnsat -> true

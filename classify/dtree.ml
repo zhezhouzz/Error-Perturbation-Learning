@@ -191,22 +191,23 @@ let classify_ fset samples =
 
 let classify_hash fset htab is_pos =
   let samples =
-    Array.init (Fvtab.length htab) (fun _ ->
+    Array.init (Hashtbl.length htab) (fun _ ->
         (false, Array.init (List.length fset) (fun _ -> false)))
   in
   let iter = ref 0 in
   let _ =
-    Fvtab.iter
+    Hashtbl.iter
       (fun f v ->
         let _ =
-          if is_pos v then
-            Array.set samples !iter (true, BitArray.to_bool_array f)
-          else Array.set samples !iter (false, BitArray.to_bool_array f)
+          if is_pos v then Array.set samples !iter (true, f)
+          else Array.set samples !iter (false, f)
         in
         iter := !iter + 1)
       htab
   in
-  let dt = FastDT.make_dt ~samples ~max_d:100 in
+  (* let _ = Printf.printf "fset:%s\n" @@ Feature.layout_set fset in *)
+  (* let _ = raise @@ failwith (spf "samples(%i)" @@ Hashtbl.length htab) in *)
+  let dt = FastDT.make_dt ~samples ~max_d:20 in
   let res = of_fastdt dt fset in
   let res_idx = of_fastdt_idx dt in
   (res, res_idx)
@@ -229,14 +230,14 @@ let classify ?(is_pos = Label.is_pos) ctx =
 (*           Array.set fv_arr idx false; *)
 (*           Some 0 *)
 (*   in *)
-(*   let ftab = Fvtab.create 10000 in *)
+(*   let ftab = Hashtbl.create 10000 in *)
 (*   let rec aux idx = *)
 (*     let fvec = fv_arr in *)
 (*     (\* let _ = Printf.printf "iter:%s\n" (boollist_to_string fvec) in *\) *)
 (*     let dt1_b = eval_vector_idx dt1 fvec in *)
 (*     let dt2_b = eval_vector_idx dt2 fvec in *)
 (*     let _ = *)
-(*       if f dt1_b dt2_b then Fvtab.add ftab fvec Pos else Fvtab.add ftab fvec Neg *)
+(*       if f dt1_b dt2_b then Hashtbl.add ftab fvec Pos else Hashtbl.add ftab fvec Neg *)
 (*     in *)
 (*     match next idx with None -> () | Some idx -> aux idx *)
 (*   in *)
@@ -292,9 +293,9 @@ let label_eq a b =
   match (a, b) with Pos, Pos | Neg, Neg | MayNeg, MayNeg -> true | _ -> false
 
 let fvtab_eq_ tab tab' =
-  Fvtab.iter
+  Hashtbl.iter
     (fun vec label ->
-      match Fvtab.find_opt tab' vec with
+      match Hashtbl.find_opt tab' vec with
       | Some label' ->
           if label_eq label label' then ()
           else raise @@ failwith "fvtab_eq_:label"

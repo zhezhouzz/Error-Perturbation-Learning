@@ -25,11 +25,15 @@ let sampling num = function
       let num_none, data = Zquickcheck.Qc_baseline.baseline qc_conf tps num in
       (QCState { tps; qc_conf }, num_none, data)
 
-let sampling_num num state =
+let sampling_num filter num state =
+  let batch_size =
+    match state with PerbState _ -> num | QCState _ -> num * 30
+  in
   let rec aux state res =
     if List.length res >= num then (state, res)
     else
-      let state, _, x = sampling num state in
+      let state, _, x = sampling batch_size state in
+      let x = List.filter filter x in
       aux state (res @ x)
   in
   aux state []

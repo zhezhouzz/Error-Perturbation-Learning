@@ -100,4 +100,19 @@ let infer_verified_pre env qc_conf prog qvnum =
       E.mk_perb_engine [ env.i_err ] (Measure.mk_measure_cond env.i_err) prog
     in
     let cctx = Cctx.mk_cctx args qv env.preds in
-    Infer.spec_infer_loop ~cctx ~pos_engine ~neg_engine inference_num_sampling
+    let pos_filter inp =
+      if not @@ env.sigma inp then false
+      else
+        let _, outp = env.client env.library_inspector inp in
+        match outp with None -> false | Some outp -> env.phi (inp @ outp)
+    in
+    let neg_filter inp =
+      if not @@ env.sigma inp then false
+      else
+        let _, outp = env.client env.library_inspector inp in
+        match outp with
+        | None -> false
+        | Some outp -> not @@ env.phi (inp @ outp)
+    in
+    Infer.spec_infer_loop ~cctx ~pos_engine ~neg_engine ~pos_filter ~neg_filter
+      inference_num_sampling

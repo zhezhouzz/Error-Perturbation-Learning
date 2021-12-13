@@ -65,10 +65,11 @@ let mk_set args qv mps =
     match mp with
     | "mem" | "hd" | "last" ->
         List.map (fun (dt, elem) -> Pr (mp, [ dt; elem ]))
-        @@ List.cross dtargs qv
+        @@ List.cross dtargs (elemargs @ qv)
     | "left" | "right" | "ord" ->
         List.map (fun (dt, args) -> Pr (mp, dt :: args))
-        @@ List.cross dtargs @@ List.combination_l qv 2
+        @@ List.cross dtargs
+        @@ List.choose_n_neq (elemargs @ qv) 2
     | "==" ->
         List.map (fun args -> Pr (mp, args))
         @@ (List.map (fun (a, b) -> [ a; b ]) @@ List.cross elemargs qv)

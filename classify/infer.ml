@@ -56,7 +56,8 @@ let max_loop_num = 10
 
 module E = Sampling.Engine
 
-let spec_infer_loop ~cctx ~pos_engine ~neg_engine num_sampling =
+let spec_infer_loop ~cctx ~pos_engine ~neg_engine ~pos_filter ~neg_filter
+    num_sampling =
   let infer_counter = ref 0 in
   let pos_counter = ref 0 in
   let neg_counter = ref 0 in
@@ -73,18 +74,20 @@ let spec_infer_loop ~cctx ~pos_engine ~neg_engine num_sampling =
     if !neg_counter >= max_loop_num then
       raise @@ failwith "over max inference loop bound"
     else
-      (* let _ = raise @@ failwith (spf "neg start") in *)
+      (* let _ = *)
+      (*   if !infer_counter == 2 then raise @@ failwith (spf "neg start") else () *)
+      (* in *)
       let ne, neg_values =
         Zlog.event_ (spf "neg_values: %i(%i)" !neg_counter !infer_counter)
           (fun () ->
-            let ne, neg_values = E.sampling_num num_sampling ne in
+            let ne, neg_values = E.sampling_num neg_filter num_sampling ne in
             ( ne,
               List.filter
                 (fun v -> Specification.Spec.eval candidate v)
                 neg_values ))
       in
       (* let _ = *)
-      (*   if !neg_counter == 1 then *)
+      (*   if !neg_counter == 2 then *)
       (*     raise @@ failwith (spf "neg end:%i" (List.length neg_values)) *)
       (*   else () *)
       (* in *)
@@ -107,26 +110,41 @@ let spec_infer_loop ~cctx ~pos_engine ~neg_engine num_sampling =
       let pe, pos_values =
         Zlog.event_ (spf "pos_values: %i(%i)" !pos_counter !infer_counter)
           (fun () ->
-            let pe, pos_values = E.sampling_num num_sampling pe in
+            let pe, pos_values = E.sampling_num pos_filter num_sampling pe in
             ( pe,
               List.filter
                 (fun v -> not @@ Specification.Spec.eval candidate v)
                 pos_values ))
       in
       (* let _ = *)
-      (*   if !pos_counter == 1 then *)
+      (*   if !pos_counter == 2 then *)
       (*     raise @@ failwith (spf "pos end:%i" (List.length pos_values)) *)
       (*   else () *)
       (* in *)
-      (* let _ = raise @@ failwith (spf "pos end:%i" (List.length pos_values)) in *)
       if List.length pos_values > 0 then (
+        (* let _ = *)
+        (*   if !pos_counter == 1 then *)
+        (*     raise *)
+        (*     @@ failwith (spf "pos gather start:%i" (List.length pos_values)) *)
+        (*   else () *)
+        (* in *)
         let () =
           Zlog.event_
             (spf "pos_gather[%i]: %i(%i)" (List.length pos_values) !pos_counter
                !infer_counter)
             (fun () -> Gather.pos_gather cctx pos_values)
         in
+        (* let _ = *)
+        (*   if !pos_counter == 1 then *)
+        (*     raise @@ failwith (spf "pos gather end:%i" (List.length pos_values)) *)
+        (*   else () *)
+        (* in *)
         let candiate' = do_infer cctx in
+        (* let _ = *)
+        (*   if !pos_counter == 1 then *)
+        (*     raise @@ failwith (spf "pos infer end:%i" (List.length pos_values)) *)
+        (*   else () *)
+        (* in *)
         pos_counter := !pos_counter + 1;
         pos_loop (candiate', pe, ne))
       else (
@@ -145,7 +163,7 @@ let spec_infer_loop ~cctx ~pos_engine ~neg_engine num_sampling =
         {
           args = cctx.Cctx.args;
           qv = cctx.Cctx.qv;
-          body = Specification.Specast.True;
+          body = Specification.Specast.(Not True);
         },
       pos_engine,
       neg_engine )
