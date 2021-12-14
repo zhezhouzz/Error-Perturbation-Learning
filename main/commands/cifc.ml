@@ -1,6 +1,8 @@
 let mk_default_env () =
   let i_err = Ifc.Test.i_err_raw in
-  Synthesizer.Mkenv.mk_env_v2_ Ifc.Test.sigma_raw
+  Synthesizer.Mkenv.mk_env_v2_
+    (Specification.Spec.dummy_pre [])
+    Ifc.Test.sigma_raw
     (let c = Ifc.Test.client_raw Ifc.Test.error in
      fun _ inp -> ([], c inp))
     (Language.Bblib.invocation_inspector_init [])

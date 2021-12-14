@@ -9,29 +9,14 @@ open Specification
 module S = Specification.Specast
 module Sepc = Specification.Spec
 open Primitive
+open Caux
 
 let verify_ source_file meta_file prog_file qc_file verified_sigma_file =
-  let prog = Ocaml_parser.Frontend.parse ~sourcefile:source_file in
-  let meta = Ocaml_parser.Frontend.parse ~sourcefile:meta_file in
-  let ( sigma,
-        client,
-        libs,
-        i_err,
-        phi,
-        tps,
-        op_pool,
-        preds,
-        sampling_rounds,
-        p_size ) =
-    Language.Of_ocamlast.load_client_and_meta prog meta
-  in
-  let env =
-    Synthesizer.Mkenv.mk_env_v2 sigma client libs phi tps i_err op_pool preds
-      sampling_rounds p_size
-  in
+  let env = mk_env_from_files source_file meta_file in
   let i_err, prog = Parse.parse_piecewise prog_file in
   let env = Synthesizer.Mkenv.update_i_err env i_err in
   let qc_conf = Qc_config.load_config qc_file in
+  let sigma = env.Synthesizer.Env.sigma_raw in
   let verified_sigma =
     Parse.parse_verified_sigma sigma.Spec.args verified_sigma_file
   in

@@ -31,9 +31,10 @@ let mk_standard_env () =
   in
   let preds = [ "hd"; "mem" ] in
   let inspector = Language.Bblib.invocation_inspector_init libraries in
-  Synthesizer.Mkenv.mk_env_v2_ Imp_const.sigma_merge Language.Bblib.merge
-    inspector Imp_const.phi_merge tps i_err op_pool preds sampling_rounds
-    prog_size
+  Synthesizer.Mkenv.mk_env_v2_
+    (Specification.Spec.dummy_pre tps)
+    Imp_const.sigma_merge Language.Bblib.merge inspector Imp_const.phi_merge tps
+    i_err op_pool preds sampling_rounds prog_size
 
 let mk_env_from_files source_file meta_file =
   let prog = Ocaml_parser.Frontend.parse ~sourcefile:source_file in

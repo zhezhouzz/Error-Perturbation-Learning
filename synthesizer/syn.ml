@@ -60,33 +60,53 @@ let synthesize_f bias samples bound env =
            (Language.Oplang.layout cur_p.prog);
       Some (env, cur_p.prog)
 
-type state = FGoodEnough | FTotalWrong | FIsOK of (Spec.t * V.t list list)
+type state = FIsOK of (Spec.t * V.t list list)
 
-let synthesize_pre env init_set =
-  let pre, (in_pre, out_pre) = Pre.pre_infer_from_env env init_set 2 in
-  if List.length out_pre == 0 then FGoodEnough
-  else if List.length in_pre == 0 then (
-    Zlog.log_write ~log_level:LWarning
-    @@ Printf.sprintf "Pre condition is false...";
-    FTotalWrong)
-  else
-    let samples =
-      List.filter
-        (fun inp ->
-          let _, output = env.client env.library_inspector inp in
-          match output with
-          | None -> false
-          | Some output -> not @@ env.phi (inp @ output))
-        (in_pre @ out_pre)
-    in
-    FIsOK (pre, samples)
+(* let synthesize_pre env init_set = *)
+(*   let pre, (in_pre, out_pre) = Pre.pre_infer_from_env env init_set 2 in *)
+(*   if List.length out_pre == 0 then FGoodEnough *)
+(*   else if List.length in_pre == 0 then ( *)
+(*     Zlog.log_write ~log_level:LWarning *)
+(*     @@ Printf.sprintf "Pre condition is false..."; *)
+(*     FTotalWrong) *)
+(*   else *)
+(*     let samples = *)
+(*       List.filter *)
+(*         (fun inp -> *)
+(*           let _, output = env.client env.library_inspector inp in *)
+(*           match output with *)
+(*           | None -> false *)
+(*           | Some output -> not @@ env.phi (inp @ output)) *)
+(*         (in_pre @ out_pre) *)
+(*     in *)
+(*     FIsOK (pre, samples) *)
 
-let synthesize_piecewise env max_length bound =
+module E = Sampling.Engine
+open Primitive
+
+let init_set_size = 4
+
+let synthesize_pre_v2 env qc_conf prog =
+  let sigma = env.Env.sigma_raw in
+  let discovered_pre = Pre.infer_verified_pre env qc_conf prog sigma in
+  let neg_engine =
+    E.mk_perb_engine [ env.i_err ] (Measure.mk_measure_cond env.i_err) prog
+  in
+  let neg_filter inp =
+    if not @@ env.sigma inp then false
+    else
+      let _, outp = env.client env.library_inspector inp in
+      match outp with None -> false | Some outp -> not @@ env.phi (inp @ outp)
+  in
+  let _, init_set = E.sampling_num neg_filter init_set_size neg_engine in
+  FIsOK (discovered_pre, init_set)
+
+let synthesize_piecewise env qc_conf max_length bound =
   let rec loop current iter =
     if iter >= iter_bound || length current >= max_length then
       force_converge current
     else
-      let prev_cases, f, init_set =
+      let prev_cases, f, _ =
         match current with
         | InitF env ->
             ( [],
@@ -104,9 +124,11 @@ let synthesize_piecewise env max_length bound =
       | Some (env, f) -> (
           if length current + 1 >= max_length then ([], f)
           else
-            match synthesize_pre env init_set with
-            | FGoodEnough -> (prev_cases, f)
-            | FTotalWrong -> loop current (iter + 1)
+            match synthesize_pre_v2 env qc_conf (prev_cases, f) with
+            (* | FGoodEnough -> *)
+            (*     Zlog.log_write @@ spf "FGoodEnough\n"; *)
+            (*     (prev_cases, f) *)
+            (* | FTotalWrong -> loop current (iter + 1) *)
             | FIsOK (pre, samples) ->
                 Zlog.log_write @@ spf "Init Samples:\n%s\n"
                 @@ List.split_by "\n" V.layout_l samples;
@@ -114,7 +136,7 @@ let synthesize_piecewise env max_length bound =
   in
   loop (InitF env) 0
 
-let synthesize_one env bound = synthesize_piecewise env 0 bound
+let synthesize_one env qc_conf bound = synthesize_piecewise env qc_conf 0 bound
 
 (* bias on size of the result *)
 

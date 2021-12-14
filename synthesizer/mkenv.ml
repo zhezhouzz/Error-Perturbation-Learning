@@ -84,7 +84,7 @@ let random_init_prog env =
   let prog, acache = loop () in
   { env with cur_p = Some { prog; acache } }
 
-let mk_env_v2_ (sigma : V.t list -> bool)
+let mk_env_v2_ sigma_raw (sigma : V.t list -> bool)
     (client :
       Language.Bblib.inspector -> V.t list -> int list * V.t list option)
     (inspector : Language.Bblib.inspector) (phi : V.t list -> bool)
@@ -92,6 +92,7 @@ let mk_env_v2_ (sigma : V.t list -> bool)
     (preds : string list) (sampling_rounds : int) (p_size : int) =
   let info = verify_i_err_gen_info tps client inspector sigma phi i_err in
   {
+    sigma_raw;
     sigma;
     client;
     library_inspector = inspector;
@@ -108,11 +109,11 @@ let mk_env_v2_ (sigma : V.t list -> bool)
     cur_p = None;
   }
 
-let mk_env_v2 (sigma : Spec.t) (client : Language.Tinyocaml.func)
+let mk_env_v2 (sigma_raw : Spec.t) (client : Language.Tinyocaml.func)
     (libraries : string list) (phi : Spec.t) (tps : T.t list) (i_err : V.t list)
     (op_pool : string list) (preds : string list) (sampling_rounds : int)
     (p_size : int) : Env.t =
-  let sigma = Spec.eval sigma in
+  let sigma = Spec.eval sigma_raw in
   let phi = Spec.eval phi in
   let inspector = Language.Bblib.invocation_inspector_init libraries in
   let _ =
@@ -121,7 +122,7 @@ let mk_env_v2 (sigma : Spec.t) (client : Language.Tinyocaml.func)
       | TySafe _ -> ()
       | TyErr msg -> raise @@ failwith msg)
   in
-  mk_env_v2_ sigma
+  mk_env_v2_ sigma_raw sigma
     (Language.Clientlang.eval client)
     inspector phi tps i_err op_pool preds sampling_rounds p_size
 

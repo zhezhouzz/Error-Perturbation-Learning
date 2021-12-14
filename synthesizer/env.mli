@@ -12,6 +12,7 @@ type non_trivial_info = int list
 type sample = V.t list
 
 type t = {
+  sigma_raw : Specification.Spec.t;
   sigma : V.t list -> bool;
   client : BB.inspector -> V.t list -> non_trivial_info * V.t list option;
   library_inspector : BB.inspector;

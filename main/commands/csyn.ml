@@ -6,7 +6,7 @@ let ppf = Format.err_formatter
 open Core
 open Caux
 
-let syn_piecewise source_file meta_file max_length bound =
+let syn_piecewise source_file meta_file qc_file max_length bound =
   let env =
     Zlog.event_
       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
@@ -14,10 +14,12 @@ let syn_piecewise source_file meta_file max_length bound =
         Synthesizer.Mkenv.random_init_prog
         @@ mk_env_from_files source_file meta_file)
   in
+  let qc_conf = Qc_config.load_config qc_file in
   let result =
     Zlog.event_
       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-      (fun () -> Synthesizer.Syn.synthesize_piecewise env max_length bound)
+      (fun () ->
+        Synthesizer.Syn.synthesize_piecewise env qc_conf max_length bound)
   in
   (env.i_err, result)
 
@@ -45,13 +47,14 @@ let synthesize_piecewise =
       let%map_open configfile = anon ("configfile" %: regular_file)
       and source_file = anon ("source file" %: regular_file)
       and meta_file = anon ("meta file" %: regular_file)
+      and qc_file = anon ("quickcheck config file" %: regular_file)
       and max_length = anon ("maximal length of the pieces" %: int)
       and num_burn_in = anon ("num burn-in" %: int)
       and num_sampling = anon ("num sampling" %: int) in
       fun () ->
         Config.exec_main configfile (fun () ->
             let i_err, result =
-              syn_piecewise source_file meta_file max_length
+              syn_piecewise source_file meta_file qc_file max_length
                 (Synthesizer.Syn.IterBound (num_burn_in, num_sampling))
             in
             let () =
