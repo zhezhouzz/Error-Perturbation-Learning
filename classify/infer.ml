@@ -7,7 +7,7 @@ open Basic_dt
 let infer_ ctx =
   (* let () = Zlog.log_write @@ spf "fvctx:\n%s\n" @@ Cctx.layout_fvctx ctx in *)
   let dt, _ = Dtree.classify ctx in
-  let body = Dtree.to_prop dt in
+  let body = Specification.Simplify.simplify_ite @@ Dtree.to_prop dt in
   let _ =
     Zlog.log_write
     @@ Printf.sprintf "spec: %s\n"
