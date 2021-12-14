@@ -120,10 +120,11 @@ let synthesize_piecewise env qc_conf max_length bound =
             in
             ([], res, [ env.i_err ])
         | NextF (cases, f, pre, samples, env) ->
-            let pres = List.map fst cases in
-            let bias x =
-              not @@ List.for_all (fun pre -> Spec.eval pre x) (pres @ [ pre ])
-            in
+            (* let pres = List.map fst cases in *)
+            (* let bias x = *)
+            (*   not @@ List.for_all (fun pre -> Spec.eval pre x) (pres @ [ pre ]) *)
+            (* in *)
+            let bias x = Spec.eval pre x in
             let res = synthesize_f bias samples bound env in
             let () =
               Zlog.log_write

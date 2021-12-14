@@ -23,7 +23,7 @@ let verify_ source_file meta_file prog_file qc_file verified_sigma_file =
   let spec = Synthesizer.Pre.infer_verified_pre env qc_conf prog sigma in
   let res = Spec.check_verified ~verified_sigma ~spec in
   let () =
-    Printf.printf "Verify Result: (Sound? %b) (Complete? %b)\n" (fst res)
+    Printf.printf "Verify Result: (Complete? %b) (Sound? %b)\n" (fst res)
       (snd res)
   in
   res

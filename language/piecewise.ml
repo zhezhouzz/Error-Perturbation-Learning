@@ -22,7 +22,7 @@ let eval (cases, default) inps =
   let rec loop = function
     | [] -> FInterp.interp default inps
     | (pre, f) :: cases ->
-        if Spec.eval pre inps then FInterp.interp f inps else loop cases
+        if not @@ Spec.eval pre inps then FInterp.interp f inps else loop cases
   in
   loop cases
 
@@ -40,7 +40,7 @@ let eval_sampling (cases, default) inps nondet_num =
   let rec loop = function
     | [] -> run nondet_num default inps
     | (pre, f) :: cases ->
-        if Spec.eval pre inps then run nondet_num f inps else loop cases
+        if not @@ Spec.eval pre inps then run nondet_num f inps else loop cases
   in
   loop cases
 
