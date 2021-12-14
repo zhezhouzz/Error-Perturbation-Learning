@@ -197,6 +197,10 @@ let prop_of_ocamlexpr tenv expr =
         | "false" -> SpecAst.Not SpecAst.True
         | _ -> raise @@ failwith "do not support complicate literal")
     | Pexp_construct (_, Some _) -> raise @@ failwith "Pexp_construct"
+    | Pexp_ifthenelse (_, _, None) ->
+        raise @@ failwith "Pexp_ifthenelse: no else"
+    | Pexp_ifthenelse (cond, e1, Some e2) ->
+        SpecAst.Ite (aux cond, aux e1, aux e2)
     | Pexp_apply (func, args) -> (
         let funcname =
           match expr_of_ocamlexpr func with

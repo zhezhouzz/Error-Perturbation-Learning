@@ -137,7 +137,7 @@ let synthesize_piecewise env qc_conf max_length bound =
       match f with
       | None -> loop current (iter + 1)
       | Some (env, f) -> (
-          if length current + 1 >= max_length then (prev_cases, f)
+          if List.length prev_cases + 1 >= max_length then (prev_cases, f)
           else
             match synthesize_pre_v2 env qc_conf (prev_cases, f) with
             (* | FGoodEnough -> *)
@@ -145,7 +145,14 @@ let synthesize_piecewise env qc_conf max_length bound =
             (*     (prev_cases, f) *)
             (* | FTotalWrong -> loop current (iter + 1) *)
             | FIsOK (pre, samples) ->
-                Zlog.log_write @@ spf "Pre:\n%s\n" (Spec.layout pre);
+                Zlog.log_write
+                @@ spf "Pre:\n%s\n"
+                     (Spec.layout
+                     @@ {
+                          pre with
+                          Spec.body =
+                            Specification.Simplify.simplify_ite pre.Spec.body;
+                        });
                 Zlog.log_write @@ spf "Init Samples:\n%s\n"
                 @@ List.split_by "\n" V.layout_l samples;
                 loop (NextF (prev_cases, f, pre, samples, env)) (iter + 1))
