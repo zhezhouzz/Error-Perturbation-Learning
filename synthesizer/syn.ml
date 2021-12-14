@@ -81,8 +81,7 @@ let synthesize_pre env init_set =
     in
     FIsOK (pre, samples)
 
-let synthesize_piecewise env max_length num_burn_in num_sampling =
-  let bound = IterBound (num_burn_in, num_sampling) in
+let synthesize_piecewise env max_length bound =
   let rec loop current iter =
     if iter >= iter_bound || length current >= max_length then
       force_converge current
@@ -115,8 +114,7 @@ let synthesize_piecewise env max_length num_burn_in num_sampling =
   in
   loop (InitF env) 0
 
-let synthesize_one env num_burn_in num_sampling =
-  synthesize_piecewise env 0 num_burn_in num_sampling
+let synthesize_one env bound = synthesize_piecewise env 0 bound
 
 (* bias on size of the result *)
 

@@ -128,6 +128,10 @@ let is_false { body; _ } =
 
 let spec_body_to_z3 ctx { qv; body; _ } = forallformula_to_z3 ctx (qv, body)
 
+(* let lemma () = *)
+(*   let open Specast in *)
+(*   S *)
+(* TODO: add lemmas *)
 let check_verified ~verified_sigma ~spec =
   match !Config.conf.z3_ctx with
   | None -> raise @@ failwith "no z3 ctx"
