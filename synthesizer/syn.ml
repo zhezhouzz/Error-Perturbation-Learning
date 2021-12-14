@@ -103,26 +103,41 @@ let synthesize_pre_v2 env qc_conf prog =
 
 let synthesize_piecewise env qc_conf max_length bound =
   let rec loop current iter =
+    let () = Zlog.log_write @@ spf "iter: %i" iter in
     if iter >= iter_bound || length current >= max_length then
       force_converge current
     else
       let prev_cases, f, _ =
         match current with
         | InitF env ->
-            ( [],
-              synthesize_f (fun _ -> true) [ env.i_err ] bound env,
-              [ env.i_err ] )
+            let res = synthesize_f (fun _ -> true) [ env.i_err ] bound env in
+            let () =
+              Zlog.log_write
+              @@ spf "init f:\n %s"
+                   (match res with
+                   | None -> "none"
+                   | Some (_, f) -> Language.Oplang.layout f)
+            in
+            ([], res, [ env.i_err ])
         | NextF (cases, f, pre, samples, env) ->
             let pres = List.map fst cases in
             let bias x =
               not @@ List.for_all (fun pre -> Spec.eval pre x) (pres @ [ pre ])
             in
-            (cases @ [ (pre, f) ], synthesize_f bias samples bound env, samples)
+            let res = synthesize_f bias samples bound env in
+            let () =
+              Zlog.log_write
+              @@ spf "init f:\n %s"
+                   (match res with
+                   | None -> "none"
+                   | Some (_, f) -> Language.Oplang.layout f)
+            in
+            (cases @ [ (pre, f) ], res, samples)
       in
       match f with
       | None -> loop current (iter + 1)
       | Some (env, f) -> (
-          if length current + 1 >= max_length then ([], f)
+          if length current + 1 >= max_length then (prev_cases, f)
           else
             match synthesize_pre_v2 env qc_conf (prev_cases, f) with
             (* | FGoodEnough -> *)
@@ -130,6 +145,7 @@ let synthesize_piecewise env qc_conf max_length bound =
             (*     (prev_cases, f) *)
             (* | FTotalWrong -> loop current (iter + 1) *)
             | FIsOK (pre, samples) ->
+                Zlog.log_write @@ spf "Pre:\n%s\n" (Spec.layout pre);
                 Zlog.log_write @@ spf "Init Samples:\n%s\n"
                 @@ List.split_by "\n" V.layout_l samples;
                 loop (NextF (prev_cases, f, pre, samples, env)) (iter + 1))
