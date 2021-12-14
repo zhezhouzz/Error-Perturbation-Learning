@@ -118,6 +118,16 @@ let layout { mem; gs } =
   in
   aux 0 "" (List.rev gs)
 
+let layout_raw { gs; _ } =
+  let rec aux idx prev = function
+    | [] -> prev
+    | inps :: t ->
+        aux (idx + 1)
+          (spf "%s\n[iter %i]:\n%s" prev idx @@ IntList.to_string inps)
+          t
+  in
+  aux 0 "" (List.rev gs)
+
 let non_det_sampling_times = 3
 
 (* TODO add non-det *)

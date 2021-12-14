@@ -21,7 +21,7 @@ let perturbation_pre_infer (cctx : Cctx.t) (scache : S.t)
           try S.Mem.get_outs scache.mem inp_idx
           with _ ->
             let () = Zlog.log_write @@ spf "%i(%s)" inp_idx (V.layout_l inp) in
-            let () = Zlog.log_write @@ S.layout scache in
+            let () = Zlog.log_write @@ S.layout_raw scache in
             failwith "cannot find outs"
         in
         if List.length outs == 0 then false
