@@ -108,6 +108,9 @@ let init init_set =
   let mem, idxs = Mem.adds (Mem.init ()) init_set in
   { mem; gs = [ idxs ] }
 
+let flatten_raw { gs; _ } =
+  match gs with [] -> [] | _ :: t -> List.remove_duplicates @@ List.flatten t
+
 let layout { mem; gs } =
   let rec aux idx prev = function
     | [] -> prev

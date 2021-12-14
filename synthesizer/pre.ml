@@ -7,7 +7,7 @@ module S = Sampling.Scache
 let perturbation_pre_infer (cctx : Cctx.t) (scache : S.t)
     (sigma : V.t list -> bool) (client : V.t list -> V.t list option)
     (phi : V.t list -> bool) =
-  let i_list = List.remove_duplicates @@ List.flatten scache.gs in
+  let i_list = S.flatten_raw scache in
   match i_list with
   | [] ->
       raise
