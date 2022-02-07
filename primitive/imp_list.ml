@@ -253,7 +253,29 @@ let table =
           | _ -> raise @@ exn __FILE__ __LINE__);
       };
       {
+        imp_name = "list_head";
+        imp_itps = [ IntList ];
+        imp_otps = [ Int ];
+        nondet = false;
+        imp_exec =
+          (function
+          | [ L [] ] -> None
+          | [ L (h :: _) ] -> Some [ I h ]
+          | _ -> raise @@ exn __FILE__ __LINE__);
+      };
+      {
         imp_name = "bottom";
+        imp_itps = [ IntList ];
+        imp_otps = [ Int ];
+        nondet = false;
+        imp_exec =
+          (function
+          | [ L [] ] -> None
+          | [ L l ] -> Some [ I (List.last l) ]
+          | _ -> raise @@ exn __FILE__ __LINE__);
+      };
+      {
+        imp_name = "list_last";
         imp_itps = [ IntList ];
         imp_otps = [ Int ];
         nondet = false;

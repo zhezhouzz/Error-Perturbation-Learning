@@ -6,6 +6,7 @@ module LabeledTree = Datatype.Zlabeled_tree.LabeledTree
 module IntSet = Datatype.Zset.IntSet
 module IntMap = Datatype.Zmap.IntMap
 module StrMap = Datatype.Zmap.StrMap
+module IntListMap = Datatype.Zmap.IntListMap
 module BitArray = Datatype.Zarray.Bitarray
 module Array = Datatype.Zarray.Array
 module TreeTailCall = Datatype.Ztailcall.TreeTailCall

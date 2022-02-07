@@ -10,6 +10,13 @@ let map6 f (a, b, c, d, e, g) = (f a, f b, f c, f d, f e, f g)
 
 let map7 f (a, b, c, d, e, g, h) = (f a, f b, f c, f d, f e, f g, f h)
 
+let opt_comapre c x y =
+  match (x, y) with
+  | None, None -> 0
+  | None, Some _ -> -1
+  | Some _, None -> 1
+  | Some x, Some y -> c x y
+
 let opt_fmap (x : 'a option) (f : 'a -> 'b) : 'b option =
   match x with None -> None | Some x -> Some (f x)
 

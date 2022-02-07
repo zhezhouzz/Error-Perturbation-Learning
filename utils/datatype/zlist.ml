@@ -408,6 +408,7 @@ module List = struct
       in
       aux default
 
+  (* duplicate *)
   let choose_n l n =
     let rec aux r n =
       if n == 0 then r

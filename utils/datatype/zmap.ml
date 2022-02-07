@@ -50,3 +50,9 @@ module IntMap = MyMap (struct
 end)
 
 module StrMap = MyMap (String)
+
+module IntListMap = MyMap (struct
+  type t = int list
+
+  let compare = List.compare compare
+end)

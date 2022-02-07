@@ -5,6 +5,7 @@
    caux
    ctest
    csyn
+   cmoti
    cparse
    cev
    cbaseline

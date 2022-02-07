@@ -37,6 +37,8 @@ let info_table =
       "top";
       "cons";
       "append";
+      "list_head";
+      "list_last";
       "list_destruct";
       "list_last_destruct";
       "list_mid_partition";

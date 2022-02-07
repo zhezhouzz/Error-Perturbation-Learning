@@ -15,6 +15,7 @@
 %%
 
 prog_eof:
+  | IN COLON input=args_tuple LBRACK RBRACK OUT COLON output=args_tuple ; EOF { (input, [], output) }
   | IN COLON input=args_tuple LBRACK body=statements RBRACK OUT COLON output=args_tuple ; EOF { (input, body, output) }
 ;
 statements:

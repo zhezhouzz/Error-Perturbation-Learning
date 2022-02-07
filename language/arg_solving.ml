@@ -196,12 +196,12 @@ let nodup_qeury ctx (total, vs, m, v0, v1) =
          else mk_eq ctx v v0)
        (List.combine total vs)
 
-let max_solution = 35
-
-let solve ctx cache =
+let solve max_solution ctx cache =
   let counter = ref 0 in
   let rec loop no_dup cache =
-    if List.length cache.solutions > max_solution then cache
+    if List.length cache.solutions > max_solution then (
+      Zlog.log_write "the solution maximal number is overed";
+      cache)
     else
       (* let r = *)
       (*   Zlog.event_ *)
@@ -227,11 +227,13 @@ let solve ctx cache =
   in
   loop [] cache
 
-let arg_assign_ ctx tps ops =
+let arg_assign_ max_solution ctx tps ops =
   (* let () = Printf.printf "arg_assign_ tps:\n%s\n" (List.split_by_comma Tp.layout tps) in *)
   let prog_with_holes = initial_naming tps ops in
   (* let () = Printf.printf "prog_with_holes:\n%s\n" (Oplang.layout prog_with_holes) in *)
-  Sugar.opt_fmap (init_cache ctx tps ops prog_with_holes) (solve ctx)
+  Sugar.opt_fmap
+    (init_cache ctx tps ops prog_with_holes)
+    (solve max_solution ctx)
 
 let shift_within_in_cache cache idx =
   let prog =
@@ -240,7 +242,31 @@ let shift_within_in_cache cache idx =
   in
   (prog, { cache with current_using = Some idx })
 
-let arg_assign tps ops =
+let solution_compare sx sy =
+  let n = IntMap.cardinal sx in
+  if IntMap.cardinal sy != n then
+    raise @@ failwith "fatal error: solution maps have different cardinal"
+  else
+    let find = IntMap.find "fatal error: solution maps have different indix" in
+    let rec aux i =
+      if i >= n then raise @@ failwith "duplicate args assignment solutions"
+      else
+        let c = compare (find sx i) (find sy i) in
+        if c != 0 then c else aux (i + 1)
+    in
+    aux 0
+
+let sort_cache cache =
+  { cache with solutions = List.sort solution_compare cache.solutions }
+
+let unfold_cache (solutions, prog_with_holes) =
+  List.map
+    (fun solution ->
+      try subst solution prog_with_holes
+      with _ -> raise @@ failwith "unfold_cache")
+    solutions
+
+let arg_assign ?(max_solution = 35) tps ops =
   let ctx =
     match Config.(!conf.z3_ctx) with
     | Some ctx -> ctx
@@ -248,7 +274,7 @@ let arg_assign tps ops =
   in
   Sugar.(
     (* let () = Printf.printf "\tops:%s\n" @@ StrList.to_string ops in *)
-    let* cache = arg_assign_ ctx tps ops in
+    let* cache = arg_assign_ max_solution ctx tps ops in
     (* let () = Printf.printf "\tops:%s\n" @@ StrList.to_string cache.ops in *)
     match cache.solutions with
     | [] -> None

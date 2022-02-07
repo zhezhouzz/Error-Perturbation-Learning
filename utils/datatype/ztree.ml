@@ -199,6 +199,18 @@ module Tree = struct
     in
     aux t
 
+  let complete t u =
+    let rec aux incompeletes = function
+      | _, Leaf -> raise @@ failwith "never happen"
+      | 0, Node (_, Leaf, Leaf) -> raise @@ failwith "never happen"
+      | 1, Node (_, Leaf, Leaf) -> incompeletes
+      | _, Node (x, Leaf, Leaf) -> x :: incompeletes
+      | n, Node (x, Leaf, r) -> aux (x :: incompeletes) (n - 1, r)
+      | n, Node (x, l, Leaf) -> aux (x :: incompeletes) (n - 1, l)
+      | n, Node (_, l, r) -> aux (aux incompeletes (n - 1, l)) (n - 1, r)
+    in
+    List.exists (fun x -> x == u) @@ aux [] (deep t, t)
+
   let eq compare t1 t2 =
     let rec aux = function
       | Leaf, Leaf -> true

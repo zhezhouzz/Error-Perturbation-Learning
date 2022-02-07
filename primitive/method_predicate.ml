@@ -73,6 +73,18 @@ let once_apply = function
   | [ V.L l; V.I e ] -> List.once ( = ) l e
   | _ -> raise @@ failwith "once_apply"
 
+let complete_apply = function
+  | [ V.T t; V.I e ] -> Tree.complete t e
+  | _ -> raise @@ failwith "complete_apply"
+
+let depth_eq_apply = function
+  | [ V.T t1; V.T t2 ] -> Tree.deep t1 == Tree.deep t2
+  | _ -> raise @@ failwith "depth_eq_apply"
+
+let depth_plus1_apply = function
+  | [ V.T t1; V.T t2 ] -> Tree.deep t1 + 1 == Tree.deep t2
+  | _ -> raise @@ failwith "depth_plus1_apply"
+
 let left_apply = function
   | [ V.T t; V.I e1; V.I e2 ] -> Tree.left_child ( == ) t e1 e2
   | [ V.TI t; V.I e1; V.I e2 ] -> LabeledTree.left_child ( == ) t e1 e2
@@ -471,6 +483,42 @@ let para_adj_info =
       tps = [ T.IntTreeB; T.Int; T.Int ];
       permu = false;
       imp = parallel_adj_apply;
+    };
+  ]
+
+let complete_info =
+  let poly_name = "complete" in
+  [
+    {
+      poly_name;
+      name = "tree_complete";
+      tps = [ T.IntTree; T.Int ];
+      permu = false;
+      imp = complete_apply;
+    };
+  ]
+
+let depth_eq_info =
+  let poly_name = "depth_eq" in
+  [
+    {
+      poly_name;
+      name = "tree_depth_eq";
+      tps = [ T.IntTree; T.IntTree ];
+      permu = false;
+      imp = depth_eq_apply;
+    };
+  ]
+
+let depth_plus1_info =
+  let poly_name = "depth_plus1" in
+  [
+    {
+      poly_name;
+      name = "tree_depth_plus1";
+      tps = [ T.IntTree; T.IntTree ];
+      permu = false;
+      imp = depth_plus1_apply;
     };
   ]
 

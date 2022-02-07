@@ -234,6 +234,8 @@ let mk_generation_measure_only measure init_set f num =
 
 let max_pool_num = 100
 
+let allow_stuck = true
+
 let eval_sampling (init_set : Value.t list list) fs measure bound =
   let conds = measure_conds measure in
   let { mem; gs } = init init_set in
@@ -245,11 +247,13 @@ let eval_sampling (init_set : Value.t list list) fs measure bound =
     let num_none = num_none + expected_n - List.length outs in
     let samples = next_pool mem outs Config.MeasureOnly conds in
     if List.length samples == 0 then
-      let () =
-        Zlog.log_write @@ spf "data:\n%s\n"
-        @@ List.split_by "\n" (fun x -> Value.layout_l @@ Mem.itov mem x) !res
-      in
-      raise @@ failwith "sampling get stuck"
+      if allow_stuck then ([], num_none, List.map (Mem.itov mem) !res)
+      else
+        let () =
+          Zlog.log_write @@ spf "data:\n%s\n"
+          @@ List.split_by "\n" (fun x -> Value.layout_l @@ Mem.itov mem x) !res
+        in
+        raise @@ failwith "sampling get stuck"
     else
       let () = res := !res @ samples in
       let samples =

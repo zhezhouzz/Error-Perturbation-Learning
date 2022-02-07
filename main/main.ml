@@ -26,6 +26,8 @@ let command =
       ("ifc-sampling", Cifc.ifc_sampling);
       ("ifc-syn", Cifc.ifc_syn);
       ("verify", Cverify.verify);
+      ("moti-save", Cmoti.moti_save);
+      ("moti-load", Cmoti.moti_load);
     ]
 
 let () = Command.run command
