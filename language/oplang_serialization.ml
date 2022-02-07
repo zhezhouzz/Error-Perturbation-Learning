@@ -76,17 +76,42 @@ let reg_vertices pf_graph l =
 
 let moti_layout_stat pf_graph =
   let num_v = IntMap.cardinal pf_graph.vertices in
+  let get_best idx =
+    let aas, oplang = IntMap.find "moti_layout_stat" pf_graph.vertices idx in
+    let ns = IntMap.find "moti_layout_stat" pf_graph.num_e idx in
+    let r =
+      List.fold_left
+        (fun r (aa, n) ->
+          match r with
+          | None -> Some (aa, n)
+          | Some (_, mn) -> if n > mn then Some (aa, n) else r)
+        None (List.combine aas ns)
+    in
+    match r with
+    | None -> None
+    | Some (aa, n) -> Some (Oplang.subst aa oplang, n)
+  in
   let stat =
     IntMap.fold
-      (fun _ nums stat ->
+      (fun idx nums stat ->
         (* let _ = Printf.printf "<%s>\n" @@ IntList.to_string nums in *)
-        ( List.length nums,
-          match IntList.max_opt nums with None -> 0 | Some x -> x )
-        :: stat)
+        let len = List.length nums in
+        let r =
+          match IntList.max_opt nums with
+          | None -> (len, 0, None)
+          | Some x -> if x >= 90 then (len, x, get_best idx) else (len, x, None)
+        in
+        r :: stat)
       pf_graph.num_e []
   in
   spf "details:\n%s\nnum of vertices: %i\n"
-    (List.split_by "\n" (fun (len, m) -> spf "num:%i --> max: %i" len m) stat)
+    (List.split_by "\n"
+       (fun (len, m, r) ->
+         spf "num:%i --> max: %i%s" len m
+           (match r with
+           | None -> ""
+           | Some (pf, _) -> spf "-->\n%s" @@ Oplang.layout pf))
+       stat)
     num_v
 
 (* PF Enumeration *)
