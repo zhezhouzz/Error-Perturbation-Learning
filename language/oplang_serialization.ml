@@ -193,10 +193,13 @@ let bfs pf_graph start f =
 
 let reorder pf_graph searching_algo =
   let get_score idx =
-    let r = IntMap.find "reorder" pf_graph.num_e idx in
-    let m1 = match IntList.max_opt r with None -> 0 | Some x -> x in
+    let r = List.sort compare @@ IntMap.find "reorder" pf_graph.num_e idx in
+    let len = List.length r in
+    let r = if List.length r < 3 then r else List.sublist r (len - 3, len) in
+    (* let m1 = match IntList.max_opt r with None -> 0 | Some x -> x in *)
     let m2 = float_of_int (IntList.sum r) /. (float_of_int @@ List.length r) in
-    m2 +. float_of_int m1
+    (* m2 +. float_of_int m1 *)
+    m2
   in
   let res = ref [] in
   let blocks = ref [] in
