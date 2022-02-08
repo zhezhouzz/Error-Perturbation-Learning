@@ -25,6 +25,8 @@ let info_table =
       "consttrue";
       "constfalse";
       (* int *)
+      "plus";
+      "minus";
       "plus1";
       "minus1";
       "random_int";

@@ -6,8 +6,8 @@ let op_pool =
     "list_head";
     "list_tail";
     "list_last";
-    "plus1";
-    "minus1";
+    "plus";
+    "minus";
     "const0";
     "const1";
     "random_int";

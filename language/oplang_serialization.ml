@@ -180,14 +180,13 @@ let bfs pf_graph start f =
           List.fold_left
             (fun r n ->
               let () = Hashtbl.add visited n () in
-              let s =
-                List.filter (fun x -> not (Hashtbl.mem visited x))
-                @@ IntMap.find "dfs" pf_graph.edges n
-              in
+              let s = IntMap.find "dfs" pf_graph.edges n in
               s @ r)
             [] queue
         in
-        aux (List.remove_duplicates queue)
+        aux
+          (List.filter (fun x -> not (Hashtbl.mem visited x))
+          @@ List.remove_duplicates queue)
   in
   aux [ start ]
 
@@ -195,7 +194,10 @@ let reorder pf_graph searching_algo =
   let get_score idx =
     let r = List.sort compare @@ IntMap.find "reorder" pf_graph.num_e idx in
     let len = List.length r in
-    let r = if List.length r < 3 then r else List.sublist r (len - 3, len) in
+    let cut = 20 in
+    let r =
+      if List.length r < cut then r else List.sublist r (len - cut, len)
+    in
     (* let m1 = match IntList.max_opt r with None -> 0 | Some x -> x in *)
     let m2 = float_of_int (IntList.sum r) /. (float_of_int @@ List.length r) in
     (* m2 +. float_of_int m1 *)

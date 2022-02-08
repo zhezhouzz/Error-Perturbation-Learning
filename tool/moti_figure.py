@@ -28,7 +28,12 @@ def plot (pfs, scores, blocks):
     # axs[2].plot(pfs, scores)
     # fig.suptitle('Categorical Plotting')
     for xc in blocks:
-        plt.axvline(x=xc)
+        plt.axvline(x=xc, color='red')
+    frame1 = plt.gca()
+    frame1.get_xaxis().set_ticks([])
+    frame1.get_yaxis().set_ticks([])
+    plt.xlabel("Perturbation functions")
+    plt.ylabel("Number of erroneous inputs covered")
     plt.show()
 
 if __name__ == '__main__':
