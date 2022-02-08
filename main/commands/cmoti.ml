@@ -51,7 +51,7 @@ let moti_load_ source_file meta_file num_sampling =
   let pf_graph =
     Yojson.Basic.from_file ".moti" |> pf_graph_load Parse.parse_string
   in
-  let pf_graph = make_num pf_graph (count env num_sampling) in
+  (* let pf_graph = make_num pf_graph (count env num_sampling) in *)
   let () = Printf.printf "%s\n" @@ moti_layout_stat pf_graph in
   ()
 
