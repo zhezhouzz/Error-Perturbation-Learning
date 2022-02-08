@@ -2,7 +2,15 @@ let preds = [| "hd"; "mem"; "<" |]
 
 let op_pool =
   [|
-    "append"; "list_head"; "list_last"; "plus1"; "minus1"; "const0"; "const1";
+    "append";
+    "list_head";
+    "list_tail";
+    "list_last";
+    "plus1";
+    "minus1";
+    "const0";
+    "const1";
+    "random_int";
   |]
 
 let libs = [| "List" |]

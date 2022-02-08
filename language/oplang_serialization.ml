@@ -54,14 +54,16 @@ let update_encoding e fps =
   @@ List.mapi (fun idx x -> (idx, x)) fps
 
 type pf_graph = {
+  max_length : int;
   ops_encoding : encoding;
   vertices : (int IntMap.t list * Oplang.t) IntMap.t;
   edges : int list IntMap.t;
   num_e : int list IntMap.t;
 }
 
-let init_pf_graph ops =
+let init_pf_graph ops max_length =
   {
+    max_length;
     ops_encoding = init_encoding ops;
     vertices = IntMap.empty;
     edges = IntMap.empty;
@@ -133,6 +135,97 @@ let enumerate (tps : Tp.t list) (theta : string list) (len : int) =
           Some (ops, (acache.solutions, acache.prog_with_holes)))
     (enumerate_ops theta len)
 
+(* Graph Iteration *)
+
+let init_node pf_graph =
+  let rawpf = List.init pf_graph.max_length (fun _ -> None) in
+  let i = rawpf_to_int pf_graph.ops_encoding rawpf in
+  i
+
+type signal = VisitNode of int | Block
+
+let dfs pf_graph start f =
+  let rec successors = function
+    | [] -> None
+    | [] :: stk -> successors stk
+    | (h :: t) :: stk -> Some (h, t :: stk)
+  in
+  let visited = Hashtbl.create (IntMap.cardinal pf_graph.vertices) in
+  let rec rdfs stk visited node =
+    let stk =
+      if not (Hashtbl.mem visited node) then
+        let () = Hashtbl.add visited node () in
+        let () = f (VisitNode node) in
+        let stk = IntMap.find "dfs" pf_graph.edges node :: stk in
+        stk
+      else stk
+    in
+    match successors stk with
+    | None -> ()
+    | Some (node, stk) -> rdfs stk visited node
+  in
+  rdfs [] visited start
+
+let bfs pf_graph start f =
+  let visited = Hashtbl.create (IntMap.cardinal pf_graph.vertices) in
+  let rec aux = function
+    | [] -> ()
+    | queue ->
+        (* let () = f queue in *)
+        let () =
+          List.iter (fun x -> f (VisitNode x)) queue;
+          f Block
+        in
+        let queue =
+          List.fold_left
+            (fun r n ->
+              let () = Hashtbl.add visited n () in
+              let s =
+                List.filter (fun x -> not (Hashtbl.mem visited x))
+                @@ IntMap.find "dfs" pf_graph.edges n
+              in
+              s @ r)
+            [] queue
+        in
+        aux (List.remove_duplicates queue)
+  in
+  aux [ start ]
+
+let reorder pf_graph searching_algo =
+  let get_score idx =
+    let r = IntMap.find "reorder" pf_graph.num_e idx in
+    let m1 = match IntList.max_opt r with None -> 0 | Some x -> x in
+    let m2 = float_of_int (IntList.sum r) /. (float_of_int @@ List.length r) in
+    m2 +. float_of_int m1
+  in
+  let res = ref [] in
+  let blocks = ref [] in
+  let f = function
+    | VisitNode x -> res := x :: !res
+    | Block -> blocks := List.length !res :: !blocks
+  in
+  let () = searching_algo pf_graph (init_node pf_graph) f in
+  let res = List.rev !res in
+  let blocks = List.rev !blocks in
+  (List.map (fun i -> (i, get_score i)) res, blocks)
+
+(* List.map *)
+(*   (fun l -> *)
+(*     let r = *)
+(*       List.fold_left *)
+(*         (fun r idx -> *)
+(*           match r with *)
+(*           | None -> Some (idx, get_score idx) *)
+(*           | Some (_, m') -> *)
+(*               let m = get_score idx in *)
+(*               if m > m' then Some (idx, m) else r) *)
+(*         None l *)
+(*     in *)
+(*     match r with *)
+(*     | None -> raise @@ failwith "reorder" *)
+(*     | Some (idx, m) -> (idx, m)) *)
+(*   res *)
+
 (* make edges *)
 
 let make_edges_ encoding one =
@@ -189,6 +282,12 @@ let i_save i = `Int i
 let i_load =
   let open Util in
   to_int
+
+let f_save f = `Float f
+
+let f_load =
+  let open Util in
+  to_float
 
 let str_save i = `String i
 
@@ -278,9 +377,10 @@ let n_save m = kvlist_save i_save il_save (IntMap.to_kv_list m)
 
 let n_load json = IntMap.from_kv_list @@ kvlist_load i_load il_load json
 
-let pf_graph_save { ops_encoding; vertices; edges; num_e } =
+let pf_graph_save { max_length; ops_encoding; vertices; edges; num_e } =
   `Assoc
     [
+      ("max_length", i_save max_length);
       ("ops_encoding", ope_save ops_encoding);
       ("vertices", v_save vertices);
       ("edges", e_save edges);
@@ -290,6 +390,7 @@ let pf_graph_save { ops_encoding; vertices; edges; num_e } =
 let pf_graph_load p json =
   let open Util in
   {
+    max_length = json |> member "max_length" |> i_load;
     ops_encoding = json |> member "ops_encoding" |> ope_load;
     vertices = json |> member "vertices" |> v_load p;
     edges = json |> member "edges" |> e_load;

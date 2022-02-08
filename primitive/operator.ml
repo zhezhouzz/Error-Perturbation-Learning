@@ -35,9 +35,11 @@ let info_table =
       "replace";
       "insert";
       "top";
+      "tail";
       "cons";
       "append";
       "list_head";
+      "list_tail";
       "list_last";
       "list_destruct";
       "list_last_destruct";

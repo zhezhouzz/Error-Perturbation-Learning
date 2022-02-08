@@ -359,4 +359,15 @@ let table =
           | [ L (_ :: t) ] -> Some [ L t ]
           | _ -> raise @@ exn __FILE__ __LINE__);
       };
+      {
+        imp_name = "list_tail";
+        imp_itps = [ IntList ];
+        imp_otps = [ IntList ];
+        nondet = false;
+        imp_exec =
+          (function
+          | [ L [] ] -> None
+          | [ L (_ :: t) ] -> Some [ L t ]
+          | _ -> raise @@ exn __FILE__ __LINE__);
+      };
     ]

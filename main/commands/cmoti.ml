@@ -29,9 +29,9 @@ let moti_save_ source_file meta_file max_length num_sampling =
         @@ mk_env_from_files source_file meta_file)
   in
   let open Language.Oplang_serialization in
-  let pf_graph = init_pf_graph env.op_pool in
+  let pf_graph = init_pf_graph env.op_pool max_length in
   let pf_graph =
-    reg_vertices pf_graph @@ enumerate env.tps env.op_pool max_length
+    reg_vertices pf_graph @@ enumerate env.tps env.op_pool pf_graph.max_length
   in
   let pf_graph = make_edges pf_graph in
   let pf_graph = make_num pf_graph (count env num_sampling) in
@@ -39,7 +39,7 @@ let moti_save_ source_file meta_file max_length num_sampling =
   let () = Yojson.Basic.to_file ".moti" @@ pf_graph_save pf_graph in
   ()
 
-let moti_load_ source_file meta_file max_length num_sampling =
+let moti_load_ source_file meta_file num_sampling =
   let env =
     Zlog.event_
       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
@@ -55,24 +55,51 @@ let moti_load_ source_file meta_file max_length num_sampling =
   let () = Printf.printf "%s\n" @@ moti_layout_stat pf_graph in
   ()
 
-type moti_option = IsSave | IsLoad
-
-let moti k =
+let moti =
   Command.basic ~summary:"moti save/load"
     Command.Let_syntax.(
       let%map_open configfile = anon ("configfile" %: regular_file)
       and source_file = anon ("source file" %: regular_file)
       and meta_file = anon ("meta file" %: regular_file)
       and max_length = anon ("maximal length of the pieces" %: int)
-      and num_sampling = anon ("num_sampling" %: int) in
+      and num_sampling = anon ("num_sampling" %: int)
+      and sl = anon ("save/load" %: string) in
       fun () ->
         Config.exec_main configfile (fun () ->
             Zlog.event_
               (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
               (fun () ->
-                (match k with IsSave -> moti_save_ | IsLoad -> moti_save_)
-                  source_file meta_file max_length num_sampling)))
+                match sl with
+                | "save" ->
+                    moti_save_ source_file meta_file max_length num_sampling
+                | "load" -> moti_load_ source_file meta_file num_sampling
+                | _ -> raise @@ failwith "[save | load]")))
 
-let moti_save = moti IsSave
+let search_ algo =
+  let open Language.Oplang_serialization in
+  let open Yojson.Basic in
+  let pf_graph = from_file ".moti" |> pf_graph_load Parse.parse_string in
+  let algo =
+    match algo with
+    | "bfs" -> bfs
+    | "dfs" -> dfs
+    | _ -> raise @@ failwith "unknown searching algo"
+  in
+  let res, blocks = reorder pf_graph algo in
+  let () =
+    Yojson.Basic.to_file ".search"
+      (`Assoc
+        [ ("res", kvlist_save i_save f_save res); ("blocks", il_save blocks) ])
+  in
+  ()
 
-let moti_load = moti IsLoad
+let search =
+  Command.basic ~summary:"moti serch"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and algo = anon ("algo: dfs, bfs" %: string) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            Zlog.event_
+              (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+              (fun () -> search_ algo)))
