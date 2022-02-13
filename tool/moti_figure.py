@@ -1,4 +1,8 @@
+import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+from matplotlib.collections import LineCollection
+from matplotlib.colors import ListedColormap, BoundaryNorm
 import json
 import sys
 import math
@@ -24,11 +28,27 @@ def analysize (pfs, scores):
 def plot (pfs, scores, blocks):
     # fig, axs = plt.subplots(1, 1, figsize=(9, 3), sharey=True)
     plt.bar(pfs, scores)
+  # prev = 0
+  #   for i in range(0, len(blocks)):
+  #       x = pfs[prev: blocks[i]]
+  #       y = scores[prev: blocks[i]]
+  #       print(cs[i])
+  #       plt.bar(x, y, color = cs[i])
+  #       prev = blocks[i]
     # axs[1].scatter(pfs, scores)
     # axs[2].plot(pfs, scores)
     # fig.suptitle('Categorical Plotting')
-    for xc in blocks:
-        plt.axvline(x=xc, color='red')
+    for xc in ([0] + blocks):
+        plt.axvline(x=xc, color='black', linewidth=0.5, linestyle = (0, (5, 10)))
+    avg = []
+    # b = blocks + [len(scores)]
+    b = blocks
+    for xc in b:
+        l = scores[len(avg): xc]
+        avg = avg + ([sum(l)/len(l)]*(len(l)))
+    print(len(pfs))
+    print(len(avg))
+    plt.plot(pfs, avg, color='red', linewidth=0.8)
     frame1 = plt.gca()
     frame1.get_xaxis().set_ticks([])
     frame1.get_yaxis().set_ticks([])

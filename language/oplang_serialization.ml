@@ -137,14 +137,46 @@ let enumerate (tps : Tp.t list) (theta : string list) (len : int) =
 
 (* Graph Iteration *)
 
+let get_score pf_graph idx =
+  let r = List.sort compare @@ IntMap.find "reorder" pf_graph.num_e idx in
+  let len = List.length r in
+  let cut = 6 in
+  let r = if List.length r < cut then r else List.sublist r (len - cut, len) in
+  (* let m1 = match IntList.max_opt r with None -> 0 | Some x -> x in *)
+  let m2 = float_of_int (IntList.sum r) /. (float_of_int @@ List.length r) in
+  (* m2 +. float_of_int m1 *)
+  m2
+
 let init_node pf_graph =
   let rawpf = List.init pf_graph.max_length (fun _ -> None) in
   let i = rawpf_to_int pf_graph.ops_encoding rawpf in
-  i
+  [ i ]
+
+let max_node pf_graph =
+  let r =
+    IntMap.fold
+      (fun idx _ r ->
+        let s = get_score pf_graph idx in
+        match r with
+        | None -> Some ([ idx ], s)
+        | Some (idxs, s') ->
+            if s > s' then Some ([ idx ], s)
+            else if s' -. s < 1.0 then Some (idx :: idxs, s)
+            else r)
+      pf_graph.num_e None
+  in
+  match r with
+  | None -> raise @@ failwith "max_node"
+  | Some (idxs, m) ->
+      let _ = Printf.printf "max(%f): %s\n" m (IntList.to_string idxs) in
+      idxs
 
 type signal = VisitNode of int | Block
 
 let dfs pf_graph start f =
+  let start =
+    match start with [ x ] -> x | _ -> raise @@ failwith "bad dfs init node"
+  in
   let rec successors = function
     | [] -> None
     | [] :: stk -> successors stk
@@ -188,31 +220,19 @@ let bfs pf_graph start f =
           (List.filter (fun x -> not (Hashtbl.mem visited x))
           @@ List.remove_duplicates queue)
   in
-  aux [ start ]
+  aux start
 
-let reorder pf_graph searching_algo =
-  let get_score idx =
-    let r = List.sort compare @@ IntMap.find "reorder" pf_graph.num_e idx in
-    let len = List.length r in
-    let cut = 20 in
-    let r =
-      if List.length r < cut then r else List.sublist r (len - cut, len)
-    in
-    (* let m1 = match IntList.max_opt r with None -> 0 | Some x -> x in *)
-    let m2 = float_of_int (IntList.sum r) /. (float_of_int @@ List.length r) in
-    (* m2 +. float_of_int m1 *)
-    m2
-  in
+let reorder pf_graph searching_algo start =
   let res = ref [] in
   let blocks = ref [] in
   let f = function
     | VisitNode x -> res := x :: !res
     | Block -> blocks := List.length !res :: !blocks
   in
-  let () = searching_algo pf_graph (init_node pf_graph) f in
+  let () = searching_algo pf_graph start f in
   let res = List.rev !res in
   let blocks = List.rev !blocks in
-  (List.map (fun i -> (i, get_score i)) res, blocks)
+  (List.map (fun i -> (i, get_score pf_graph i)) res, blocks)
 
 (* List.map *)
 (*   (fun l -> *)

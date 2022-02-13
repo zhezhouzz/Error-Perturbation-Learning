@@ -75,7 +75,7 @@ let moti =
                 | "load" -> moti_load_ source_file meta_file num_sampling
                 | _ -> raise @@ failwith "[save | load]")))
 
-let search_ algo =
+let search_ algo start =
   let open Language.Oplang_serialization in
   let open Yojson.Basic in
   let pf_graph = from_file ".moti" |> pf_graph_load Parse.parse_string in
@@ -85,7 +85,13 @@ let search_ algo =
     | "dfs" -> dfs
     | _ -> raise @@ failwith "unknown searching algo"
   in
-  let res, blocks = reorder pf_graph algo in
+  let start =
+    match start with
+    | "init" -> init_node pf_graph
+    | "max" -> max_node pf_graph
+    | _ -> raise @@ failwith "bad start"
+  in
+  let res, blocks = reorder pf_graph algo start in
   let () =
     Yojson.Basic.to_file ".search"
       (`Assoc
@@ -97,9 +103,10 @@ let search =
   Command.basic ~summary:"moti serch"
     Command.Let_syntax.(
       let%map_open configfile = anon ("configfile" %: regular_file)
-      and algo = anon ("algo: dfs, bfs" %: string) in
+      and algo = anon ("algo: dfs, bfs" %: string)
+      and start = anon ("start: init, max" %: string) in
       fun () ->
         Config.exec_main configfile (fun () ->
             Zlog.event_
               (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-              (fun () -> search_ algo)))
+              (fun () -> search_ algo start)))
