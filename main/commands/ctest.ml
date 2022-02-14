@@ -48,6 +48,18 @@ let test_feature () =
   in
   ()
 
+(* type gen_version = *)
+(*    | QcGen | RGen *)
+open Basic_dt
+
+let test_random_gen conf tp num =
+  let res = QCheck.Gen.generate ~n:num @@ Zquickcheck.Qc.choose_gen conf tp in
+  Printf.printf "%s:\n%s\n" (Primitive.Tp.layout tp)
+  @@ List.split_by "\n\n"
+       (fun x ->
+         match x with None -> "none" | Some x -> Primitive.Value.layout x)
+       res
+
 let test_pre_infer env =
   let prog = Parse.parse "data/pre.prog" in
   let open Synthesizer in
@@ -182,3 +194,16 @@ let batched_test =
         Config.exec_main configfile (fun () ->
             batched_test source_file meta_file num_times num_burn_in
               num_sampling))
+
+let qcgen_test =
+  Command.basic ~summary:"batched test."
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and qc_file = anon ("qcconfigfile" %: regular_file)
+      and tp = anon ("datatype" %: string)
+      and num = anon ("num times" %: int) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let qc_conf = Qc_config.load_config qc_file in
+            let tp = Primitive.Tp.of_string tp in
+            test_random_gen qc_conf tp num))

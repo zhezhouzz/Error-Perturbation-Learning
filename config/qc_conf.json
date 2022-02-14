@@ -29,5 +29,25 @@
             "fq_leaf": 1,
             "fq_node": 3
         }
+    },
+    "binomialhp_conf": {
+        "element": "-10,19",
+        "size": "5"
+    },
+    "pairinghp_conf": {
+        "element": "-10,19",
+        "size": "5"
+    },
+    "physicistsq_conf": {
+        "element": "-10,19",
+        "size": "20"
+    },
+    "realtimeq_conf": {
+        "element": "-10,19",
+        "size": "20"
+    },
+    "skewhp_conf": {
+        "element": "-10,19",
+        "size": "5"
     }
 }

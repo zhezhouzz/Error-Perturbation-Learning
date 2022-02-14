@@ -10,6 +10,10 @@ open Zlist
 
 let deep = List.length
 
+let rec max_deep l =
+  let aux = function Node (_, _, l) -> 1 + max_deep l in
+  match IntList.max_opt @@ List.map aux l with None -> 0 | Some x -> x
+
 let of_list l =
   let num = 1 in
   let rec make_one l =
@@ -26,24 +30,79 @@ let of_list l =
   in
   make [] num l
 
-let rec to_string t =
-  match t with
-  | [] -> "()"
-  | _ ->
-      let a, b =
-        List.fold_left
-          (fun (layer, rest) tr ->
-            match tr with Node (r, x, t) -> (layer @ [ (r, x) ], rest @ [ t ]))
-          ([], []) t
-      in
-      Printf.sprintf "%s\n%s"
-        (List.split_by " " (fun (r, x) -> Printf.sprintf "%i:%i " r x) a)
-        (List.split_by " " (fun t -> Printf.sprintf "{%s}" @@ to_string t) b)
+(* type 'a nested_list = LO of 'a list | LS of 'a nested_list list *)
+
+(* let rec nested_list_length = function *)
+(*   | LO _ -> 0 *)
+(*   | LS [] -> 1 + (nested_list_length x) *)
+
+(*                           let merge  *)
+
+(* (\* (fun (r, x) -> Printf.sprintf "%i:%i" r x) *\) *)
+
+(* let rec nested_list_to_string to_str = function *)
+(*   | LO a -> List.split_by ", " to_str a *)
+(*   | LS b -> *)
+(*     List.split_by ", " *)
+(*       (fun x -> Printf.sprintf "{%s}" @@ nested_list_to_string to_str  x) *)
+(*       b *)
+
+(* let merge_nested_list *)
 
 let rec flatten t =
   List.fold_left
     (fun res tr -> match tr with Node (r, x, t) -> [ r; x ] @ res @ flatten t)
     [] t
+
+let to_string l =
+  match l with
+  | [] -> "_"
+  | _ ->
+      let len = max_deep l in
+      let arr = Array.init len (fun _ -> "") in
+      let update idx str = arr.(idx) <- arr.(idx) ^ str in
+      let update_below idx str =
+        List.iter (fun i -> update i str)
+        @@ List.init (len - idx) (fun x -> idx + x)
+      in
+      let rec aux idx t =
+        match t with
+        | Node (r, x, l) ->
+            update_below idx "{";
+            update idx (Printf.sprintf "%i:%i, " r x);
+            List.iter (fun t -> aux (idx + 1) t) l;
+            update_below idx "}"
+      in
+      List.iter (fun t -> aux 0 t) l;
+      Array.fold_left
+        (fun res str -> Printf.sprintf "%s\n%s" res str)
+        (Printf.sprintf "flatten:%s\n" @@ IntList.to_string @@ flatten l)
+        arr
+
+(* let rec aux t = *)
+(*   let a, b = *)
+(*     List.fold_left *)
+(*       (fun (layer, rest) tr -> *)
+(*          match tr with Node (r, x, t) -> (layer @ [ (r, x) ], rest @ [ t ])) *)
+(*       ([], []) t *)
+(*   in *)
+(*   let b, c = List.split @@ List.map aux b in *)
+(*   aLS b *)
+(*   let b = LS b, *)
+(* match t with *)
+(* | [] -> "_" *)
+(* | _ -> *)
+(*     let a, b = *)
+(*       List.fold_left *)
+(*         (fun (layer, rest) tr -> *)
+(*           match tr with Node (r, x, t) -> (layer @ [ (r, x) ], rest @ [ t ])) *)
+(*         ([], []) t *)
+(*     in *)
+(*     let b = List.map        *)
+(*     Printf.sprintf "%s\n%s" (nested_list_to_string (LO a)) *)
+(*       (nested_list_to_string ())       *)
+(*       (List.split_by ", " (fun (r, x) -> Printf.sprintf "%i:%i" r x) a) *)
+(*       (List.split_by " " (fun t -> Printf.sprintf "{%s}" @@ to_string t) b) *)
 
 let compare t1 t2 =
   let rec aux t1 t2 =

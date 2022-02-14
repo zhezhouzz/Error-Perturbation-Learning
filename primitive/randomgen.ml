@@ -93,7 +93,7 @@ let binomialhp_gen (chooses : int list) (bound : int) =
   let node a b c = BinomialHeap.Node (a, b, c) in
   sized_size (int_bound bound)
   @@ fix (fun self n ->
-         list_repeat n
+         list_size (int_bound n)
          @@ map3 node (oneofl chooses) (oneofl chooses)
          @@ self (n - 1))
 

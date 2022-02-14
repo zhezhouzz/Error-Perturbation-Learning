@@ -5,6 +5,7 @@ let command =
   Command.group ~summary:"Error Perturbation Learning"
     [
       ("test", Ctest.test);
+      ("test-qcgen", Ctest.qcgen_test);
       ("baseline", Cbaseline.baseline);
       ("baseline-time", Ctime.baseline_time);
       ("baseline-time-all", Ctime.baseline_time_all);

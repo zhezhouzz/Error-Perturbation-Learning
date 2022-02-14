@@ -29,5 +29,25 @@
             "fq_leaf": 1,
             "fq_node": 1
         }
+    },
+    "binomialhp_conf": {
+        "element": "SmallUnsign",
+        "size": "SmallNat"
+    },
+    "pairinghp_conf": {
+        "element": "SmallUnsign",
+        "size": "SmallNat"
+    },
+    "physicistsq_conf": {
+        "element": "SmallUnsign",
+        "size": "SmallNat"
+    },
+    "realtimeq_conf": {
+        "element": "SmallUnsign",
+        "size": "SmallNat"
+    },
+    "skewhp_conf": {
+        "element": "SmallUnsign",
+        "size": "SmallNat"
     }
 }

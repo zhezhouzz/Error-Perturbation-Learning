@@ -113,12 +113,11 @@ let labeled_tree_gen conf label_gen =
   | SmallNat -> Gen.sized body
   | SizeBound n -> Gen.(sized_size (int_bound n) body)
 
-let helper size_conf f =
+let helper max_depth size_conf f =
   let body =
     Gen.(
       fun n ->
-        if n > Measure.tree_max_depth then return None
-        else map (fun x -> Some x) @@ f n)
+        if n > max_depth then return None else map (fun x -> Some x) @@ f n)
   in
   match size_conf with
   | SmallNat -> Gen.sized body
@@ -133,9 +132,11 @@ let binomialhp_gen conf label_gen =
     Gen.(
       sized_size (int_bound bound)
       @@ fix (fun self n ->
-             list_repeat n @@ map3 node label_gen elem_gen @@ self (n - 1)))
+             list_size (int_bound n)
+             @@ map3 node label_gen elem_gen
+             @@ self (n - 1)))
   in
-  helper size_conf f
+  helper Measure.binomialhp_max_deep size_conf f
 
 let pairinghp_gen conf =
   let elem_conf, size_conf = conf in
@@ -162,7 +163,7 @@ let pairinghp_gen conf =
                        @@ list_repeat 3 (self (n - 1)) );
                    ]))
   in
-  helper size_conf f
+  helper Measure.pairinghp_max_deep size_conf f
 
 let physicistsq_gen conf =
   let _, size_conf = conf in
@@ -175,7 +176,7 @@ let physicistsq_gen conf =
         (int_bound @@ (bound + 2))
         (list_gen conf))
   in
-  helper size_conf f
+  helper Measure.physicistsq_max_deep size_conf f
 
 let stream_gen conf = QCheck.Gen.map Realtimeq.of_list @@ list_gen conf
 
@@ -192,11 +193,11 @@ let skewhp_gen conf label_gen =
     Gen.(
       sized_size (int_bound bound)
       @@ fix (fun self n ->
-             list_repeat n
-             @@ make label_gen elem_gen (list_gen conf)
+             list_size (int_bound n)
+             @@ make label_gen elem_gen (list_size (int_bound n) elem_gen)
              @@ self (n - 1)))
   in
-  helper size_conf f
+  helper Measure.skewhp_max_deep size_conf f
 
 let choose_gen conf tp =
   match tp with

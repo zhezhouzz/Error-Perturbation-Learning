@@ -10,29 +10,69 @@ open Zlist
 
 let deep = List.length
 
-let rec to_string t =
-  match t with
-  | [] -> "()"
-  | _ ->
-      let a, b =
-        List.fold_left
-          (fun (layer, rest) tr ->
-            match tr with
-            | Node (r, x, l, t) -> (layer @ [ (r, x, l) ], rest @ [ t ]))
-          ([], []) t
-      in
-      Printf.sprintf "%s\n%s"
-        (List.split_by " "
-           (fun (r, x, l) ->
-             Printf.sprintf "%i:%i~[%s] " r x @@ IntList.to_string l)
-           a)
-        (List.split_by " " (fun t -> Printf.sprintf "{%s}" @@ to_string t) b)
+let rec max_deep l =
+  let aux = function Node (_, _, _, l) -> 1 + max_deep l in
+  match IntList.max_opt @@ List.map aux l with None -> 0 | Some x -> x
 
 let rec flatten t =
   List.fold_left
     (fun res tr ->
       match tr with Node (r, x, l, t) -> [ r; x ] @ l @ res @ flatten t)
     [] t
+
+let to_string l =
+  match l with
+  | [] -> "_"
+  | _ ->
+      let len = max_deep l in
+      let arr = Array.init len (fun _ -> "") in
+      let update idx str = arr.(idx) <- arr.(idx) ^ str in
+      let update_below idx str =
+        List.iter (fun i -> update i str)
+        @@ List.init (len - idx) (fun x -> idx + x)
+      in
+      let rec aux idx t =
+        match t with
+        | Node (r, x, l, lt) ->
+            update_below idx "{";
+            update idx (Printf.sprintf "%i:%i~[%s] " r x @@ IntList.to_string l);
+            List.iter (fun t -> aux (idx + 1) t) lt;
+            update_below idx "}"
+      in
+      List.iter (fun t -> aux 0 t) l;
+      let elems = flatten l in
+      (* let _ = *)
+      (*   Printf.printf "%s\n" *)
+      (*   @@ Printf.sprintf "flatten:%s\n" *)
+      (*   @@ IntList.to_string elems *)
+      (* in *)
+      (* let _ = raise @@ failwith "end" in *)
+      let s =
+        Array.fold_left
+          (fun res str -> Printf.sprintf "%s\n%s" res str)
+          (Printf.sprintf "flatten:%s\n" @@ IntList.to_string elems)
+          arr
+      in
+      (* let _ = raise @@ failwith "end" in *)
+      s
+
+(* let rec to_string t = *)
+(*   match t with *)
+(*   | [] -> "()" *)
+(*   | _ -> *)
+(*       let a, b = *)
+(*         List.fold_left *)
+(*           (fun (layer, rest) tr -> *)
+(*             match tr with *)
+(*             | Node (r, x, l, t) -> (layer @ [ (r, x, l) ], rest @ [ t ])) *)
+(*           ([], []) t *)
+(*       in *)
+(*       Printf.sprintf "%s\n%s" *)
+(*         (List.split_by " " *)
+(*            (fun (r, x, l) -> *)
+(*              Printf.sprintf "%i:%i~[%s] " r x @@ IntList.to_string l) *)
+(*            a) *)
+(*         (List.split_by " " (fun t -> Printf.sprintf "{%s}" @@ to_string t) b) *)
 
 let compare t1 t2 =
   let rec aux t1 t2 =

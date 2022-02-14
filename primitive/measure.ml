@@ -3,6 +3,16 @@ open Value
 
 let tree_max_depth = 600
 
+let binomialhp_max_deep = 15
+
+let pairinghp_max_deep = 15
+
+let physicistsq_max_deep = 100
+
+let realtimeq_max_deep = 100
+
+let skewhp_max_deep = 15
+
 let size_measure = fastexpt 2
 
 let measure = function

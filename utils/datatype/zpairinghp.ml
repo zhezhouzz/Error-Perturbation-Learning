@@ -13,27 +13,50 @@ let rec deep = function
       | None -> 1
       | Some x -> 1 + x)
 
-let to_string t =
-  let rec aux l =
-    match l with
-    | [] -> "()"
-    | _ ->
-        let a, b =
-          List.fold_left
-            (fun (layer, rest) tr ->
-              match tr with
-              | E -> (layer @ [ " " ], rest @ [])
-              | T (x, l) -> (layer @ [ string_of_int x ], rest @ [ l ]))
-            ([], []) l
-        in
-        Printf.sprintf "%s\n%s"
-          (List.split_by " " (fun x -> Printf.sprintf "%s " x) a)
-          (List.split_by " " (fun t -> Printf.sprintf "{%s}" @@ aux t) b)
-  in
-  aux [ t ]
-
 let rec flatten t =
   match t with E -> [] | T (x, l) -> x :: (List.concat @@ List.map flatten l)
+
+let to_string l =
+  let len = 1 + deep l in
+  let arr = Array.init len (fun _ -> "") in
+  let update idx str = arr.(idx) <- arr.(idx) ^ str in
+  let update_below idx str =
+    List.iter (fun i -> update i str)
+    @@ List.init (len - idx) (fun x -> idx + x)
+  in
+  let rec aux idx t =
+    match t with
+    | E -> update idx "()"
+    | T (x, l) ->
+        update_below idx "{";
+        update idx (Printf.sprintf "%i, " x);
+        List.iter (fun t -> aux (idx + 1) t) l;
+        update_below idx "}"
+  in
+  aux 0 l;
+  Array.fold_left
+    (fun res str -> Printf.sprintf "%s\n%s" res str)
+    (Printf.sprintf "flatten:%s\n" @@ IntList.to_string @@ flatten l)
+    arr
+
+(* let to_string t = *)
+(*   let rec aux l = *)
+(*     match l with *)
+(*     | [] -> "()" *)
+(*     | _ -> *)
+(*         let a, b = *)
+(*           List.fold_left *)
+(*             (fun (layer, rest) tr -> *)
+(*               match tr with *)
+(*               | E -> (layer @ [ " " ], rest @ []) *)
+(*               | T (x, l) -> (layer @ [ string_of_int x ], rest @ [ l ])) *)
+(*             ([], []) l *)
+(*         in *)
+(*         Printf.sprintf "%s\n%s" *)
+(*           (List.split_by " " (fun x -> Printf.sprintf "%s " x) a) *)
+(*           (List.split_by " " (fun t -> Printf.sprintf "{%s}" @@ aux t) b) *)
+(*   in *)
+(*   aux [ t ] *)
 
 let compare t1 t2 =
   let rec aux t1 t2 =
