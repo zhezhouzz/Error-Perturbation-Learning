@@ -10,6 +10,7 @@ type t =
   | IntTreeB
   | IfcInstr
   | IfcInstrList
+  | Uninterp of string
 
 type tvar = t * string
 
@@ -25,6 +26,7 @@ let layout = function
   | IntTreeB -> "int treeb"
   | IfcInstr -> "instr"
   | IfcInstrList -> "instr list"
+  | Uninterp name -> name
 
 let of_string = function
   | "unit" -> Unit
@@ -38,25 +40,30 @@ let of_string = function
   | "int treeb" -> IntTreeB
   | "instr" -> IfcInstr
   | "instr list" -> IfcInstrList
+  | "binomialhp" -> Uninterp "binomialhp"
+  | "pairinghp" -> Uninterp "pairinghp"
+  | "physicistsq" -> Uninterp "physicistsq"
+  | "realtimeq" -> Uninterp "realtimeq"
+  | "skewhp" -> Uninterp "skewhp"
   | _ as tp -> failwith (Printf.sprintf "unknown type name(%s)" tp)
 
 let layout_l = Basic_dt.List.split_by_comma layout
 
 let compare t1 t2 =
-  let conding = function
-    | Unit -> 0
-    | Bool -> 1
-    | Int -> 2
-    | IntList -> 3
-    | IntTree -> 4
-    | IntTreeI -> 5
-    | IntTreeB -> 6
-    | IfcInstr -> 7
-    | IfcInstrList -> 8
-    | IntBoolList -> 9
-    | BoolIntBoolList -> 10
-  in
-  compare (conding t1) (conding t2)
+  (* let conding = function *)
+  (*   | Unit -> 0 *)
+  (*   | Bool -> 1 *)
+  (*   | Int -> 2 *)
+  (*   | IntList -> 3 *)
+  (*   | IntTree -> 4 *)
+  (*   | IntTreeI -> 5 *)
+  (*   | IntTreeB -> 6 *)
+  (*   | IfcInstr -> 7 *)
+  (*   | IfcInstrList -> 8 *)
+  (*   | IntBoolList -> 9 *)
+  (*   | BoolIntBoolList -> 10 *)
+  (* in *)
+  compare (layout t1) (layout t2)
 
 let compare_tvar (t1, name1) (t2, name2) =
   let c1 = compare t1 t2 in
@@ -80,6 +87,7 @@ let is_dt = function
   | IfcInstrList -> true
   | IntBoolList -> true
   | BoolIntBoolList -> true
+  | Uninterp _ -> true
 
 let eq_tp_ = function
   | Unit, Unit -> true
@@ -93,6 +101,7 @@ let eq_tp_ = function
   | IfcInstrList, IfcInstrList -> true
   | IntBoolList, IntBoolList -> true
   | BoolIntBoolList, BoolIntBoolList -> true
+  | Uninterp a, Uninterp b when String.equal a b -> true
   | _ -> false
 
 let eq a b = eq_tp_ (a, b)
@@ -132,6 +141,7 @@ module Naming = struct
       | IfcInstrList -> Renaming.unique "instrl"
       | IntBoolList -> Renaming.unique "ibl"
       | BoolIntBoolList -> Renaming.unique "bibl"
+      | Uninterp x -> Renaming.unique x
     in
     (tp, name)
 
@@ -199,6 +209,7 @@ module Naming = struct
     | BoolIntBoolList ->
         ( name "instr" counter.biblnum,
           { counter with biblnum = counter.biblnum + 1 } )
+    | Uninterp _ -> raise @@ failwith "counter uninterp datatype"
 
   let universal_counter = ref (make_counter ())
 

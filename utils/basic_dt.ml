@@ -11,6 +11,11 @@ module BitArray = Datatype.Zarray.Bitarray
 module Array = Datatype.Zarray.Array
 module TreeTailCall = Datatype.Ztailcall.TreeTailCall
 module LabeledTreeTailCall = Datatype.Ztailcall.LabeledTreeTailCall
+module BinomialHeap = Datatype.Zbinomialhp
+module Pairinghp = Datatype.Zpairinghp
+module Physicistsq = Datatype.Zphysicistsq
+module Realtimeq = Datatype.Zrealtimeq
+module Skewhp = Datatype.Zskewhp
 
 let spf = Printf.sprintf
 

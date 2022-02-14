@@ -13,6 +13,7 @@ let value_int_map v f =
   | T tr -> T (Tree.map f tr)
   | TI tr -> TI (LabeledTree.map f tr)
   | TB tr -> TB (LabeledTree.map f tr)
+  | _ -> raise @@ failwith "unsupport type"
 
 let value_shift v k = value_int_map v (fun x -> x + k)
 

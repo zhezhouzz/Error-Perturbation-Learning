@@ -17,7 +17,8 @@ let tp_to_sort ctx =
     | Bool -> Boolean.mk_sort ctx
     | IntList | IntTree | IntTreeI | IntTreeB | IntBoolList | BoolIntBoolList
     | IfcInstrList ->
-        Integer.mk_sort ctx)
+        Integer.mk_sort ctx
+    | Uninterp _ -> Integer.mk_sort ctx)
 
 let z3func ctx funcname inptps outtp =
   FuncDecl.mk_func_decl ctx
@@ -50,7 +51,9 @@ let tpedvar_to_z3 ctx (tp, name) =
     | Bool -> Boolean.mk_const_s ctx name
     | IntList | IntTree | IntTreeI | IntTreeB | IntBoolList | BoolIntBoolList
     | IfcInstrList ->
-        Integer.mk_const_s ctx name)
+        Integer.mk_const_s ctx name
+    | Uninterp tname ->
+        Integer.mk_const_s ctx (Printf.sprintf "%s_%s" tname name))
 
 type imp_version = V1 | V2
 

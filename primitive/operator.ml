@@ -104,9 +104,7 @@ let info_table =
   in
   let make_info name =
     let imps =
-      List.filter (fun imp -> String.equal name imp.Imp.imp_name)
-      @@ Imp_const.table @ Imp_list.table @ Imp_tree.table @ Imp_treei.table
-      @ Imp_treeb.table
+      List.filter (fun imp -> String.equal name imp.Imp.imp_name) Imps.imps
     in
     match imps with
     | [] -> raise @@ failwith (spf "operator(%s) cannot find imp..." name)

@@ -14,6 +14,11 @@ type t =
   | IInstrL of instruction list
   | IBL of (int * bool) list
   | BIBL of (bool * int * bool) list
+  | Binomialhp of BinomialHeap.t
+  | Pairinghp of Pairinghp.t
+  | Physicistsq of Physicistsq.t
+  | Realtimeq of Realtimeq.t
+  | Skewhp of Skewhp.t
   | NotADt
 
 let layout = function
@@ -33,6 +38,11 @@ let layout = function
   | BIBL bibl ->
       sprintf "[%s]"
       @@ List.split_by ";" (fun (b1, i, b2) -> sprintf "%b,%i,%b" b1 i b2) bibl
+  | Binomialhp x -> BinomialHeap.to_string x
+  | Pairinghp x -> Pairinghp.to_string x
+  | Physicistsq x -> Physicistsq.to_string x
+  | Realtimeq x -> Realtimeq.to_string x
+  | Skewhp x -> Skewhp.to_string x
   | NotADt -> "_"
 
 let layout_l l = sprintf "[%s]" @@ List.split_by_comma layout l
@@ -54,6 +64,11 @@ let formal_layout = function
   | BIBL bibl ->
       sprintf "[%s]"
       @@ List.split_by ";" (fun (b1, i, b2) -> sprintf "%b,%i,%b" b1 i b2) bibl
+  | Binomialhp x -> BinomialHeap.to_string x
+  | Pairinghp x -> Pairinghp.to_string x
+  | Physicistsq x -> Physicistsq.to_string x
+  | Realtimeq x -> Realtimeq.to_string x
+  | Skewhp x -> Skewhp.to_string x
   | NotADt -> "_"
 
 let formal_layout_l l = sprintf "(%s)" @@ List.split_by_comma formal_layout l
@@ -76,6 +91,11 @@ let eq x y =
           (fun (b1, i1, b1') (b2, i2, b2') ->
             i1 == i2 && b1 == b2 && b1' == b2')
           bibl1 bibl2
+    | Binomialhp x, Binomialhp y -> BinomialHeap.eq x y
+    | Pairinghp x, Pairinghp y -> Pairinghp.eq x y
+    | Physicistsq x, Physicistsq y -> Physicistsq.eq x y
+    | Realtimeq x, Realtimeq y -> Realtimeq.eq x y
+    | Skewhp x, Skewhp y -> Skewhp.eq x y
     | _, _ -> false
   in
   aux (x, y)
@@ -105,6 +125,11 @@ let compare x y =
             if x == 0 then if y == 0 then compare b1' b2' else y else x)
           bibl1 bibl2
     | NotADt, NotADt -> 0
+    | Binomialhp x, Binomialhp y -> BinomialHeap.compare x y
+    | Pairinghp x, Pairinghp y -> Pairinghp.compare x y
+    | Physicistsq x, Physicistsq y -> Physicistsq.compare x y
+    | Realtimeq x, Realtimeq y -> Realtimeq.compare x y
+    | Skewhp x, Skewhp y -> Skewhp.compare x y
     | _, _ ->
         raise
         @@ failwith
@@ -122,6 +147,11 @@ let flatten_forall = function
   | T it -> Tree.flatten_forall it
   | TI iti -> LabeledTree.flatten_forall iti
   | TB itb -> LabeledTree.flatten_forall itb
+  | Binomialhp x -> List.remove_duplicates @@ BinomialHeap.flatten x
+  | Pairinghp x -> List.remove_duplicates @@ Pairinghp.flatten x
+  | Physicistsq x -> List.remove_duplicates @@ Physicistsq.flatten x
+  | Realtimeq x -> List.remove_duplicates @@ Realtimeq.flatten x
+  | Skewhp x -> List.remove_duplicates @@ Skewhp.flatten x
 
 let flatten_forall_l l =
   List.fold_left
@@ -137,7 +167,12 @@ let flatten_forall_l l =
       | T it -> Tree.flatten_forall it @ r
       | TI iti -> LabeledTree.flatten_forall iti @ r
       | TB itb -> LabeledTree.flatten_forall itb @ r
-      | NotADt -> raise @@ failwith "flatten_forall_l: not a value")
+      | NotADt -> raise @@ failwith "flatten_forall_l: not a value"
+      | Binomialhp x -> r @ List.remove_duplicates @@ BinomialHeap.flatten x
+      | Pairinghp x -> r @ List.remove_duplicates @@ Pairinghp.flatten x
+      | Physicistsq x -> r @ List.remove_duplicates @@ Physicistsq.flatten x
+      | Realtimeq x -> r @ List.remove_duplicates @@ Realtimeq.flatten x
+      | Skewhp x -> r @ List.remove_duplicates @@ Skewhp.flatten x)
     [] l
 
 let len = function
@@ -150,6 +185,11 @@ let len = function
   | TI iti -> LabeledTreeTailCall.deep iti
   | TB itb -> LabeledTreeTailCall.deep itb
   | IInstrL l -> List.length l
+  | Binomialhp x -> BinomialHeap.deep x
+  | Pairinghp x -> Pairinghp.deep x
+  | Physicistsq x -> Physicistsq.length x
+  | Realtimeq x -> Realtimeq.length x
+  | Skewhp x -> Skewhp.deep x
 
 let layout_l_len l =
   sprintf "[%s]" @@ List.split_by_comma string_of_int @@ List.map len l
@@ -168,6 +208,11 @@ let get_tp v =
   | IBL _ -> IntBoolList
   | BIBL _ -> BoolIntBoolList
   | NotADt -> raise @@ failwith "get_tp: not a value"
+  | Binomialhp _ -> Tp.Uninterp "binomialhp"
+  | Pairinghp _ -> Tp.Uninterp "pairinghp"
+  | Physicistsq _ -> Tp.Uninterp "physicistsq"
+  | Realtimeq _ -> Tp.Uninterp "realtimeq"
+  | Skewhp _ -> Tp.Uninterp "skewhp"
 
 let get_tp_l = List.map get_tp
 

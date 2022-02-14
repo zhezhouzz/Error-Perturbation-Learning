@@ -33,7 +33,7 @@ let mk_standard_env () =
   let inspector = Language.Bblib.invocation_inspector_init libraries in
   Synthesizer.Mkenv.mk_env_v2_
     (Specification.Spec.dummy_pre tps)
-    Imp_const.sigma_merge Language.Bblib.merge inspector Imp_const.phi_merge tps
+    Imp_int.sigma_merge Language.Bblib.merge inspector Imp_int.phi_merge tps
     i_err op_pool preds sampling_rounds prog_size
 
 let mk_env_from_files source_file meta_file =

@@ -87,6 +87,64 @@ let treeb_gen (chooses : int list) (bound : int) =
                        (self (n - 1)) );
                  ]))
 
+(* following the type *)
+let binomialhp_gen (chooses : int list) (bound : int) =
+  let open QCheck.Gen in
+  let node a b c = BinomialHeap.Node (a, b, c) in
+  sized_size (int_bound bound)
+  @@ fix (fun self n ->
+         list_repeat n
+         @@ map3 node (oneofl chooses) (oneofl chooses)
+         @@ self (n - 1))
+
+let pairinghp_gen (chooses : int list) (bound : int) =
+  let node a l = Pairinghp.T (a, l) in
+  QCheck.Gen.(
+    sized_size (int_bound bound)
+    @@ fix (fun self n ->
+           match n with
+           | 0 -> oneofl [ Pairinghp.E ]
+           | n ->
+               frequency
+                 [
+                   (2, oneofl [ Pairinghp.E ]);
+                   ( 1,
+                     QCheck.Gen.map2 node (oneofl chooses)
+                     @@ list_repeat 1 (self (n - 1)) );
+                   ( 1,
+                     QCheck.Gen.map2 node (oneofl chooses)
+                     @@ list_repeat 2 (self (n - 1)) );
+                   ( 1,
+                     QCheck.Gen.map2 node (oneofl chooses)
+                     @@ list_repeat 3 (self (n - 1)) );
+                 ]))
+
+let physicistsq_gen (chooses : int list) (bound : int) =
+  let open QCheck.Gen in
+  let make x lenf f lenr r st = (x st, lenf st, f st, lenr st, r st) in
+  make (list_gen chooses bound)
+    (int_bound @@ (bound + 2))
+    (map (fun l -> lazy l) @@ list_gen chooses bound)
+    (int_bound @@ (bound + 2))
+    (list_gen chooses bound)
+
+let stream_gen (chooses : int list) (bound : int) =
+  QCheck.Gen.map Realtimeq.of_list @@ list_gen chooses bound
+
+let realtimeq_gen (chooses : int list) (bound : int) =
+  let make a b c st = (a st, b st, c st) in
+  make (stream_gen chooses bound) (list_gen chooses bound)
+    (stream_gen chooses bound)
+
+let skewhp_gen (chooses : int list) (bound : int) =
+  let open QCheck.Gen in
+  let make r x l tl st = Skewhp.Node (r st, x st, l st, tl st) in
+  sized_size (int_bound bound)
+  @@ fix (fun self n ->
+         list_repeat n
+         @@ make (oneofl chooses) (oneofl chooses) (list_gen chooses bound)
+         @@ self (n - 1))
+
 let choose_gen chooses bound tp =
   match tp with
   | T.Unit -> QCheck.Gen.pure V.U
@@ -103,6 +161,17 @@ let choose_gen chooses bound tp =
       QCheck.Gen.map (fun x -> V.IBL x) (iblist_gen chooses bound)
   | T.BoolIntBoolList ->
       QCheck.Gen.map (fun x -> V.BIBL x) (biblist_gen chooses bound)
+  | T.Uninterp "binomialhp" ->
+      QCheck.Gen.map (fun x -> V.Binomialhp x) (binomialhp_gen chooses bound)
+  | T.Uninterp "pairinghp" ->
+      QCheck.Gen.map (fun x -> V.Pairinghp x) (pairinghp_gen chooses bound)
+  | T.Uninterp "physicistsq" ->
+      QCheck.Gen.map (fun x -> V.Physicistsq x) (physicistsq_gen chooses bound)
+  | T.Uninterp "realtimeq" ->
+      QCheck.Gen.map (fun x -> V.Realtimeq x) (realtimeq_gen chooses bound)
+  | T.Uninterp "skewhp" ->
+      QCheck.Gen.map (fun x -> V.Skewhp x) (skewhp_gen chooses bound)
+  | T.Uninterp name -> raise @@ failwith (spf "no generator for type %s" name)
 
 let gens ~chooses ~num ~tps ~bound =
   let gens = List.map (choose_gen chooses bound) tps in

@@ -113,6 +113,91 @@ let labeled_tree_gen conf label_gen =
   | SmallNat -> Gen.sized body
   | SizeBound n -> Gen.(sized_size (int_bound n) body)
 
+let helper size_conf f =
+  let body =
+    Gen.(
+      fun n ->
+        if n > Measure.tree_max_depth then return None
+        else map (fun x -> Some x) @@ f n)
+  in
+  match size_conf with
+  | SmallNat -> Gen.sized body
+  | SizeBound n -> Gen.(sized_size (int_bound n) body)
+
+(* following the type *)
+let binomialhp_gen conf label_gen =
+  let elem_conf, size_conf = conf in
+  let elem_gen = int_gen elem_conf in
+  let node a b c = BinomialHeap.Node (a, b, c) in
+  let f bound =
+    Gen.(
+      sized_size (int_bound bound)
+      @@ fix (fun self n ->
+             list_repeat n @@ map3 node label_gen elem_gen @@ self (n - 1)))
+  in
+  helper size_conf f
+
+let pairinghp_gen conf =
+  let elem_conf, size_conf = conf in
+  let elem_gen = int_gen elem_conf in
+  let node a l = Pairinghp.T (a, l) in
+  let f bound =
+    Gen.(
+      sized_size (int_bound bound)
+      @@ fix (fun self n ->
+             match n with
+             | 0 -> oneofl [ Pairinghp.E ]
+             | n ->
+                 frequency
+                   [
+                     (2, oneofl [ Pairinghp.E ]);
+                     ( 1,
+                       QCheck.Gen.map2 node elem_gen
+                       @@ list_repeat 1 (self (n - 1)) );
+                     ( 1,
+                       QCheck.Gen.map2 node elem_gen
+                       @@ list_repeat 2 (self (n - 1)) );
+                     ( 1,
+                       QCheck.Gen.map2 node elem_gen
+                       @@ list_repeat 3 (self (n - 1)) );
+                   ]))
+  in
+  helper size_conf f
+
+let physicistsq_gen conf =
+  let _, size_conf = conf in
+  let make x lenf f lenr r st = (x st, lenf st, f st, lenr st, r st) in
+  let f bound =
+    Gen.(
+      make (list_gen conf)
+        (int_bound @@ (bound + 2))
+        (map (fun l -> lazy l) @@ list_gen conf)
+        (int_bound @@ (bound + 2))
+        (list_gen conf))
+  in
+  helper size_conf f
+
+let stream_gen conf = QCheck.Gen.map Realtimeq.of_list @@ list_gen conf
+
+let realtimeq_gen conf =
+  let make a b c st = (a st, b st, c st) in
+  Gen.map (fun x -> Some x)
+  @@ make (stream_gen conf) (list_gen conf) (stream_gen conf)
+
+let skewhp_gen conf label_gen =
+  let elem_conf, size_conf = conf in
+  let elem_gen = int_gen elem_conf in
+  let make r x l tl st = Skewhp.Node (r st, x st, l st, tl st) in
+  let f bound =
+    Gen.(
+      sized_size (int_bound bound)
+      @@ fix (fun self n ->
+             list_repeat n
+             @@ make label_gen elem_gen (list_gen conf)
+             @@ self (n - 1)))
+  in
+  helper size_conf f
+
 let choose_gen conf tp =
   match tp with
   | T.Unit -> QCheck.Gen.return (Some V.U)
@@ -144,3 +229,24 @@ let choose_gen conf tp =
       QCheck.Gen.map (fun x -> Some (V.IBL x)) (iblist_gen conf.list_conf)
   | T.BoolIntBoolList ->
       QCheck.Gen.map (fun x -> Some (V.BIBL x)) (biblist_gen conf.list_conf)
+  | T.Uninterp "binomialhp" ->
+      QCheck.Gen.map
+        (function None -> None | Some x -> Some (V.Binomialhp x))
+        (binomialhp_gen conf.binomialhp_conf (int_gen conf.int_conf))
+  | T.Uninterp "pairinghp" ->
+      QCheck.Gen.map
+        (function None -> None | Some x -> Some (V.Pairinghp x))
+        (pairinghp_gen conf.pairinghp_conf)
+  | T.Uninterp "physicistsq" ->
+      QCheck.Gen.map
+        (function None -> None | Some x -> Some (V.Physicistsq x))
+        (physicistsq_gen conf.physicistsq_conf)
+  | T.Uninterp "realtimeq" ->
+      QCheck.Gen.map
+        (function None -> None | Some x -> Some (V.Realtimeq x))
+        (realtimeq_gen conf.realtimeq_conf)
+  | T.Uninterp "skewhp" ->
+      QCheck.Gen.map
+        (function None -> None | Some x -> Some (V.Skewhp x))
+        (skewhp_gen conf.skewhp_conf (int_gen conf.int_conf))
+  | T.Uninterp name -> raise @@ failwith (spf "no generator for type %s" name)

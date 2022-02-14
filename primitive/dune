@@ -1,21 +1,26 @@
+(copy_files# libimp/*.ml{,i})
 (library
  (name primitive)
  (modules_without_implementation imp)
  (libraries utils qcheck)
  (modules
- tp
- value
- value_aux
- operator
- imp
- imp_const
- imp_list
- imp_tree
- imp_treei
- imp_treeb
- randomgen
- method_predicate
- measure
- ifc_instruction
+   tp
+   value
+   value_aux
+   operator
+   ; library implementation
+   imp
+   imp_helper
+   imp_int
+   imp_list
+   imp_tree
+   imp_treei
+   imp_treeb
+   imps
+   ; library implementation end
+   randomgen
+   method_predicate
+   measure
+   ifc_instruction
  )
 )

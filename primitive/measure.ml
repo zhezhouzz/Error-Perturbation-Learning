@@ -15,6 +15,11 @@ let measure = function
   | T it -> 2 * TreeTailCall.deep it
   | TI iti -> 2 * LabeledTreeTailCall.deep iti
   | TB itb -> 2 * LabeledTreeTailCall.deep itb
+  | Binomialhp x -> 3 * BinomialHeap.deep x
+  | Pairinghp x -> 3 * Pairinghp.deep x
+  | Physicistsq x -> Physicistsq.length x
+  | Realtimeq x -> Realtimeq.length x
+  | Skewhp x -> 3 * Skewhp.deep x
 
 let bound_min = 20
 

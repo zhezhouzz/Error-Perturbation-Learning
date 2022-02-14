@@ -1,9 +1,7 @@
 open Value
 open Basic_dt
 open Imp
-
-let exn file line =
-  failwith (spf "runtime operator(defined at file %s line %i) error" file line)
+open Imp_helper
 
 let table =
   [

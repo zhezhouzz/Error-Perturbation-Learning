@@ -10,6 +10,11 @@ type quick_check_config = {
   tree_conf : element * size * tree_fq;
   treei_conf : element * size * tree_fq;
   treeb_conf : element * size * tree_fq;
+  binomialhp_conf : element * size;
+  pairinghp_conf : element * size;
+  physicistsq_conf : element * size;
+  realtimeq_conf : element * size;
+  skewhp_conf : element * size;
 }
 
 open Yojson.Basic.Util
@@ -56,5 +61,10 @@ let load_config fname =
       tree_conf = j |> member "tree_conf" |> parse_tree;
       treei_conf = j |> member "treei_conf" |> parse_tree;
       treeb_conf = j |> member "treeb_conf" |> parse_tree;
+      binomialhp_conf = j |> member "binomialhp_conf" |> parse_list;
+      pairinghp_conf = j |> member "pairinghp_conf" |> parse_list;
+      physicistsq_conf = j |> member "physicistsq_conf" |> parse_list;
+      realtimeq_conf = j |> member "realtimeq_conf" |> parse_list;
+      skewhp_conf = j |> member "skewhp_conf" |> parse_list;
     }
   with _ -> raise @@ failwith "cannot load config::quich check"
