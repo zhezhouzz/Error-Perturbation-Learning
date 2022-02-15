@@ -6,6 +6,12 @@ module LabeledTree = struct
 
   let spf = Printf.sprintf
 
+  let rank = function Leaf -> 0 | Node (r, _, _, _) -> r
+
+  let makeT x a b =
+    if rank a >= rank b then Node (rank b + 1, x, a, b)
+    else Node (rank a + 1, x, b, a)
+
   let rec map f = function
     | Leaf -> Leaf
     | Node (label, x, a, b) -> Node (label, f x, map f a, map f b)
@@ -110,6 +116,18 @@ module LabeledTree = struct
     let a1, b1 = rb_balance_ t1 in
     let a2, b2 = rb_balance_ t2 in
     a1 && a2 && b1 == b2
+
+  let leftists t =
+    let rec aux = function
+      | Leaf -> Some 0
+      | Node (label, _, l, r) -> (
+          match aux l with
+          | None -> None
+          | Some ll -> (
+              if label != ll + 1 then None
+              else match aux r with None -> None | Some _ -> Some label))
+    in
+    match aux t with None -> false | Some _ -> true
 
   let exists f t =
     let rec aux before t =

@@ -1,0 +1,8 @@
+let i_err = (false, 1, LNodeS (false, 0), LNode (true, 5, LNode (true, 3, LNodeS (false, 2), LNodeS (false, 4)), LNodeS (false, 6)))
+Default
+IN: (x0: bool, x1: int, x2: int treeb, x3: int treeb) {
+(x4: int treeb) = treeb_drop_bottom(x2: int treeb);
+(x5: int treeb) = treeb_rec_flip(x4: int treeb);
+(x6: int) = minus1(x1: int);
+(x7: int treeb) = treeb_rec_flip(x5: int treeb)}
+OUT: (x0: bool, x6: int, x7: int treeb, x3: int treeb)

@@ -88,6 +88,10 @@ let info_table =
       "treei_append_to_right_most";
       "treei_max";
       "treei_min";
+      "treei_upper_bound";
+      "treei_lower_bound";
+      "treei_destruct";
+      "treei_drop_bottom";
       (* treeb *)
       "treeb_node";
       "treeb_left_right_subtree";

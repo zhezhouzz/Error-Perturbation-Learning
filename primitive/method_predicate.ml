@@ -145,6 +145,10 @@ let rb_balance2_apply = function
   | [ V.TB t1; V.TB t2 ] -> LabeledTree.rb_balance2 t1 t2
   | _ -> raise @@ failwith "rb_balance2"
 
+let leftist_apply = function
+  | [ V.TI t ] -> LabeledTree.leftists t
+  | _ -> raise @@ failwith "leftist"
+
 let empty_info =
   let poly_name = "empty" in
   [
@@ -615,11 +619,22 @@ let rb_info =
     };
   ]
 
+let leftist_info =
+  [
+    {
+      poly_name = "leftist";
+      name = "leftist";
+      tps = [ T.IntTreeI ];
+      permu = false;
+      imp = leftist_apply;
+    };
+  ]
+
 let mp_table =
   empty_info @ mem_info @ hd_info @ lt_info @ eq_info @ ord_info
   @ (left_info @ right_info @ para_info)
   @ (left_adj_info @ right_adj_info @ para_adj_info)
-  @ size_info @ len_info @ last_info @ once_info @ rb_info
+  @ size_info @ len_info @ last_info @ once_info @ rb_info @ leftist_info
 
 let imp_map =
   List.fold_left (fun m r -> StrMap.add r.name r.imp m) StrMap.empty mp_table

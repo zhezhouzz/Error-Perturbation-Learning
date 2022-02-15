@@ -54,6 +54,7 @@ let treei_setting =
     ("node", "treei_node");
     ("leaf_rev", "treei_leaf_rev");
     ("node_rev", "treei_node_rev");
+    ("makeT", "treei_makeT");
   ]
 
 let treeb_setting =
