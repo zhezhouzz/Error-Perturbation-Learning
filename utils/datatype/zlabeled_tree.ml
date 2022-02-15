@@ -69,9 +69,9 @@ module LabeledTree = struct
       | Node (label, a, b, c) ->
           let max_e =
             match max_e with
-            | None -> max_e
+            | None -> Some (label, a)
             | Some (_, max_e') ->
-                if e_compare a max_e' > 0 then max_e else Some (label, a)
+                if e_compare a max_e' > 0 then Some (label, a) else max_e
           in
           aux (aux max_e b) c
     in
@@ -251,9 +251,7 @@ module LabeledTree = struct
     let rec aux = function
       | Leaf, Leaf -> true
       | Node (lab1, a1, l1, r1), Node (lab2, a2, l2, r2) ->
-          if compare a1 a2 && lcompare lab1 lab2 then
-            if aux (l1, l2) then aux (r1, r2) else false
-          else false
+          lcompare lab1 lab2 && compare a1 a2 && aux (l1, l2) && aux (r1, r2)
       | _, _ -> false
     in
     aux (t1, t2)
