@@ -65,6 +65,7 @@ let rev_eval libmember libinsp term values env =
         | Some values' ->
             if List.eq V.eq values' values then Some ([], [ var ]) else None
         | None -> Some ([ (var, values) ], []))
+    | Lit lit -> if List.eq V.eq lit values then Some ([], []) else None
     | Tuple vars ->
         merge
         @@ List.map (fun (arg, value) -> aux arg [ value ])
@@ -80,7 +81,10 @@ let rev_eval libmember libinsp term values env =
               Sugar.(
                 let* l, trace = aux (Tuple args) values' in
                 Some (l, fname :: trace)))
-    | _ -> raise @@ failwith "Sementic Error: wrong match case"
+    | _ ->
+        raise
+        @@ failwith
+             (spf "Sementic Error: wrong match case: %s" @@ layout_body term)
   in
   match aux term values with
   | None -> None

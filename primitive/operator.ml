@@ -100,6 +100,10 @@ let info_table =
       "treeb_append_to_right_most";
       "treeb_max";
       "treeb_min";
+      "treeb_upper_bound";
+      "treeb_lower_bound";
+      "treeb_destruct";
+      "treeb_drop_bottom";
     ]
   in
   let make_info name =

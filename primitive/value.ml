@@ -27,8 +27,8 @@ let layout = function
   | T tr -> Tree.layout string_of_int tr
   | I i -> string_of_int i
   | B b -> string_of_bool b
-  | TI tr -> LabeledTree.layout string_of_int tr
-  | TB tr -> LabeledTree.layout string_of_int tr
+  | TI tr -> LabeledTree.layout string_of_int string_of_int tr
+  | TB tr -> LabeledTree.layout string_of_bool string_of_int tr
   | IInstr instr -> layout_instruction instr
   | IInstrL instrl ->
       sprintf "[%s]" @@ List.split_by ";" layout_instruction instrl

@@ -109,7 +109,7 @@ module Tree = struct
   let formal_layout f tr =
     let rec aux = function
       | Leaf -> "Leaf"
-      | Node (a, Leaf, Leaf) -> spf "SNode %s" (f a)
+      | Node (a, Leaf, Leaf) -> spf "NodeS %s" (f a)
       | Node (a, l, r) ->
           Printf.sprintf "Node (%s, %s, %s)" (f a) (aux l) (aux r)
     in
@@ -245,4 +245,12 @@ module Tree = struct
             if c != 0 then c else aux r1 r2
     in
     aux t1 t2
+
+  let last t i =
+    let rec aux = function
+      | Leaf -> false
+      | Node (x, Leaf, Leaf) -> x == i
+      | Node (x, l, r) -> x == i || aux l || aux r
+    in
+    aux t
 end

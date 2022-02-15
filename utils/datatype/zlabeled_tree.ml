@@ -56,16 +56,18 @@ module LabeledTree = struct
     | Node (labely, y, a, b) ->
         Node (labely, y, a, append_to_right_most_label label x b)
 
-  let max_opt (e_compare : 'a -> 'a -> int) t1 =
+  let max_opt (e_compare : 'a -> 'a -> int) (t1 : ('a, 'b) t) : ('b * 'a) option
+      =
     let rec aux max_e = function
       | Leaf -> max_e
-      | Node (_, a, b, c) ->
+      | Node (label, a, b, c) ->
           let max_e =
             match max_e with
-            | None -> a
-            | Some max_e -> if e_compare a max_e > 0 then max_e else a
+            | None -> max_e
+            | Some (_, max_e') ->
+                if e_compare a max_e' > 0 then max_e else Some (label, a)
           in
-          aux (aux (Some max_e) b) c
+          aux (aux max_e b) c
     in
     aux None t1
 
@@ -77,6 +79,38 @@ module LabeledTree = struct
     | Tree.Node (a, l, r) ->
         Node (label, a, from_tree label l, from_tree label r)
 
+  let fold f default t =
+    let rec aux res t =
+      match t with
+      | Leaf -> res
+      | Node (label, e, l, r) -> aux (aux (f default label e) l) r
+    in
+    aux default t
+
+  let rb_balance_ t =
+    let nfalse = ref None in
+    let update i =
+      match !nfalse with
+      | None ->
+          nfalse := Some i;
+          true
+      | Some i' -> if i == i' then true else false
+    in
+    let rec aux idx = function
+      | Leaf -> update idx
+      | Node (label, _, l, r) ->
+          let idx = if label then idx else idx + 1 in
+          aux idx l && aux idx r
+    in
+    (aux 0 t, !nfalse)
+
+  let rb_balance t = fst @@ rb_balance_ t
+
+  let rb_balance2 t1 t2 =
+    let a1, b1 = rb_balance_ t1 in
+    let a2, b2 = rb_balance_ t2 in
+    a1 && a2 && b1 == b2
+
   let exists f t =
     let rec aux before t =
       if before then true
@@ -87,22 +121,35 @@ module LabeledTree = struct
     in
     aux false t
 
+  let exists_withlabel f t =
+    let rec aux before t =
+      if before then true
+      else
+        match t with
+        | Leaf -> false
+        | Node (label, e, l, r) ->
+            if f label e then true else aux (aux before l) r
+    in
+    aux false t
+
   let formal_layout flabel f tr =
     let rec aux = function
       | Leaf -> "Leaf"
       | Node (label, a, Leaf, Leaf) ->
-          spf "SLNode (%s, %s)" (flabel label) (f a)
+          spf "LNodeS (%s, %s)" (flabel label) (f a)
       | Node (label, a, l, r) ->
           Printf.sprintf "LNode (%s, %s, %s, %s)" (flabel label) (f a) (aux l)
             (aux r)
     in
     aux tr
 
-  let layout f tr =
+  let layout flabel f tr =
     let rec aux = function
       | Leaf -> "."
-      | Node (_, a, Leaf, Leaf) -> f a
-      | Node (_, a, l, r) -> Printf.sprintf "{%s, %s, %s}" (aux l) (f a) (aux r)
+      | Node (label, a, Leaf, Leaf) ->
+          Printf.sprintf "{%s, %s,}" (flabel label) (f a)
+      | Node (label, a, l, r) ->
+          Printf.sprintf "{%s, %s, %s, %s}" (flabel label) (f a) (aux l) (aux r)
     in
     aux tr
 
@@ -219,4 +266,22 @@ module LabeledTree = struct
             if c != 0 then c else aux r1 r2
     in
     aux t1 t2
+
+  let last t i =
+    let rec aux = function
+      | Leaf -> false
+      | Node (_, x, Leaf, Leaf) -> x == i
+      | Node (_, x, l, r) -> x == i || aux l || aux r
+    in
+    aux t
+
+  let drop_bottom tr =
+    let depth = deep tr in
+    let rec aux d = function
+      | Leaf -> Leaf
+      | Node (label, x, l, r) ->
+          if depth == d + 1 then Leaf
+          else Node (label, x, aux (d + 1) l, aux (d + 1) r)
+    in
+    aux 0 tr
 end

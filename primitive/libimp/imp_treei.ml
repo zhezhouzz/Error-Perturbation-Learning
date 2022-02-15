@@ -143,28 +143,78 @@ let table =
     };
     {
       imp_name = "treei_max";
-      imp_itps = [ IntTreeI ];
-      imp_otps = [ Int ];
+      imp_itps = [ IntTreeB ];
+      imp_otps = [ Int; Int ];
       nondet = false;
       imp_exec =
         (function
         | [ TI tr ] ->
             Sugar.(
-              let* e = LabeledTree.max_opt Stdlib.compare tr in
-              Some [ I e ])
+              let* b, e = LabeledTree.max_opt Stdlib.compare tr in
+              Some [ I b; I e ])
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
       imp_name = "treei_min";
-      imp_itps = [ IntTreeI ];
-      imp_otps = [ Int ];
+      imp_itps = [ IntTreeB ];
+      imp_otps = [ Int; Int ];
       nondet = false;
       imp_exec =
         (function
         | [ TI tr ] ->
             Sugar.(
-              let* e = LabeledTree.min_opt Stdlib.compare tr in
-              Some [ I e ])
+              let* b, e = LabeledTree.min_opt Stdlib.compare tr in
+              Some [ I b; I e ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "treei_upper_bound";
+      imp_itps = [ IntTreeB ];
+      imp_otps = [ Int; Int ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ TI tr ] -> (
+            match LabeledTree.max_opt Stdlib.compare tr with
+            | None -> Some [ B false; I 0 ]
+            | Some (label, m) -> Some [ I label; I (m + 1) ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "treei_lower_bound";
+      imp_itps = [ IntTreeB ];
+      imp_otps = [ Int; Int ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ TI tr ] -> (
+            match LabeledTree.min_opt Stdlib.compare tr with
+            | None -> Some [ B false; I 0 ]
+            | Some (label, m) -> Some [ I label; I (m - 1) ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "treei_drop_bottom";
+      imp_itps = [ IntTreeB ];
+      imp_otps = [ IntTreeB ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ TI tr ] -> Some [ TI (LabeledTree.drop_bottom tr) ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "treei_destruct";
+      imp_itps = [ IntTreeB ];
+      imp_otps = [ Int; Int; IntTreeB; IntTreeB ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ TI tr ] -> (
+            match tr with
+            | LabeledTree.Leaf -> None
+            | LabeledTree.Node (label, x, a, b) ->
+                Some [ I label; I x; TI a; TI b ])
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
   ]

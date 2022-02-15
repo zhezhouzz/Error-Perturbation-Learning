@@ -20,6 +20,8 @@ let to_tp (elem, l) =
   | [ T.Bool; T.Int; T.Bool ], [ "list" ] -> T.BoolIntBoolList
   | [ T.IfcInstr ], [ "list" ] -> T.IfcInstrList
   | [ T.Int ], [ "tree" ] -> T.IntTree
+  | [ T.Int ], [ "treeb" ] -> T.IntTreeB
+  | [ T.Int ], [ "treei" ] -> T.IntTreeI
   | _ ->
       raise
       @@ failwith

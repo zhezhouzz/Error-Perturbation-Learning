@@ -62,6 +62,13 @@ let rec lit_of_ocamlexpr e =
           match lit_of_ocamlexpr e with
           | [ V.I x ] -> [ V.T (Tree.Node (x, Leaf, Leaf)) ]
           | k -> raise @@ mk_exn e k)
+      | "LNodeS", Some e -> (
+          match lit_of_ocamlexpr e with
+          | [ V.B label; V.I x ] ->
+              [ V.TB LabeledTree.(Node (label, x, Leaf, Leaf)) ]
+          | [ V.I label; V.I x ] ->
+              [ V.TI LabeledTree.(Node (label, x, Leaf, Leaf)) ]
+          | k -> raise @@ mk_exn e k)
       | "Node", Some e -> (
           match lit_of_ocamlexpr e with
           | [ V.I x; V.T a; V.T b ] -> [ V.T (Tree.Node (x, a, b)) ]

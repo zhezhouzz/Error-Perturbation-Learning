@@ -42,6 +42,9 @@ let last_apply = function
       match List.last_destruct_opt l with
       | Some (_, e') -> e == e'
       | None -> false)
+  | [ V.T t; V.I e ] -> Tree.last t e
+  | [ V.TI t; V.I e ] -> LabeledTree.last t e
+  | [ V.TB t; V.I e ] -> LabeledTree.last t e
   | _ -> raise @@ failwith "last_apply"
 
 let mem_apply = function
@@ -128,6 +131,19 @@ let lt_apply = function
 let eq_apply = function
   | [ V.I a; V.I b ] -> a == b
   | _ -> raise @@ failwith "eq_apply"
+
+let label_is_apply b = function
+  | [ V.TB t; V.I x ] ->
+      LabeledTree.exists_withlabel (fun label y -> label == b && x == y) t
+  | _ -> raise @@ failwith "label_is_true"
+
+let rb_balance_apply = function
+  | [ V.TB t ] -> LabeledTree.rb_balance t
+  | _ -> raise @@ failwith "rb_balance"
+
+let rb_balance2_apply = function
+  | [ V.TB t1; V.TB t2 ] -> LabeledTree.rb_balance2 t1 t2
+  | _ -> raise @@ failwith "rb_balance2"
 
 let empty_info =
   let poly_name = "empty" in
@@ -235,6 +251,27 @@ let last_info =
       poly_name;
       name = "list_last";
       tps = [ T.IntList; T.Int ];
+      permu = false;
+      imp = last_apply;
+    };
+    {
+      poly_name;
+      name = "tree_last";
+      tps = [ T.IntTree; T.Int ];
+      permu = false;
+      imp = last_apply;
+    };
+    {
+      poly_name;
+      name = "treei_last";
+      tps = [ T.IntTreeI; T.Int ];
+      permu = false;
+      imp = last_apply;
+    };
+    {
+      poly_name;
+      name = "treeb_last";
+      tps = [ T.IntTreeB; T.Int ];
       permu = false;
       imp = last_apply;
     };
@@ -546,11 +583,43 @@ let eq_info =
     };
   ]
 
+let rb_info =
+  [
+    {
+      poly_name = "rb_balance";
+      name = "rb_balance";
+      tps = [ T.IntTreeB ];
+      permu = false;
+      imp = rb_balance_apply;
+    };
+    {
+      poly_name = "rb_balance2";
+      name = "rb_balance2";
+      tps = [ T.IntTreeB; T.IntTreeB ];
+      permu = false;
+      imp = rb_balance2_apply;
+    };
+    {
+      poly_name = "label_is_true";
+      name = "label_is_true";
+      tps = [ T.IntTreeB; T.Int ];
+      permu = false;
+      imp = label_is_apply true;
+    };
+    {
+      poly_name = "label_is_false";
+      name = "label_is_false";
+      tps = [ T.IntTreeB; T.Int ];
+      permu = false;
+      imp = label_is_apply false;
+    };
+  ]
+
 let mp_table =
   empty_info @ mem_info @ hd_info @ lt_info @ eq_info @ ord_info
   @ (left_info @ right_info @ para_info)
   @ (left_adj_info @ right_adj_info @ para_adj_info)
-  @ size_info @ len_info @ last_info @ once_info
+  @ size_info @ len_info @ last_info @ once_info @ rb_info
 
 let imp_map =
   List.fold_left (fun m r -> StrMap.add r.name r.imp m) StrMap.empty mp_table
