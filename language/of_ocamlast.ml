@@ -58,6 +58,21 @@ let rec lit_of_ocamlexpr e =
       | "()", None -> [ V.U ]
       | "Empty", None -> [ V.U ]
       | "[]", None -> [ V.L [] ]
+      | "BiNil", None -> [ V.Binomialhp [] ]
+      | "BiCons", Some e -> (
+          match lit_of_ocamlexpr e with
+          | [ V.Binomialhp a; V.Binomialhp b ] -> [ V.Binomialhp (a @ b) ]
+          | k -> raise @@ mk_exn e k)
+      | "BiNode", Some e -> (
+          match lit_of_ocamlexpr e with
+          | [ V.I a; V.I b; V.Binomialhp c ] ->
+              [ V.Binomialhp [ BinomialHeap.Node (a, b, c) ] ]
+          | k -> raise @@ mk_exn e k)
+      | "BiNodeS", Some e -> (
+          match lit_of_ocamlexpr e with
+          | [ V.I a; V.I b ] ->
+              [ V.Binomialhp [ BinomialHeap.Node (a, b, []) ] ]
+          | k -> raise @@ mk_exn e k)
       | "NodeS", Some e -> (
           match lit_of_ocamlexpr e with
           | [ V.I x ] -> [ V.T (Tree.Node (x, Leaf, Leaf)) ]

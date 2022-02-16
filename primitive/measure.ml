@@ -26,6 +26,7 @@ let measure = function
   | TI iti -> 2 * LabeledTreeTailCall.deep iti
   | TB itb -> 2 * LabeledTreeTailCall.deep itb
   | Binomialhp x -> 3 * BinomialHeap.deep x
+  | Binomialt x -> 3 * BinomialHeap.deep [ x ]
   | Pairinghp x -> 3 * Pairinghp.deep x
   | Physicistsq x -> Physicistsq.length x
   | Realtimeq x -> Realtimeq.length x

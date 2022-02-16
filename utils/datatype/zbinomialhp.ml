@@ -30,24 +30,12 @@ let of_list l =
   in
   make [] num l
 
-(* type 'a nested_list = LO of 'a list | LS of 'a nested_list list *)
-
-(* let rec nested_list_length = function *)
-(*   | LO _ -> 0 *)
-(*   | LS [] -> 1 + (nested_list_length x) *)
-
-(*                           let merge  *)
-
-(* (\* (fun (r, x) -> Printf.sprintf "%i:%i" r x) *\) *)
-
-(* let rec nested_list_to_string to_str = function *)
-(*   | LO a -> List.split_by ", " to_str a *)
-(*   | LS b -> *)
-(*     List.split_by ", " *)
-(*       (fun x -> Printf.sprintf "{%s}" @@ nested_list_to_string to_str  x) *)
-(*       b *)
-
-(* let merge_nested_list *)
+let rec formal_layout l =
+  match l with
+  | [] -> "BiNil"
+  | Node (r, x, l') :: t ->
+      Printf.sprintf "BiCons (BiNode (%i, %i, %s), %s)" r x (formal_layout l')
+        (formal_layout t)
 
 let rec flatten t =
   List.fold_left
@@ -161,3 +149,68 @@ let find_min ts = root (fst (remove_min_tree ts))
 let delete_min ts =
   let Node (_, _, ts1), ts2 = remove_min_tree ts in
   merge (List.rev ts1) ts2
+
+let rec num_node = function
+  | [] -> 0
+  | Node (_, _, ts') :: ts -> 1 + num_node ts' + num_node ts
+
+let if_complete_list l =
+  (* let () = Printf.printf "_complete_list? %s\n" @@ IntList.to_string l in *)
+  let arr = Array.init (List.length l) (fun _ -> false) in
+  let b =
+    List.fold_left
+      (fun b i ->
+        (* let i = i - 1 in *)
+        if not b then false
+        else if i < 0 then false
+        else if arr.(i) then false
+        else (
+          arr.(i) <- true;
+          true))
+      true l
+  in
+  if not b then false else Array.for_all (fun x -> x) arr
+
+let rec binomial_complete_tree = function
+  | Node (0, _, []) -> true
+  | Node (num_nodes, _, ts) ->
+      if List.length ts != num_nodes then false
+      else if
+        let if_comp = if_complete_list @@ List.map rank ts in
+        (* let () = Printf.printf "_complete_list? %b\n" if_comp in *)
+        if_comp
+      then List.for_all binomial_complete_tree ts
+      else false
+
+let rec flatten_node t =
+  List.fold_left
+    (fun res tr -> match tr with Node (_, x, t) -> [ x ] @ res @ flatten t)
+    [] t
+
+let mem t x = List.mem x @@ flatten_node t
+
+let binomialhp ts =
+  let rec to_binary res = function
+    | 0 -> res
+    | 1 -> true :: res
+    | 2 -> true :: false :: res
+    | 3 -> true :: true :: res
+    | n ->
+        let n' = n / 2 in
+        let r = n - (n' * 2) in
+        let b =
+          if r == 1 then true
+          else if r == 0 then false
+          else raise @@ failwith "bad divide"
+        in
+        to_binary (b :: res) n'
+  in
+  let bl = List.rev @@ to_binary [] @@ num_node ts in
+  (* let () = Printf.printf "bl: %s\n" @@ List.split_by_comma string_of_bool bl in *)
+  let bl = List.filter_mapi (fun idx b -> if b then Some idx else None) bl in
+  (* let () = Printf.printf "bl: %s\n" @@ IntList.to_string bl in *)
+  if List.length ts != List.length bl then false
+  else
+    let rs = List.map rank ts in
+    if List.eq ( == ) bl rs then List.for_all binomial_complete_tree ts
+    else false

@@ -15,6 +15,7 @@ type t =
   | IBL of (int * bool) list
   | BIBL of (bool * int * bool) list
   | Binomialhp of BinomialHeap.t
+  | Binomialt of BinomialHeap.tree
   | Pairinghp of Pairinghp.t
   | Physicistsq of Physicistsq.t
   | Realtimeq of Realtimeq.t
@@ -39,6 +40,7 @@ let layout = function
       sprintf "[%s]"
       @@ List.split_by ";" (fun (b1, i, b2) -> sprintf "%b,%i,%b" b1 i b2) bibl
   | Binomialhp x -> BinomialHeap.to_string x
+  | Binomialt x -> BinomialHeap.to_string [ x ]
   | Pairinghp x -> Pairinghp.to_string x
   | Physicistsq x -> Physicistsq.to_string x
   | Realtimeq x -> Realtimeq.to_string x
@@ -64,7 +66,8 @@ let formal_layout = function
   | BIBL bibl ->
       sprintf "[%s]"
       @@ List.split_by ";" (fun (b1, i, b2) -> sprintf "%b,%i,%b" b1 i b2) bibl
-  | Binomialhp x -> BinomialHeap.to_string x
+  | Binomialhp x -> BinomialHeap.formal_layout x
+  | Binomialt x -> BinomialHeap.formal_layout [ x ]
   | Pairinghp x -> Pairinghp.to_string x
   | Physicistsq x -> Physicistsq.to_string x
   | Realtimeq x -> Realtimeq.to_string x
@@ -92,6 +95,7 @@ let eq x y =
             i1 == i2 && b1 == b2 && b1' == b2')
           bibl1 bibl2
     | Binomialhp x, Binomialhp y -> BinomialHeap.eq x y
+    | Binomialt x, Binomialt y -> BinomialHeap.eq [ x ] [ y ]
     | Pairinghp x, Pairinghp y -> Pairinghp.eq x y
     | Physicistsq x, Physicistsq y -> Physicistsq.eq x y
     | Realtimeq x, Realtimeq y -> Realtimeq.eq x y
@@ -126,6 +130,7 @@ let compare x y =
           bibl1 bibl2
     | NotADt, NotADt -> 0
     | Binomialhp x, Binomialhp y -> BinomialHeap.compare x y
+    | Binomialt x, Binomialt y -> BinomialHeap.compare [ x ] [ y ]
     | Pairinghp x, Pairinghp y -> Pairinghp.compare x y
     | Physicistsq x, Physicistsq y -> Physicistsq.compare x y
     | Realtimeq x, Realtimeq y -> Realtimeq.compare x y
@@ -148,6 +153,7 @@ let flatten_forall = function
   | TI iti -> LabeledTree.flatten_forall iti
   | TB itb -> LabeledTree.flatten_forall itb
   | Binomialhp x -> List.remove_duplicates @@ BinomialHeap.flatten x
+  | Binomialt x -> List.remove_duplicates @@ BinomialHeap.flatten [ x ]
   | Pairinghp x -> List.remove_duplicates @@ Pairinghp.flatten x
   | Physicistsq x -> List.remove_duplicates @@ Physicistsq.flatten x
   | Realtimeq x -> List.remove_duplicates @@ Realtimeq.flatten x
@@ -169,6 +175,7 @@ let flatten_forall_l l =
       | TB itb -> LabeledTree.flatten_forall itb @ r
       | NotADt -> raise @@ failwith "flatten_forall_l: not a value"
       | Binomialhp x -> r @ List.remove_duplicates @@ BinomialHeap.flatten x
+      | Binomialt x -> r @ List.remove_duplicates @@ BinomialHeap.flatten [ x ]
       | Pairinghp x -> r @ List.remove_duplicates @@ Pairinghp.flatten x
       | Physicistsq x -> r @ List.remove_duplicates @@ Physicistsq.flatten x
       | Realtimeq x -> r @ List.remove_duplicates @@ Realtimeq.flatten x
@@ -186,6 +193,7 @@ let len = function
   | TB itb -> LabeledTreeTailCall.deep itb
   | IInstrL l -> List.length l
   | Binomialhp x -> BinomialHeap.deep x
+  | Binomialt x -> BinomialHeap.deep [ x ]
   | Pairinghp x -> Pairinghp.deep x
   | Physicistsq x -> Physicistsq.length x
   | Realtimeq x -> Realtimeq.length x
@@ -209,6 +217,7 @@ let get_tp v =
   | BIBL _ -> BoolIntBoolList
   | NotADt -> raise @@ failwith "get_tp: not a value"
   | Binomialhp _ -> Tp.Uninterp "binomialhp"
+  | Binomialt _ -> Tp.Uninterp "binomialt"
   | Pairinghp _ -> Tp.Uninterp "pairinghp"
   | Physicistsq _ -> Tp.Uninterp "physicistsq"
   | Realtimeq _ -> Tp.Uninterp "realtimeq"

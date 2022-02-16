@@ -6,164 +6,263 @@ open Imp_helper
 let table =
   [
     {
+      imp_name = "binomialhp_list_destruct";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialt"; Uninterp "binomialhp" ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialhp l ] ->
+            Sugar.(
+              let* h, t = List.destruct_opt l in
+              Some [ Binomialt h; Binomialhp t ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "binomialhp_list_last_destruct";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialhp"; Uninterp "binomialt" ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialhp l ] ->
+            Sugar.(
+              let* t, h = List.last_destruct_opt l in
+              Some [ Binomialhp t; Binomialt h ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "binomialhp_list_mid_partition";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialhp"; Uninterp "binomialhp" ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialhp l ] ->
+            let l, r = List.mid_partition l in
+            Some [ Binomialhp l; Binomialhp r ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "binomialhp_list_alter_partition";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialhp"; Uninterp "binomialhp" ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialhp l ] ->
+            let l, r = List.alter_partition l in
+            Some [ Binomialhp l; Binomialhp r ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "binomialhp_list_cons";
+      imp_itps = [ Uninterp "binomialt"; Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialhp" ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialt elem; Binomialhp l ] -> Some [ Binomialhp (elem :: l) ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "binomialhp_liblazy";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialhp" ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialhp l ] -> Some [ Binomialhp l ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "binomialhp_libforce";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialhp" ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialhp l ] -> Some [ Binomialhp l ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "binomialhp_concat";
+      imp_itps = [ Uninterp "binomialhp"; Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialhp" ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialhp a; Binomialhp b ] -> Some [ Binomialhp (a @ b) ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "binomialhp_cons_rev";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialt"; Uninterp "binomialhp" ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialhp [] ] -> None
+        | [ Binomialhp (h :: t) ] -> Some [ Binomialt h; Binomialhp t ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
       imp_name = "binomialhp_nil";
       imp_itps = [];
-      imp_otps = [ IntTreeI ];
+      imp_otps = [ Uninterp "binomialhp" ];
       nondet = false;
       imp_exec =
         (function
-        | [] -> Some [ TI LabeledTree.Leaf ]
-        | _ -> raise @@ exn __FILE__ __LINE__);
+        | [] -> Some [ Binomialhp [] ] | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
-      imp_name = "treei_node";
-      imp_itps = [ Int; Int; IntTreeI; IntTreeI ];
-      imp_otps = [ IntTreeI ];
-      nondet = false;
-      imp_exec =
-        (function
-        | [ I label; I a; TI b; TI c ] ->
-            Some [ TI (LabeledTree.Node (label, a, b, c)) ]
-        | _ -> raise @@ exn __FILE__ __LINE__);
-    };
-    {
-      imp_name = "treei_leaf_rev";
-      imp_itps = [ IntTreeI ];
+      imp_name = "binomialhp_nil_rev";
+      imp_itps = [ Uninterp "binomialhp" ];
       imp_otps = [];
       nondet = false;
       imp_exec =
         (function
-        | [ TI LabeledTree.Leaf ] -> Some []
-        | [ TI _ ] -> None
+        | [ Binomialhp [] ] -> Some []
+        | [ Binomialhp (_ :: _) ] -> None
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
-      imp_name = "treei_node_rev";
-      imp_itps = [ IntTreeI ];
-      imp_otps = [ Int; Int; IntTreeI; IntTreeI ];
+      imp_name = "binomialhp_list_append";
+      imp_itps = [ Uninterp "binomialhp"; Uninterp "binomialt" ];
+      imp_otps = [ Uninterp "binomialhp" ];
       nondet = false;
       imp_exec =
         (function
-        | [ TI (LabeledTree.Node (label, a, b, c)) ] ->
-            Some [ I label; I a; TI b; TI c ]
-        | [ TI _ ] -> None
+        | [ Binomialhp l; Binomialt elem ] -> Some [ Binomialhp (l @ [ elem ]) ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
-    (* tree manipulation *)
     {
-      imp_name = "treei_left_right_subtree";
-      imp_itps = [ IntTreeI ];
-      imp_otps = [ IntTreeI; IntTreeI ];
+      imp_name = "binomialhp_rev";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialhp" ];
       nondet = false;
       imp_exec =
         (function
-        | [ TI (LabeledTree.Node (_, _, b, c)) ] -> Some [ TI b; TI c ]
-        | [ TI LabeledTree.Leaf ] -> None
+        | [ Binomialhp l ] -> Some [ Binomialhp (List.rev l) ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
-      imp_name = "treei_root";
-      imp_itps = [ IntTreeI ];
+      imp_name = "binomialhp_top";
+      imp_itps = [ Uninterp "binomialhp" ];
       imp_otps = [ Int ];
       nondet = false;
       imp_exec =
         (function
-        | [ TI (LabeledTree.Node (_, a, _, _)) ] -> Some [ I a ]
-        | [ TI LabeledTree.Leaf ] -> None
+        | [ Binomialhp [] ] -> None
+        | [ Binomialhp (BinomialHeap.Node (_, x, _) :: _) ] -> Some [ I x ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
-      imp_name = "treei_flip";
-      imp_itps = [ IntTreeI ];
-      imp_otps = [ IntTreeI ];
+      imp_name = "binomialhp_single";
+      imp_itps = [ Int ];
+      imp_otps = [ Uninterp "binomialhp" ];
       nondet = false;
       imp_exec =
         (function
-        | [ TI tr ] -> Some [ TI (LabeledTree.flip tr) ]
+        | [ I x ] -> Some [ Binomialhp [ BinomialHeap.Node (0, x, []) ] ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
-      imp_name = "treei_rec_flip";
-      imp_itps = [ IntTreeI ];
-      imp_otps = [ IntTreeI ];
+      imp_name = "binomialhp_list_head";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialt" ];
       nondet = false;
       imp_exec =
         (function
-        | [ TI tr ] -> Some [ TI (LabeledTree.rec_flip tr) ]
+        | [ Binomialhp [] ] -> None
+        | [ Binomialhp (h :: _) ] -> Some [ Binomialt h ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
-      imp_name = "treei_rotation_left";
-      imp_itps = [ IntTreeI ];
-      imp_otps = [ IntTreeI ];
+      imp_name = "binomialhp_bottom";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialht" ];
       nondet = false;
       imp_exec =
         (function
-        | [ TI tr ] ->
-            Sugar.(
-              let* tr' = LabeledTree.rotation_left_opt tr in
-              Some [ TI tr' ])
+        | [ Binomialhp [] ] -> None
+        | [ Binomialhp l ] -> Some [ Binomialt (List.last l) ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
-      imp_name = "treei_rotation_right";
-      imp_itps = [ IntTreeI ];
-      imp_otps = [ IntTreeI ];
+      imp_name = "binomialhp_list_last";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialht" ];
       nondet = false;
       imp_exec =
         (function
-        | [ TI tr ] ->
-            Sugar.(
-              let* tr' = LabeledTree.rotation_right_opt tr in
-              Some [ TI tr' ])
+        | [ Binomialhp [] ] -> None
+        | [ Binomialhp l ] -> Some [ Binomialt (List.last l) ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
-      imp_name = "treei_append_to_left_most";
-      imp_itps = [ Int; Int; IntTreeI ];
-      imp_otps = [ IntTreeI ];
+      imp_name = "binomialhp_is_empty";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Bool ];
       nondet = false;
       imp_exec =
         (function
-        | [ I label; I x; TI tr ] ->
-            Some [ TI (LabeledTree.append_to_left_most_label label x tr) ]
+        | [ Binomialhp [] ] -> Some [ B true ]
+        | [ Binomialhp _ ] -> Some [ B false ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
-      imp_name = "treei_append_to_right_most";
-      imp_itps = [ Int; Int; IntTreeI ];
-      imp_otps = [ IntTreeI ];
+      imp_name = "binomialhp_tail";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialhp" ];
       nondet = false;
       imp_exec =
         (function
-        | [ I label; I x; TI tr ] ->
-            Some [ TI (LabeledTree.append_to_right_most_label label x tr) ]
+        | [ Binomialhp [] ] -> None
+        | [ Binomialhp (_ :: t) ] -> Some [ Binomialhp t ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
-      imp_name = "treei_max";
-      imp_itps = [ IntTreeI ];
+      imp_name = "binomialhp_list_tail";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialhp" ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialhp [] ] -> None
+        | [ Binomialhp (_ :: t) ] -> Some [ Binomialhp t ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "binomialhp_rank";
+      imp_itps = [ Uninterp "binomialt" ];
       imp_otps = [ Int ];
       nondet = false;
       imp_exec =
         (function
-        | [ TI tr ] ->
-            Sugar.(
-              let* e = LabeledTree.max_opt Stdlib.compare tr in
-              Some [ I e ])
+        | [ Binomialt t ] -> Some [ I (BinomialHeap.rank t) ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
-      imp_name = "treei_min";
-      imp_itps = [ IntTreeI ];
-      imp_otps = [ Int ];
+      imp_name = "binomialhp_ins_tree";
+      imp_itps = [ Uninterp "binomialt"; Uninterp "binomialhp" ];
+      imp_otps = [ Uninterp "binomialhp" ];
       nondet = false;
       imp_exec =
         (function
-        | [ TI tr ] ->
-            Sugar.(
-              let* e = LabeledTree.min_opt Stdlib.compare tr in
-              Some [ I e ])
+        | [ Binomialt t; Binomialhp ts ] ->
+            Some [ Binomialhp (BinomialHeap.ins_tree t ts) ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "binomialhp_link";
+      imp_itps = [ Uninterp "binomialt"; Uninterp "binomialt" ];
+      imp_otps = [ Uninterp "binomialt" ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialt t; Binomialt t' ] ->
+            Some [ Binomialt (BinomialHeap.link t t') ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
   ]

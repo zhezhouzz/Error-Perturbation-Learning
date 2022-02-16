@@ -52,6 +52,7 @@ let mem_apply = function
   | [ V.T t; V.I e ] -> Tree.exists (fun x -> x == e) t
   | [ V.TI t; V.I e ] -> LabeledTree.exists (fun x -> x == e) t
   | [ V.TB t; V.I e ] -> LabeledTree.exists (fun x -> x == e) t
+  | [ V.Binomialhp t; V.I e ] -> BinomialHeap.mem t e
   | _ -> raise @@ failwith "member_apply"
 
 let size_apply = function
@@ -153,6 +154,10 @@ let leftist_apply = function
   | [ V.TI t ] -> LabeledTree.leftists t
   | _ -> raise @@ failwith "leftist"
 
+let binomialhp_apply = function
+  | [ V.Binomialhp t ] -> BinomialHeap.binomialhp t
+  | _ -> raise @@ failwith "binomialhp"
+
 let empty_info =
   let poly_name = "empty" in
   [
@@ -214,6 +219,13 @@ let mem_info =
       poly_name;
       name = "treeb_mem";
       tps = [ T.IntTreeB; T.Int ];
+      permu = false;
+      imp = mem_apply;
+    };
+    {
+      poly_name;
+      name = "binomialhp_mem";
+      tps = [ T.Uninterp "binomialhp"; T.Int ];
       permu = false;
       imp = mem_apply;
     };
@@ -646,12 +658,23 @@ let leftist_info =
     };
   ]
 
+let binomialhp_info =
+  [
+    {
+      poly_name = "binomialhp";
+      name = "binomialhp";
+      tps = [ T.Uninterp "binomialhp" ];
+      permu = false;
+      imp = binomialhp_apply;
+    };
+  ]
+
 let mp_table =
   empty_info @ mem_info @ hd_info @ lt_info @ eq_info @ ord_info
   @ (left_info @ right_info @ para_info)
   @ (left_adj_info @ right_adj_info @ para_adj_info)
   @ size_info @ size_plus1_info @ len_info @ last_info @ once_info @ rb_info
-  @ leftist_info
+  @ leftist_info @ binomialhp_info
 
 let imp_map =
   List.fold_left (fun m r -> StrMap.add r.name r.imp m) StrMap.empty mp_table

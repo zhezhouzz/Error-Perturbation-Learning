@@ -65,6 +65,17 @@ let treeb_setting =
     ("node_rev", "treeb_node_rev");
   ]
 
+let binomialhp_setting =
+  [
+    ("cons", "binomialhp_list_cons");
+    ("rank", "binomialhp_rank");
+    ("ins_tree", "binomialhp_ins_tree");
+    ("link", "binomialhp_link");
+    ("nil", "binomialhp_nil");
+    ("nil_rev", "binomialhp_nil_rev");
+    ("cons_rev", "binomialhp_cons_rev");
+  ]
+
 let modules =
   [
     ("List", list_setting);
@@ -80,6 +91,7 @@ let modules =
     ("Trie", list_setting @ tree_setting);
     ("Physicistsq", list_setting);
     ("Realtimeq", list_setting);
+    ("Binomialhp", binomialhp_setting);
   ]
 
 let underline_type_reduction = function
@@ -97,6 +109,7 @@ let underline_type_reduction = function
   | "Trie.tp" -> "int list"
   | "Physicistsq.t" -> "int list"
   | "Realtimeq.t" -> "int list"
+  | "Binomialhp.t" -> "binomialhp"
   | tp -> failwith (spf "unknown type(%s)" tp)
 
 let invocation_inspector_init module_name =

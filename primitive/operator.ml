@@ -109,6 +109,13 @@ let info_table =
       "treeb_lower_bound";
       "treeb_destruct";
       "treeb_drop_bottom";
+      (* binomialhp       *)
+      "binomialhp_list_last_destruct";
+      "binomialhp_list_destruct";
+      "binomialhp_list_cons";
+      "binomialhp_list_append";
+      "binomialhp_single";
+      "binomialhp_top";
     ]
   in
   let make_info name =
