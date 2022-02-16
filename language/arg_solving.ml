@@ -266,7 +266,7 @@ let unfold_cache (solutions, prog_with_holes) =
       with _ -> raise @@ failwith "unfold_cache")
     solutions
 
-let arg_assign ?(max_solution = 70) tps ops =
+let arg_assign ?(max_solution = 35) tps ops =
   let ctx =
     match Config.(!conf.z3_ctx) with
     | Some ctx -> ctx

@@ -9,4 +9,4 @@ let rec merge (ts1 : Binomialhp.t) (ts2 : Binomialhp.t) =
         Binomialhp.cons t1 (merge ts1' ts2)
       else if Binomialhp.rank t2 < Binomialhp.rank t1 then
         Binomialhp.cons t2 (merge ts1 ts2')
-      else Binomialhp.ins_tree (Binomialhp.link t1 t1) (merge ts1' ts2')
+      else Binomialhp.ins_tree (Binomialhp.link t1 t2) (merge ts1' ts2')

@@ -19,7 +19,7 @@ let libs = [| "Physicistsq" |]
 
 let i_err = ([ 2 ], 2, [ 2; 3 ], 3, [ 6; 5; 4 ])
 
-let sampling_rounds = 6
+let sampling_rounds = 5
 
 let p_size = 4
 
