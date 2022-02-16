@@ -8,8 +8,6 @@ let op_pool =
     "append";
     "list_destruct";
     "list_last_destruct";
-    "list_mid_partition";
-    "list_alter_partition";
     "list_upper_bound";
     "list_lower_bound";
     "list_single";
@@ -17,8 +15,6 @@ let op_pool =
     "min";
     "plus1";
     "minus1";
-    "const0";
-    "const1";
   |]
 
 let libs = [| "Physicistsq" |]
