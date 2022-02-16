@@ -21,29 +21,27 @@ let op_pool =
     "const1";
   |]
 
-let libs = [| "Physicistsq" |]
+let libs = [| "Realtimeq" |]
 
-let i_err = ([ 2 ], 2, [ 2; 3 ], 3, [ 6; 5; 4 ])
+let i_err = ([ 1; 2 ], [ 6; 4; 3 ], [])
 
 let sampling_rounds = 6
 
 let p_size = 4
 
-let pre (w : Physicistsq.t) (lenf : int) (f : Physicistsq.t) (lenr : int)
-    (r : Physicistsq.t) (u : int) (v : int) =
+let pre (w : Realtimeq.t) (lenf : int) (f : Realtimeq.t) (lenr : int)
+    (r : Realtimeq.t) (u : int) (v : int) =
   implies (ord w u v) (u < v)
   && implies (ord f u v) (u < v)
   && implies (ord r u v) (v < u)
-  && implies (last f v && hd r u) (v < u)
   && size f lenf && size r lenr
 
-let post (w : Physicistsq.t) (lenf : int) (f : Physicistsq.t) (lenr : int)
-    (r : Physicistsq.t) (w' : Physicistsq.t) (lenf' : int) (f' : Physicistsq.t)
-    (lenr' : int) (r' : Physicistsq.t) (u : int) (v : int) =
+let post (w : Realtimeq.t) (lenf : int) (f : Realtimeq.t) (lenr : int)
+    (r : Realtimeq.t) (w' : Realtimeq.t) (lenf' : int) (f' : Realtimeq.t)
+    (lenr' : int) (r' : Realtimeq.t) (u : int) (v : int) =
   implies (ord w' u v) (u < v)
   && implies (ord f' u v) (u < v)
   && implies (ord r' u v) (v < u)
-  && implies (last f' v && hd r' u) (v < u)
   && size f' lenf' && size r' lenr'
   && (not (lenf' < lenr'))
   && implies (mem w' u) (mem f' u)

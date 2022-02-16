@@ -251,6 +251,15 @@ let table =
           | _ -> raise @@ exn __FILE__ __LINE__);
       };
       {
+        imp_name = "list_single";
+        imp_itps = [ Int ];
+        imp_otps = [ IntList ];
+        nondet = false;
+        imp_exec =
+          (function
+          | [ I x ] -> Some [ L [ x ] ] | _ -> raise @@ exn __FILE__ __LINE__);
+      };
+      {
         imp_name = "list_head";
         imp_itps = [ IntList ];
         imp_otps = [ Int ];

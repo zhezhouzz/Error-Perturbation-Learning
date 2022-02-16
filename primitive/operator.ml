@@ -51,6 +51,7 @@ let info_table =
       "min";
       "list_upper_bound";
       "list_lower_bound";
+      "list_single";
       (* iblist *)
       "iblist_destruct";
       "iblist_cons";
