@@ -1,4 +1,4 @@
-let preds = [| "hd"; "last"; "ord"; "mem"; "size"; "<" |]
+let preds = [| "hd"; "last"; "ord"; "mem"; "size_plus1"; "<" |]
 
 let op_pool =
   [|
@@ -29,20 +29,15 @@ let sampling_rounds = 6
 
 let p_size = 4
 
-let pre (w : Realtimeq.t) (lenf : int) (f : Realtimeq.t) (lenr : int)
-    (r : Realtimeq.t) (u : int) (v : int) =
-  implies (ord w u v) (u < v)
-  && implies (ord f u v) (u < v)
-  && implies (ord r u v) (v < u)
-  && size f lenf && size r lenr
+let pre (q1 : Realtimeq.t) (q2 : Realtimeq.t) (q3 : Realtimeq.t) (u : int)
+    (v : int) =
+  implies (ord q1 u v) (u < v)
+  && implies (ord q2 u v) (v < u)
+  && implies (ord q3 u v) (u < v)
+  && implies (last q1 u && last q2 v) (u < v)
+  && implies (hd q2 u && hd q3 v) (u < v)
+  && size_plus1 q1 q2
 
-let post (w : Realtimeq.t) (lenf : int) (f : Realtimeq.t) (lenr : int)
-    (r : Realtimeq.t) (w' : Realtimeq.t) (lenf' : int) (f' : Realtimeq.t)
-    (lenr' : int) (r' : Realtimeq.t) (u : int) (v : int) =
-  implies (ord w' u v) (u < v)
-  && implies (ord f' u v) (u < v)
-  && implies (ord r' u v) (v < u)
-  && size f' lenf' && size r' lenr'
-  && (not (lenf' < lenr'))
-  && implies (mem w' u) (mem f' u)
-  && iff (mem f u || mem r u) (mem f' u || mem r' u)
+let post (q1 : Realtimeq.t) (q2 : Realtimeq.t) (q3 : Realtimeq.t)
+    (nu : Realtimeq.t) (u : int) (v : int) =
+  implies (ord nu u v) (u < v)

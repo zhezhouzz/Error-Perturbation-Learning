@@ -79,6 +79,7 @@ let modules =
     ("Rbset", treeb_setting);
     ("Trie", list_setting @ tree_setting);
     ("Physicistsq", list_setting);
+    ("Realtimeq", list_setting);
   ]
 
 let underline_type_reduction = function
@@ -95,6 +96,7 @@ let underline_type_reduction = function
   | "Trie.t" -> "int tree"
   | "Trie.tp" -> "int list"
   | "Physicistsq.t" -> "int list"
+  | "Realtimeq.t" -> "int list"
   | tp -> failwith (spf "unknown type(%s)" tp)
 
 let invocation_inspector_init module_name =

@@ -61,6 +61,10 @@ let size_apply = function
   | [ V.TB t; V.I e ] -> e == LabeledTree.size t
   | _ -> raise @@ failwith "size_apply"
 
+let size_plus1_apply = function
+  | [ V.L l1; V.L l2 ] -> List.length l1 + 1 == List.length l2
+  | _ -> raise @@ failwith "size_plus1_apply"
+
 let len_apply = function
   | [ V.L l; V.I e ] -> e == List.length l
   | [ V.T t; V.I e ] -> e == Tree.deep t
@@ -311,6 +315,18 @@ let size_info =
       tps = [ T.IntTreeB; T.Int ];
       permu = false;
       imp = size_apply;
+    };
+  ]
+
+let size_plus1_info =
+  let poly_name = "size_plus1" in
+  [
+    {
+      poly_name;
+      name = "list_size_plus1";
+      tps = [ T.IntList; T.IntList ];
+      permu = false;
+      imp = size_plus1_apply;
     };
   ]
 
@@ -634,7 +650,8 @@ let mp_table =
   empty_info @ mem_info @ hd_info @ lt_info @ eq_info @ ord_info
   @ (left_info @ right_info @ para_info)
   @ (left_adj_info @ right_adj_info @ para_adj_info)
-  @ size_info @ len_info @ last_info @ once_info @ rb_info @ leftist_info
+  @ size_info @ size_plus1_info @ len_info @ last_info @ once_info @ rb_info
+  @ leftist_info
 
 let imp_map =
   List.fold_left (fun m r -> StrMap.add r.name r.imp m) StrMap.empty mp_table
