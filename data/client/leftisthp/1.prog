@@ -1,0 +1,8 @@
+let i_err = (LNodeS (1, 0), LNode (3, 5, LNode (2, 3, LNodeS (1, 2), LNodeS (1, 4)), LNodeS (1, 6)))
+Default
+IN: (x0: int treei, x1: int treei) {
+(x2: int treei) = treei_drop_bottom(x0: int treei);
+(x3: int, x4: int) = treei_upper_bound(x0: int treei);
+(x5: int treei) = treei_rec_flip(x2: int treei);
+(x6: int treei) = treei_append_to_left_most(x3: int, x4: int, x5: int treei)}
+OUT: (x6: int treei, x1: int treei)

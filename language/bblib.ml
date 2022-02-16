@@ -78,6 +78,7 @@ let modules =
     ("Leftisthp", treei_setting);
     ("Rbset", treeb_setting);
     ("Trie", list_setting @ tree_setting);
+    ("Physicistsq", list_setting);
   ]
 
 let underline_type_reduction = function
@@ -93,6 +94,7 @@ let underline_type_reduction = function
   | "Rbset.t" -> "int treeb"
   | "Trie.t" -> "int tree"
   | "Trie.tp" -> "int list"
+  | "Physicistsq.t" -> "int list"
   | tp -> failwith (spf "unknown type(%s)" tp)
 
 let invocation_inspector_init module_name =
