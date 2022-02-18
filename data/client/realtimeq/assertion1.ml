@@ -11,8 +11,6 @@ let op_pool =
     "list_upper_bound";
     "list_lower_bound";
     "list_single";
-    "max";
-    "min";
     "plus1";
     "minus1";
   |]

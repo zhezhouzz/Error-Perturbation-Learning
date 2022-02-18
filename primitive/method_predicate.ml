@@ -297,6 +297,7 @@ let last_info =
     };
   ]
 
+(* TODO: limit size only works for nat *)
 let size_info =
   let poly_name = "size" in
   [
