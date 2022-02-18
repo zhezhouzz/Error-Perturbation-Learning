@@ -13,6 +13,7 @@ let tp_to_sort ctx =
     function
     | Unit -> raise @@ failwith "unit should not be encoded as z3"
     | Int -> Integer.mk_sort ctx
+    | Nat -> Integer.mk_sort ctx
     | IfcInstr -> Integer.mk_sort ctx
     | Bool -> Boolean.mk_sort ctx
     | IntList | IntTree | IntTreeI | IntTreeB | IntBoolList | BoolIntBoolList
@@ -47,6 +48,7 @@ let tpedvar_to_z3 ctx (tp, name) =
     match tp with
     | Unit -> raise @@ failwith "unit should not be encoded as z3"
     | Int -> Integer.mk_const_s ctx name
+    | Nat -> Integer.mk_const_s ctx name
     | IfcInstr -> Integer.mk_const_s ctx name
     | Bool -> Boolean.mk_const_s ctx name
     | IntList | IntTree | IntTreeI | IntTreeB | IntBoolList | BoolIntBoolList

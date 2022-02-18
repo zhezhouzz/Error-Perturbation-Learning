@@ -12,6 +12,11 @@ let int_gen conf =
   | SmallUnsign -> Gen.small_signed_int
   | LowUpper (l, u) -> Gen.int_range l u
 
+let nat_gen conf =
+  match conf with
+  | SmallUnsign -> Gen.small_nat
+  | LowUpper (l, u) -> Gen.int_range (if l < 0 then 0 else l) u
+
 let list_gen conf =
   let elem_conf, size_conf = conf in
   let elem_gen = int_gen elem_conf in
@@ -203,6 +208,7 @@ let choose_gen conf tp =
   match tp with
   | T.Unit -> QCheck.Gen.return (Some V.U)
   | T.Int -> QCheck.Gen.map (fun x -> Some (V.I x)) (int_gen conf.int_conf)
+  | T.Nat -> QCheck.Gen.map (fun x -> Some (V.I x)) (nat_gen conf.int_conf)
   | T.IntList ->
       QCheck.Gen.map (fun x -> Some (V.L x)) (list_gen conf.list_conf)
   | T.IntTree ->

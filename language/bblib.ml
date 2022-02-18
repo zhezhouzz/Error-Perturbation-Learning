@@ -23,6 +23,9 @@ let make_interfaces imp_name =
   | [ imp ] -> (imp.Imp.imp_itps, imp.Imp.imp_otps, imp.Imp.imp_exec)
   | _ -> raise @@ failwith (spf "poly lib(%s) do not impelemented" imp_name)
 
+let nat_setting =
+  [ ("plus", "nat_plus"); ("leq", "nat_leq"); ("zero", "nat_zero") ]
+
 let list_setting =
   [
     ("is_empty", "is_empty");
@@ -78,6 +81,7 @@ let binomialhp_setting =
 
 let modules =
   [
+    ("Nat", nat_setting);
     ("List", list_setting);
     ("Customstk", list_setting);
     ("Bankersq", list_setting);

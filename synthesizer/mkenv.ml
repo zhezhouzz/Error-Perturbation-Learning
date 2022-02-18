@@ -4,9 +4,10 @@ open Basic_dt
 open Env
 module Spec = Specification.Spec
 
+(* HACK: do not distinguish int and nat here *)
 let verify_i_err_gen_info tps client inspector sigma phi i_err =
   let tps' = V.get_tp_l i_err in
-  if List.compare T.compare tps' tps != 0 then
+  if List.compare T.compare_nat_is_int tps' tps != 0 then
     raise @@ failwith "the i_err is not consistent with the types in client"
   else if not (sigma i_err) then
     raise @@ failwith "mk_env: inconsistent i_err and sigma"

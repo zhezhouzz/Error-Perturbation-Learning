@@ -39,25 +39,6 @@ let to_string l =
     (Printf.sprintf "flatten:%s\n" @@ IntList.to_string @@ flatten l)
     arr
 
-(* let to_string t = *)
-(*   let rec aux l = *)
-(*     match l with *)
-(*     | [] -> "()" *)
-(*     | _ -> *)
-(*         let a, b = *)
-(*           List.fold_left *)
-(*             (fun (layer, rest) tr -> *)
-(*               match tr with *)
-(*               | E -> (layer @ [ " " ], rest @ []) *)
-(*               | T (x, l) -> (layer @ [ string_of_int x ], rest @ [ l ])) *)
-(*             ([], []) l *)
-(*         in *)
-(*         Printf.sprintf "%s\n%s" *)
-(*           (List.split_by " " (fun x -> Printf.sprintf "%s " x) a) *)
-(*           (List.split_by " " (fun t -> Printf.sprintf "{%s}" @@ aux t) b) *)
-(*   in *)
-(*   aux [ t ] *)
-
 let compare t1 t2 =
   let rec aux t1 t2 =
     match (t1, t2) with
@@ -91,3 +72,11 @@ let rec merge_pairs = function
 let find_min = function E -> raise Empty | T (x, _) -> x
 
 let delete_min = function E -> raise Empty | T (_, hs) -> merge_pairs hs
+
+let rec pairinghp x =
+  let rec check_list = function
+    | [] -> true
+    | E :: _ -> false
+    | h :: t -> check_tree h && check_list t
+  and check_tree = function E -> true | T (_, l) -> check_list l in
+  check_tree x

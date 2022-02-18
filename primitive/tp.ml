@@ -2,6 +2,7 @@ type t =
   | Unit
   | Bool
   | Int
+  | Nat
   | IntList
   | IntBoolList
   | BoolIntBoolList
@@ -18,6 +19,7 @@ let layout = function
   | Unit -> "unit"
   | Bool -> "bool"
   | Int -> "int"
+  | Nat -> "nat"
   | IntList -> "int list"
   | IntBoolList -> "(int * bool) list"
   | BoolIntBoolList -> "(bool * int * bool) list"
@@ -32,6 +34,7 @@ let of_string = function
   | "unit" -> Unit
   | "bool" -> Bool
   | "int" -> Int
+  | "nat" -> Nat
   | "int list" -> IntList
   | "(int * bool) list" -> IntBoolList
   | "(bool * int * bool) list" -> BoolIntBoolList
@@ -65,6 +68,9 @@ let compare t1 t2 =
   (* in *)
   compare (layout t1) (layout t2)
 
+let compare_nat_is_int t1 t2 =
+  match (t1, t2) with Nat, Int -> 0 | Int, Nat -> 0 | _ -> compare t1 t2
+
 let compare_tvar (t1, name1) (t2, name2) =
   let c1 = compare t1 t2 in
   if c1 == 0 then String.compare name1 name2 else c1
@@ -78,6 +84,7 @@ let tavrs_to_tps (l : tvar list) = List.map (fun (tp, _) -> tp) l
 let is_dt = function
   | Unit -> false
   | Int -> false
+  | Nat -> false
   | Bool -> false
   | IntList -> true
   | IntTree -> true
@@ -92,6 +99,7 @@ let is_dt = function
 let eq_tp_ = function
   | Unit, Unit -> true
   | Int, Int -> true
+  | Nat, Nat -> true
   | Bool, Bool -> true
   | IntList, IntList -> true
   | IntTree, IntTree -> true
@@ -134,6 +142,7 @@ module Naming = struct
       match tp with
       | Unit -> Renaming.unique "u"
       | Int -> Renaming.unique "x"
+      | Nat -> Renaming.unique "n"
       | IntList -> Renaming.unique "l"
       | IntTree | IntTreeI | IntTreeB -> Renaming.unique "tr"
       | Bool -> Renaming.unique "b"
@@ -185,6 +194,8 @@ module Naming = struct
           { counter with boolnum = counter.boolnum + 1 } )
     | Int ->
         (name "i" counter.intnum, { counter with intnum = counter.intnum + 1 })
+    | Nat ->
+        (name "n" counter.intnum, { counter with intnum = counter.intnum + 1 })
     | IntList ->
         ( name "il" counter.ilistnum,
           { counter with ilistnum = counter.ilistnum + 1 } )

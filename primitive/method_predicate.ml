@@ -309,6 +309,13 @@ let size_info =
     };
     {
       poly_name;
+      name = "list_size";
+      tps = [ T.IntList; T.Nat ];
+      permu = false;
+      imp = size_apply;
+    };
+    {
+      poly_name;
       name = "tree_size";
       tps = [ T.IntTree; T.Int ];
       permu = false;
@@ -601,6 +608,13 @@ let lt_info =
       permu = false;
       imp = lt_apply;
     };
+    {
+      poly_name;
+      name = "<";
+      tps = [ T.Nat; T.Nat ];
+      permu = false;
+      imp = lt_apply;
+    };
   ]
 
 let eq_info =
@@ -610,6 +624,13 @@ let eq_info =
       poly_name;
       name = "==";
       tps = [ T.Int; T.Int ];
+      permu = false;
+      imp = eq_apply;
+    };
+    {
+      poly_name;
+      name = "==";
+      tps = [ T.Nat; T.Nat ];
       permu = false;
       imp = eq_apply;
     };

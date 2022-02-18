@@ -471,7 +471,11 @@ let load_rettps struc =
         | _ -> raise @@ failwith "solve_functype"
       in
       aux rettp
-  | _ -> raise @@ failwith "wrong client types"
+  | _ ->
+      raise
+      @@ failwith
+           (spf "wrong client types: %s"
+           @@ Pprintast.string_of_structure [ struc ])
 
 (* Env *)
 

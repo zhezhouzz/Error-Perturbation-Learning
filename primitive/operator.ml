@@ -24,6 +24,7 @@ let info_table =
       "neg";
       "consttrue";
       "constfalse";
+      (* nat *)
       (* int *)
       "plus";
       "minus";

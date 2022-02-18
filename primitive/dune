@@ -12,6 +12,7 @@
    imp
    imp_helper
    imp_int
+   imp_nat
    imp_list
    imp_tree
    imp_treei

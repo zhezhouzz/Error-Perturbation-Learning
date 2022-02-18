@@ -149,6 +149,10 @@ let choose_gen chooses bound tp =
   match tp with
   | T.Unit -> QCheck.Gen.pure V.U
   | T.Int -> QCheck.Gen.map (fun x -> V.I x) (int_gen chooses)
+  | T.Nat ->
+      QCheck.Gen.map
+        (fun x -> V.I x)
+        (int_gen @@ List.filter (fun x -> x >= 0) chooses)
   | T.IntList -> QCheck.Gen.map (fun x -> V.L x) (list_gen chooses bound)
   | T.IntTree -> QCheck.Gen.map (fun x -> V.T x) (tree_gen chooses bound)
   | T.IntTreeI -> QCheck.Gen.map (fun x -> V.TI x) (treei_gen chooses bound)
