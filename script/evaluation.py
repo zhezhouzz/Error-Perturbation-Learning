@@ -37,7 +37,7 @@ def eval_pf_time(p_setting, pf_file, time, outfile):
     target_file, assertion_file, pf_file_default = solve_tap(p_setting)
     if pf_file == None:
         pf_file = pf_file_default
-    cmd = cmd_prefix + ["sampling-time", config_file, target_file, assertion_file, pf_file_default, time]
+    cmd = cmd_prefix + ["sampling-time", config_file, target_file, assertion_file, pf_file, time]
     invoc_cmd(cmd, outfile)
 
 def eval_baseline_time(p_setting, qc_config, time, outfile):
@@ -47,9 +47,10 @@ def eval_baseline_time(p_setting, qc_config, time, outfile):
 
 def eval_pf_num(p_setting, pf_file, num, outfile):
     target_file, assertion_file, pf_file_default = solve_tap(p_setting)
+    print("fp_file: {}".format(pf_file))
     if pf_file == None:
         pf_file = pf_file_default
-    cmd = cmd_prefix + ["eval-sampling", config_file, target_file, assertion_file, pf_file_default, num]
+    cmd = cmd_prefix + ["eval-sampling", config_file, target_file, assertion_file, pf_file, num]
     invoc_cmd(cmd, outfile)
 
 def eval_baseline_num(p_setting, qc_config, num, outfile):

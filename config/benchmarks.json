@@ -30,7 +30,7 @@
                 "name": "leftisthp",
                 "target": "merge.ml",
                 "assert": "assertion1.ml",
-                "pf": "4.prog"
+                "pf": "1.prog"
             },
             {
                 "name": "physicistsq",

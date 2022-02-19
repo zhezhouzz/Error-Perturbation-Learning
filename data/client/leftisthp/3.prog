@@ -1,8 +1,0 @@
-let i_err = (LNode (3, 10, LNode (2, 8, LNodeS (1, 7), LNodeS (1, 9)), LNode (1, 11, LILeaf, LNode (1, 13, LILeaf, LNodeS (1, 15)))), LNode (3, 5, LNode (2, 3, LNodeS (1, 2), LNodeS (1, 4)), LNode (1, 6, LILeaf, LNode (1, 12, LILeaf, LNodeS (1, 14)))))
-Default
-IN: (x0: int treei, x1: int treei) {
-(x2: int, x3: int) = treei_upper_bound(x0: int treei);
-(x4: int treei) = treei_append_to_right_most(x2: int, x3: int, x1: int treei);
-(x5: int) = minus1(x3: int);
-(x6: int) = const1()}
-OUT: (x4: int treei, x0: int treei)
