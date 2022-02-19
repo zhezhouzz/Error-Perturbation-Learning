@@ -16,8 +16,8 @@ let skewhp_max_deep = 15
 let size_measure = fastexpt 2
 
 let measure = function
-  | U | NotADt -> 0
-  | I _ | B _ | IInstr _ -> 1
+  | U | B _ | NotADt -> 0
+  | I _ | IInstr _ -> 1
   | L il -> List.length il
   | IBL il -> List.length il
   | BIBL il -> List.length il

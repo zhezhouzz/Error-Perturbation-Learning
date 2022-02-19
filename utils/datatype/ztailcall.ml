@@ -22,6 +22,6 @@ module LabeledTreeTailCall = struct
           aux m ((depth + 1, l) :: (depth + 1, r) :: t)
     in
     let r = aux 0 [ (0, tree) ] in
-    Printf.printf "deep: %i\n" r;
+    (* Printf.printf "deep: %i\n" r; *)
     r
 end
