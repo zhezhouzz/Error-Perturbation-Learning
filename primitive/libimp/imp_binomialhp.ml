@@ -265,4 +265,28 @@ let table =
             Some [ Binomialt (BinomialHeap.link t t') ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
+    {
+      imp_name = "binomialt_head";
+      imp_itps = [ Uninterp "binomialt" ];
+      imp_otps = [ Nat; Int ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialt t ] ->
+            let r, x = BinomialHeap.t_head t in
+            Some [ I r; I x ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "binomialt_head_update";
+      imp_itps = [ Uninterp "binomialt"; Int ];
+      imp_otps = [ Uninterp "binomialt" ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialt t; I x ] ->
+            let t' = BinomialHeap.t_head_update t x in
+            Some [ Binomialt t' ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
   ]

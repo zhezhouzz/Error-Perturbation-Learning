@@ -189,6 +189,10 @@ let rec flatten_node t =
 
 let mem t x = List.mem x @@ flatten_node t
 
+let t_head = function Node (r, x, _) -> (r, x)
+
+let t_head_update t x = match t with Node (r, _, l) -> Node (r, x, l)
+
 let binomialhp ts =
   let rec to_binary res = function
     | 0 -> res

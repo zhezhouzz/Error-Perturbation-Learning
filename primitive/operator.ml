@@ -117,6 +117,8 @@ let info_table =
       "binomialhp_list_append";
       "binomialhp_single";
       "binomialhp_top";
+      "binomialt_head";
+      "binomialt_head_update";
     ]
   in
   let make_info name =
