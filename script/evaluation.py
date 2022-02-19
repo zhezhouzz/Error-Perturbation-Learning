@@ -106,10 +106,10 @@ if __name__ == "__main__":
             eval_pf_time(b, args.pffile, timebound, outfile)
     elif action == "syneval":
         for b in bs:
-            syn(b, "1", "1", ".prog")
+            syn(b, "300", "1", ".prog")
             now = datetime.now()
             subprocess.run(["mv", ".logdir/.log", ".logdir/.log_" + b['name'] + "_" + now.strftime('%m%d%y-%T')])
-            eval_pf_time(b, ".prog", "1", ".out")
+            eval_pf_time(b, ".prog", "100", ".out")
     elif action == "evalpf":
         for b in bs:
             eval_pf_time(b, args.pffile, timebound, outfile)

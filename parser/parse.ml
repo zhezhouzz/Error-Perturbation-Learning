@@ -7,14 +7,15 @@ open Basic_dt
 let to_basic_tp = function
   | "bool" -> T.Bool
   | "int" -> T.Int
+  | "nat" -> T.Nat
   | "instr" -> T.IfcInstr
-  | _ -> raise @@ failwith "parse: wrong tp"
+  | x -> raise @@ failwith @@ spf "parse: wrong tp(%s)" x
 
 let to_tp (elem, l) =
   let elem = List.map to_basic_tp elem in
   match (elem, l) with
   | [ x ], [] -> x
-  | _, [] -> raise @@ failwith "parse: wrong tp"
+  | _, [] -> raise @@ failwith @@ spf "parse: wrong tp(%s)" @@ T.layout_l elem
   | [ T.Int ], [ "list" ] -> T.IntList
   | [ T.Int; T.Bool ], [ "list" ] -> T.IntBoolList
   | [ T.Bool; T.Int; T.Bool ], [ "list" ] -> T.BoolIntBoolList
