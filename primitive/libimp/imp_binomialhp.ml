@@ -243,7 +243,7 @@ let table =
         | [ Binomialhp l ] -> (
             match BinomialHeap.min_opt l with
             | None -> Some [ I 0 ]
-            | Some x -> Some [ I x ])
+            | Some x -> Some [ I (x - 1) ])
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
@@ -256,7 +256,7 @@ let table =
         | [ Binomialhp l ] -> (
             match BinomialHeap.max_opt l with
             | None -> Some [ I 0 ]
-            | Some x -> Some [ I x ])
+            | Some x -> Some [ I (x + 1) ])
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
