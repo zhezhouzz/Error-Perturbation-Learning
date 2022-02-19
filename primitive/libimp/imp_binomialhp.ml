@@ -234,6 +234,32 @@ let table =
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
+      imp_name = "binomialhp_lower_bound";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Int ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialhp l ] -> (
+            match BinomialHeap.min_opt l with
+            | None -> Some [ I 0 ]
+            | Some x -> Some [ I x ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "binomialhp_upper_bound";
+      imp_itps = [ Uninterp "binomialhp" ];
+      imp_otps = [ Int ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialhp l ] -> (
+            match BinomialHeap.max_opt l with
+            | None -> Some [ I 0 ]
+            | Some x -> Some [ I x ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
       imp_name = "binomialhp_rank";
       imp_itps = [ Uninterp "binomialt" ];
       imp_otps = [ Int ];

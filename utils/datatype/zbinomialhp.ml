@@ -182,12 +182,16 @@ let rec binomial_complete_tree = function
       then List.for_all binomial_complete_tree ts
       else false
 
-let rec flatten_node t =
+let flatten_node t =
   List.fold_left
     (fun res tr -> match tr with Node (_, x, t) -> [ x ] @ res @ flatten t)
     [] t
 
 let mem t x = List.mem x @@ flatten_node t
+
+let max_opt t = IntList.max_opt @@ flatten_node t
+
+let min_opt t = IntList.min_opt @@ flatten_node t
 
 let t_head = function Node (r, x, _) -> (r, x)
 

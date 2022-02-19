@@ -9,6 +9,8 @@ let to_basic_tp = function
   | "int" -> T.Int
   | "nat" -> T.Nat
   | "instr" -> T.IfcInstr
+  | "binomialhp" -> T.Uninterp "binomialhp"
+  | "binomialt" -> T.Uninterp "binomialt"
   | x -> raise @@ failwith @@ spf "parse: wrong tp(%s)" x
 
 let to_tp (elem, l) =

@@ -8,6 +8,8 @@ let op_pool =
     "binomialhp_list_append";
     "binomialhp_single";
     "binomialhp_top";
+    "binomialhp_lower_bound";
+    "binomialhp_upper_bound";
     "binomialt_head";
     "binomialt_head_update";
     "plus1";
