@@ -1,0 +1,8 @@
+let i_err = (LNode (3, 10, LNode (2, 8, LNodeS (1, 7), LNodeS (1, 9)), LNode (1, 11, LILeaf, LNodeS (1, 13))), LNode (3, 5, LNode (2, 3, LNodeS (1, 2), LNodeS (1, 4)), LNode (1, 6, LILeaf, LNodeS (1, 12))))
+Default
+IN: (x0: int treei, x1: int treei) {
+(x2: int, x3: int, x4: int treei, x5: int treei) = treei_destruct(x0: int treei);
+(x6: int) = minus1(x3: int);
+(x7: int treei) = treei_node(x6: int, x2: int, x4: int treei, x4: int treei);
+(x8: int, x9: int) = treei_max(x7: int treei)}
+OUT: (x1: int treei, x5: int treei)

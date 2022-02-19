@@ -39,12 +39,12 @@ let i_err =
       ( 3,
         10,
         LNode (2, 8, LNodeS (1, 7), LNodeS (1, 9)),
-        LNode (1, 11, LILeaf, LNode (1, 13, LILeaf, LNodeS (1, 15))) ),
+        LNode (1, 11, LILeaf, LNodeS (1, 13)) ),
     LNode
       ( 3,
         5,
         LNode (2, 3, LNodeS (1, 2), LNodeS (1, 4)),
-        LNode (1, 6, LILeaf, LNode (1, 12, LILeaf, LNodeS (1, 14))) ) )
+        LNode (1, 6, LILeaf, LNodeS (1, 12)) ) )
 
 let sampling_rounds = 6
 

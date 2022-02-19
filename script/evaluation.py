@@ -3,8 +3,9 @@ import subprocess
 import sys
 import argparse
 import os
+from datetime import datetime
 
-verbose=False
+verbose=True
 
 config_file = "config/config.json"
 benchmarks_config_file = "config/benchmarks.json"
@@ -18,7 +19,6 @@ def solve_tap(p_setting):
     return target_file, assertion_file, pf_file
 
 def invoc_cmd(cmd, output_file):
-    print(" ".join(cmd))
     if (verbose):
         print(" ".join(cmd))
     if output_file is not None:
@@ -101,18 +101,30 @@ if __name__ == "__main__":
     if action == "syn":
         for b in bs:
             syn(b, "1", timebound, outfile)
-    if action == "evalpf":
+    elif action == "evalpf":
         for b in bs:
             eval_pf_time(b, args.pffile, timebound, outfile)
-    if action == "evalbaseline":
+    elif action == "syneval":
+        for b in bs:
+            syn(b, "1", "1", ".prog")
+            now = datetime.now()
+            subprocess.run(["mv", ".logdir/.log", ".logdir/.log_" + b['name'] + "_" + now.strftime('%m%d%y-%T')])
+            eval_pf_time(b, ".prog", "1", ".out")
+    elif action == "evalpf":
+        for b in bs:
+            eval_pf_time(b, args.pffile, timebound, outfile)
+    elif action == "evalbaseline":
         for b in bs:
             eval_baseline_time(b, qc_config, timebound, outfile)
-    if action == "evalpfnum":
+    elif action == "evalpfnum":
         for b in bs:
             eval_pf_num(b, args.pffile, sizebound, outfile)
-    if action == "evalbaselinenum":
+    elif action == "evalbaselinenum":
         for b in bs:
             eval_baseline_num(b, qc_config, sizebound, outfile)
+    else:
+        print("unknown command {}".format(action))
+        exit()
 
 # dune exec -- main/main.exe synthesize-time config/config.json data/client/rbset/balance.ml data/client/rbset/assertion1.ml 1 300 > .prog
 # dune exec -- main/main.exe sampling-time config/config.json data/client/rbset/balance.ml data/client/rbset/assertion1.ml .prog 5

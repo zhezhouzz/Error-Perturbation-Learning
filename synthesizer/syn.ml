@@ -57,7 +57,7 @@ let synthesize_f bias samples bound env =
   | Some cur_p ->
       Zlog.log_write
       @@ Printf.sprintf "prog(cost: %f):\n%s\n" cost
-           (Language.Oplang.layout cur_p.prog);
+           (Language.Piecewise.layout_with_i_err env.i_err ([], cur_p.prog));
       Some (env, cur_p.prog)
 
 type state = FIsOK of (Spec.t * V.t list list)

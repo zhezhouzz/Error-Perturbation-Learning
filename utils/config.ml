@@ -16,6 +16,7 @@ type config = {
   mutation_distribution : mutation_distribution;
   bias_method : bias_method;
   arg_solve_bound : int;
+  show_samples_in_log : bool;
 }
 
 let conf =
@@ -28,6 +29,7 @@ let conf =
         { op_replace = 1; op_swap = 1; op_deny = 1; arg_reassign = 1 };
       bias_method = CostPenalty;
       arg_solve_bound = 35;
+      show_samples_in_log = false;
     }
 
 let logdir = ".logdir"
@@ -93,6 +95,10 @@ let load_config configfile =
     try j |> member "arg_solve_bound" |> to_int
     with _ -> raise @@ failwith "cannot load config::arg_solve_bound"
   in
+  let show_samples_in_log =
+    try j |> member "show_samples_in_log" |> to_bool
+    with _ -> raise @@ failwith "cannot load config::show_samples_in_log"
+  in
   conf :=
     {
       exec_flag;
@@ -101,6 +107,7 @@ let load_config configfile =
       mutation_distribution;
       bias_method;
       arg_solve_bound;
+      show_samples_in_log;
     }
 
 let release_config () =
