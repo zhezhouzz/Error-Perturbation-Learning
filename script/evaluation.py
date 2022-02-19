@@ -99,7 +99,7 @@ if __name__ == "__main__":
                 exit()
     if action == "syn":
         for b in bs:
-            syn(b, 1, timebound, outfile)
+            syn(b, "1", timebound, outfile)
     if action == "evalpf":
         for b in bs:
             eval_pf_time(b, args.pffile, timebound)
