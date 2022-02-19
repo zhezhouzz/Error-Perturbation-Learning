@@ -21,7 +21,7 @@ def invoc_cmd(cmd, output_file):
     print(" ".join(cmd))
     if (verbose):
         print(" ".join(cmd))
-    if outfile != None:
+    if outfile is not None:
         with open(output_file, "w") as ofile:
             subprocess.run(cmd, stdout=ofile)
     else:
