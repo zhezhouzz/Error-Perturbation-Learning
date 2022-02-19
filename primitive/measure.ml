@@ -23,7 +23,7 @@ let measure = function
   | BIBL il -> List.length il
   | IInstrL il -> List.length il
   | T it -> 2 * TreeTailCall.deep it
-  | TI iti -> 2 * LabeledTreeTailCall.deep iti
+  | TI iti -> 5 * LabeledTreeTailCall.deep iti
   | TB itb -> 2 * LabeledTreeTailCall.deep itb
   | Binomialhp x -> 3 * BinomialHeap.deep x
   | Binomialt x -> 3 * BinomialHeap.deep [ x ]

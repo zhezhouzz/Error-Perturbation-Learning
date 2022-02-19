@@ -24,6 +24,7 @@ module LabeledTree = struct
           let rn = aux r in
           if ln > rn then ln + 1 else rn + 1
     in
+    (* Printf.printf "ti: len: %i\n" @@ aux t; *)
     aux t
 
   let rec size = function Leaf -> 0 | Node (_, _, a, b) -> 1 + size a + size b

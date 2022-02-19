@@ -35,8 +35,16 @@ let op_pool =
 let libs = [| "Leftisthp" |]
 
 let i_err =
-  ( LNode (3, 10, LNode (2, 8, LNodeS (1, 7), LNodeS (1, 9)), LNodeS (1, 11)),
-    LNode (3, 5, LNode (2, 3, LNodeS (1, 2), LNodeS (1, 4)), LNodeS (1, 6)) )
+  ( LNode
+      ( 3,
+        10,
+        LNode (2, 8, LNodeS (1, 7), LNodeS (1, 9)),
+        LNode (1, 11, LILeaf, LNode (1, 13, LILeaf, LNodeS (1, 15))) ),
+    LNode
+      ( 3,
+        5,
+        LNode (2, 3, LNodeS (1, 2), LNodeS (1, 4)),
+        LNode (1, 6, LILeaf, LNode (1, 12, LILeaf, LNodeS (1, 14))) ) )
 
 let sampling_rounds = 6
 

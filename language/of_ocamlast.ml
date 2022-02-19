@@ -42,7 +42,7 @@ let type_of_ocamltype tp =
 let rec lit_of_ocamlexpr e =
   let mk_exn constructor args =
     failwith
-      (spf "do not support complicate literal %s --> [%s] --"
+      (spf "do not support complicate literal: %s --> [%s] --"
          (Pprintast.string_of_expression constructor)
          (List.split_by_comma V.layout args))
   in
@@ -100,7 +100,7 @@ let rec lit_of_ocamlexpr e =
           | [ V.I hd; V.L tl ] -> [ V.L (hd :: tl) ]
           | k -> raise @@ mk_exn e k)
       | x, None ->
-          raise @@ failwith (spf "do not support complicate literal(%s) --" x)
+          raise @@ failwith (spf "do not support complicate literal: %s" x)
       | x, Some es ->
           raise
           @@ failwith
