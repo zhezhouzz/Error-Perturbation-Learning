@@ -17,7 +17,7 @@ let op_pool =
 
 let libs = [| "Realtimeq" |]
 
-let i_err = ([ 1; 2 ], [ 6; 4; 3 ], [])
+let i_err = ([ 1; 2; 3 ], [ 6; 5; 4 ], [])
 
 let sampling_rounds = 6
 
