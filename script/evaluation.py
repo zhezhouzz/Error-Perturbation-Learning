@@ -21,7 +21,8 @@ def invoc_cmd(cmd, output_file):
     print(" ".join(cmd))
     if (verbose):
         print(" ".join(cmd))
-    if outfile is not None:
+    if output_file is not None:
+        # print("{}:{}".format(output_file, type(output_file)))
         with open(output_file, "w") as ofile:
             subprocess.run(cmd, stdout=ofile)
     else:
@@ -32,29 +33,29 @@ def syn(p_setting, num, time, output_file):
     cmd = cmd_prefix + ["synthesize-time", config_file, target_file, assertion_file, num, time]
     invoc_cmd(cmd, output_file)
 
-def eval_pf_time(p_setting, pf_file, time):
+def eval_pf_time(p_setting, pf_file, time, outfile):
     target_file, assertion_file, pf_file_default = solve_tap(p_setting)
     if pf_file == None:
         pf_file = pf_file_default
     cmd = cmd_prefix + ["sampling-time", config_file, target_file, assertion_file, pf_file_default, time]
-    invoc_cmd(cmd, None)
+    invoc_cmd(cmd, outfile)
 
-def eval_baseline_time(p_setting, qc_config, time):
+def eval_baseline_time(p_setting, qc_config, time, outfile):
     target_file, assertion_file, _ = solve_tap(p_setting)
     cmd = cmd_prefix + ["baseline-time", config_file, target_file, assertion_file, qc_config, time]
-    invoc_cmd(cmd, None)
+    invoc_cmd(cmd, outfile)
 
-def eval_pf_num(p_setting, pf_file, num):
+def eval_pf_num(p_setting, pf_file, num, outfile):
     target_file, assertion_file, pf_file_default = solve_tap(p_setting)
     if pf_file == None:
         pf_file = pf_file_default
     cmd = cmd_prefix + ["eval-sampling", config_file, target_file, assertion_file, pf_file_default, num]
-    invoc_cmd(cmd, None)
+    invoc_cmd(cmd, outfile)
 
-def eval_baseline_num(p_setting, qc_config, num):
+def eval_baseline_num(p_setting, qc_config, num, outfile):
     target_file, assertion_file, pf_file_default = solve_tap(p_setting)
     cmd = cmd_prefix + ["baseline", config_file, target_file, assertion_file, qc_config, num]
-    invoc_cmd(cmd, None)
+    invoc_cmd(cmd, outfile)
 
 if __name__ == "__main__":
     # print(os.path.isfile("zhouzhe"))
@@ -102,16 +103,16 @@ if __name__ == "__main__":
             syn(b, "1", timebound, outfile)
     if action == "evalpf":
         for b in bs:
-            eval_pf_time(b, args.pffile, timebound)
+            eval_pf_time(b, args.pffile, timebound, outfile)
     if action == "evalbaseline":
         for b in bs:
-            eval_baseline_time(b, qc_config, timebound)
+            eval_baseline_time(b, qc_config, timebound, outfile)
     if action == "evalpfnum":
         for b in bs:
-            eval_pf_num(b, args.pffile, sizebound)
+            eval_pf_num(b, args.pffile, sizebound, outfile)
     if action == "evalbaselinenum":
         for b in bs:
-            eval_baseline_num(b, qc_config, sizebound)
+            eval_baseline_num(b, qc_config, sizebound, outfile)
 
 # dune exec -- main/main.exe synthesize-time config/config.json data/client/rbset/balance.ml data/client/rbset/assertion1.ml 1 300 > .prog
 # dune exec -- main/main.exe sampling-time config/config.json data/client/rbset/balance.ml data/client/rbset/assertion1.ml .prog 5
