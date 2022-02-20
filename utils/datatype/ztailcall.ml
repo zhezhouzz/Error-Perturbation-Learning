@@ -38,10 +38,16 @@ end
 module SkewhpTailCall = struct
   open Zskewhp
 
-  let deep tree =
+  let deep_ tree =
     match Zlist.IntList.max_opt @@ List.map rank tree with
     | None -> List.length tree
     | Some x -> max x @@ List.length tree
+
+  let deep t =
+    let _ = Printf.printf "deep\n" in
+    let x = deep_ t in
+    Printf.printf "deep end\n";
+    x
 end
 
 module PairinghpTailCall = struct
