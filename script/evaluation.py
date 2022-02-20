@@ -19,13 +19,15 @@ def solve_tap(p_setting):
     return target_file, assertion_file, pf_file
 
 def invoc_cmd(cmd, output_file):
-    if (verbose):
-        print(" ".join(cmd))
     if output_file is not None:
         # print("{}:{}".format(output_file, type(output_file)))
+        if (verbose):
+            print(" ".join(cmd + [">>", output_file]))
         with open(output_file, "a+") as ofile:
             subprocess.run(cmd, stdout=ofile)
     else:
+        if (verbose):
+            print(" ".join(cmd))
         subprocess.run(cmd)
 
 def syn(p_setting, num, time, output_file):

@@ -153,3 +153,81 @@ let delete_min ts =
     | x :: xs' -> insert_all (insert x ts) xs'
   in
   insert_all (merge (List.rev ts1) ts2) xs
+
+let rec num_node = function
+  | [] -> 0
+  | Node (_, _, xs, ts') :: ts ->
+      1 + List.length xs + num_node ts' + num_node ts
+
+let if_complete_list l =
+  (* let () = Printf.printf "_complete_list? %s\n" @@ IntList.to_string l in *)
+  let arr = Array.init (List.length l) (fun _ -> false) in
+  let b =
+    List.fold_left
+      (fun b i ->
+        (* let i = i - 1 in *)
+        if not b then false
+        else if i < 0 then false
+        else if arr.(i) then false
+        else (
+          arr.(i) <- true;
+          true))
+      true l
+  in
+  if not b then false else Array.for_all (fun x -> x) arr
+
+let rec binomial_complete_tree = function
+  | Node (0, _, [], []) -> true
+  | Node (0, _, _, _) -> false
+  | Node (num_nodes, _, xs, ts) ->
+      if List.length ts != num_nodes || List.length xs > num_nodes then false
+      else if
+        let if_comp = if_complete_list @@ List.map rank ts in
+        (* let () = Printf.printf "_complete_list? %b\n" if_comp in *)
+        if_comp
+      then List.for_all binomial_complete_tree ts
+      else false
+
+let flatten_node t =
+  List.fold_left
+    (fun res tr ->
+      match tr with Node (_, x, xs, t) -> [ x ] @ xs @ res @ flatten t)
+    [] t
+
+let mem t x = List.mem x @@ flatten_node t
+
+let max_opt t = IntList.max_opt @@ flatten_node t
+
+let min_opt t = IntList.min_opt @@ flatten_node t
+
+let t_head = function Node (r, x, _, _) -> (r, x)
+
+let t_head_l = function Node (r, x, xs, _) -> (r, x :: xs)
+
+let t_head_update t x = match t with Node (r, _, xs, l) -> Node (r, x, xs, l)
+
+let binomialhp ts =
+  let rec to_binary res = function
+    | 0 -> res
+    | 1 -> true :: res
+    | 2 -> true :: false :: res
+    | 3 -> true :: true :: res
+    | n ->
+        let n' = n / 2 in
+        let r = n - (n' * 2) in
+        let b =
+          if r == 1 then true
+          else if r == 0 then false
+          else raise @@ failwith "bad divide"
+        in
+        to_binary (b :: res) n'
+  in
+  let bl = List.rev @@ to_binary [] @@ num_node ts in
+  (* let () = Printf.printf "bl: %s\n" @@ List.split_by_comma string_of_bool bl in *)
+  let bl = List.filter_mapi (fun idx b -> if b then Some idx else None) bl in
+  (* let () = Printf.printf "bl: %s\n" @@ IntList.to_string bl in *)
+  if List.length ts != List.length bl then false
+  else
+    let rs = List.map rank ts in
+    if List.eq ( == ) bl rs then List.for_all binomial_complete_tree ts
+    else false
