@@ -44,9 +44,9 @@ module SkewhpTailCall = struct
     | Some x -> max x @@ List.length tree
 
   let deep t =
-    let _ = Printf.printf "deep\n" in
+    (* let _ = Printf.printf "deep\n" in *)
     let x = deep_ t in
-    Printf.printf "deep end\n";
+    (* Printf.printf "deep end\n"; *)
     x
 end
 

@@ -53,9 +53,9 @@ let flatten_ input =
   List.concat @@ aux [] input
 
 let flatten t =
-  let _ = Printf.printf "flatten\n" in
+  (* let _ = Printf.printf "flatten\n" in *)
   let x, y = List.split @@ flatten_ t in
-  Printf.printf "flatten end\n";
+  (* Printf.printf "flatten end\n"; *)
   x @ y
 
 let to_string l =
