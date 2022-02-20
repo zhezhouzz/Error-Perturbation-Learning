@@ -37,23 +37,26 @@ let rec formal_layout l =
       Printf.sprintf "BiCons (BiNode (%i, %i, %s), %s)" r x (formal_layout l')
         (formal_layout t)
 
-let flatten_ t =
+let flatten_ input =
   let rec aux res t =
-    let res, ts =
-      List.fold_left
-        (fun (res, ts) tr ->
-          match tr with Node (r, x, t) -> ((r, x) :: res, t :: ts))
-        (res, []) t
-    in
-    aux res (List.concat ts)
+    match t with
+    | [] -> res
+    | _ ->
+        let res', ts =
+          List.fold_left
+            (fun (res, ts) tr ->
+              match tr with Node (r, x, t) -> ((r, x) :: res, t :: ts))
+            ([], []) t
+        in
+        aux (res' :: res) (List.concat ts)
   in
-  match t with [] -> [] | _ -> aux [] t
+  List.concat @@ aux [] input
 
 let flatten t =
   let _ = Printf.printf "flatten\n" in
-  let x = flatten_ t in
+  let x, y = List.split @@ flatten_ t in
   Printf.printf "flatten end\n";
-  x
+  x @ y
 
 let to_string l =
   match l with
@@ -79,7 +82,7 @@ let to_string l =
         (fun res str -> Printf.sprintf "%s\n%s" res str)
         (Printf.sprintf "flatten:%s\n"
         @@ List.split_by_comma (fun (a, b) -> Printf.sprintf "%i:%i" a b)
-        @@ flatten l)
+        @@ flatten_ l)
         arr
 
 (* let rec aux t = *)
@@ -197,7 +200,7 @@ let rec binomial_complete_tree = function
       then List.for_all binomial_complete_tree ts
       else false
 
-let flatten_node t = snd @@ List.split @@ flatten t
+let flatten_node t = snd @@ List.split @@ flatten_ t
 
 let mem t x = List.mem x @@ flatten_node t
 
