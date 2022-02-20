@@ -3,7 +3,7 @@ open Value
 
 let tree_max_depth = 600
 
-let binomialhp_max_deep = 10
+let binomialhp_max_deep = 20
 
 let pairinghp_max_deep = 50
 
@@ -11,7 +11,7 @@ let physicistsq_max_deep = 100
 
 let realtimeq_max_deep = 100
 
-let skewhp_max_deep = 10
+let skewhp_max_deep = 20
 
 let size_measure = fastexpt 2
 
@@ -25,12 +25,12 @@ let measure = function
   | T it -> 2 * TreeTailCall.deep it
   | TI iti -> 5 * LabeledTreeTailCall.deep iti
   | TB itb -> 2 * LabeledTreeTailCall.deep itb
-  | Binomialhp x -> 3 * BinomialHeap.deep x
-  | Binomialt x -> 3 * BinomialHeap.deep [ x ]
-  | Pairinghp x -> 3 * Pairinghp.deep x
+  | Binomialhp x -> 3 * BinomialhpTailCall.deep x
+  | Binomialt x -> 3 * BinomialhpTailCall.deep [ x ]
+  | Pairinghp x -> 3 * PairinghpTailCall.deep x
   | Physicistsq x -> Physicistsq.length x
   | Realtimeq x -> Realtimeq.length x
-  | Skewhp x -> 3 * Skewhp.deep x
+  | Skewhp x -> 3 * SkewhpTailCall.deep x
 
 let bound_min = 20
 

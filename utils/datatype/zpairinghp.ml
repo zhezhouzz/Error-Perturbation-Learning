@@ -73,7 +73,7 @@ let find_min = function E -> raise Empty | T (x, _) -> x
 
 let delete_min = function E -> raise Empty | T (_, hs) -> merge_pairs hs
 
-let rec pairinghp x =
+let pairinghp x =
   let rec check_list = function
     | [] -> true
     | E :: _ -> false

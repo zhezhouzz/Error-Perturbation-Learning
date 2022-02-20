@@ -192,12 +192,12 @@ let len = function
   | TI iti -> LabeledTreeTailCall.deep iti
   | TB itb -> LabeledTreeTailCall.deep itb
   | IInstrL l -> List.length l
-  | Binomialhp x -> BinomialHeap.deep x
-  | Binomialt x -> BinomialHeap.deep [ x ]
-  | Pairinghp x -> Pairinghp.deep x
+  | Binomialhp x -> BinomialhpTailCall.deep x
+  | Binomialt x -> BinomialhpTailCall.deep [ x ]
+  | Pairinghp x -> PairinghpTailCall.deep x
   | Physicistsq x -> Physicistsq.length x
   | Realtimeq x -> Realtimeq.length x
-  | Skewhp x -> Skewhp.deep x
+  | Skewhp x -> SkewhpTailCall.deep x
 
 let layout_l_len l =
   sprintf "[%s]" @@ List.split_by_comma string_of_int @@ List.map len l

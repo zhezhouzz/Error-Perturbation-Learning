@@ -25,3 +25,37 @@ module LabeledTreeTailCall = struct
     (* Printf.printf "deep: %i\n" r; *)
     r
 end
+
+module BinomialhpTailCall = struct
+  open Zbinomialhp
+
+  let deep tree =
+    match Zlist.IntList.max_opt @@ List.map rank tree with
+    | None -> List.length tree
+    | Some x -> max x @@ List.length tree
+end
+
+module SkewhpTailCall = struct
+  open Zskewhp
+
+  let deep tree =
+    match Zlist.IntList.max_opt @@ List.map rank tree with
+    | None -> List.length tree
+    | Some x -> max x @@ List.length tree
+end
+
+module PairinghpTailCall = struct
+  open Zpairinghp
+
+  let deep tree =
+    let rec aux m = function
+      | [] -> m
+      | (depth, E) :: t -> aux (max depth m) t
+      | (depth, T (_, ls)) :: t ->
+          let ls = List.map (fun x -> (depth + 1, x)) ls in
+          aux m (ls @ t)
+    in
+    let r = aux 0 [ (0, tree) ] in
+    (* Printf.printf "deep: %i\n" r; *)
+    r
+end

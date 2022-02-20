@@ -9,13 +9,16 @@ module StrMap = Datatype.Zmap.StrMap
 module IntListMap = Datatype.Zmap.IntListMap
 module BitArray = Datatype.Zarray.Bitarray
 module Array = Datatype.Zarray.Array
-module TreeTailCall = Datatype.Ztailcall.TreeTailCall
-module LabeledTreeTailCall = Datatype.Ztailcall.LabeledTreeTailCall
 module BinomialHeap = Datatype.Zbinomialhp
 module Pairinghp = Datatype.Zpairinghp
 module Physicistsq = Datatype.Zphysicistsq
 module Realtimeq = Datatype.Zrealtimeq
 module Skewhp = Datatype.Zskewhp
+module TreeTailCall = Datatype.Ztailcall.TreeTailCall
+module LabeledTreeTailCall = Datatype.Ztailcall.LabeledTreeTailCall
+module BinomialhpTailCall = Datatype.Ztailcall.BinomialhpTailCall
+module SkewhpTailCall = Datatype.Ztailcall.SkewhpTailCall
+module PairinghpTailCall = Datatype.Ztailcall.PairinghpTailCall
 
 let spf = Printf.sprintf
 
