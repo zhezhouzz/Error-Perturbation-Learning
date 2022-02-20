@@ -174,13 +174,14 @@ let rec num_node = function
 
 let if_complete_list l =
   (* let () = Printf.printf "_complete_list? %s\n" @@ IntList.to_string l in *)
-  let arr = Array.init (List.length l) (fun _ -> false) in
+  let len = List.length l in
+  let arr = Array.init len (fun _ -> false) in
   let b =
     List.fold_left
       (fun b i ->
         (* let i = i - 1 in *)
         if not b then false
-        else if i < 0 then false
+        else if i < 0 || i >= len then false
         else if arr.(i) then false
         else (
           arr.(i) <- true;
