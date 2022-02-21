@@ -51,6 +51,12 @@
                 "pf": "1.prog"
             },
             {
+                "name": "skewhp",
+                "target": "merge_trees.ml",
+                "assert": "assertion1.ml",
+                "pf": "1.prog"
+            },
+            {
                 "name": "sortedlist",
                 "target": "merge.ml",
                 "assert": "assertion1.ml",

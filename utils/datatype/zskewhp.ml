@@ -23,23 +23,6 @@ let rec formal_layout l =
         (formal_layout l') (formal_layout t)
 
 let flatten_ input =
-  let rec aux rs res t =
-    match t with
-    | [] -> (rs, res)
-    | _ ->
-        let rs', res', ts =
-          List.fold_left
-            (fun (rs, res, ts) tr ->
-              match tr with
-              | Node (r, x, l, t) -> (r :: rs, x :: (l @ res), t :: ts))
-            ([], [], []) t
-        in
-        aux (rs' :: rs) (res' :: res) (List.concat ts)
-  in
-  let rs, res = aux [] [] input in
-  (List.concat rs, List.concat res)
-
-let flatten_ input =
   let rtab = Hashtbl.create 40000 in
   let xtab = Hashtbl.create 40000 in
   let update tab x = if Hashtbl.mem tab x then () else Hashtbl.add tab x () in
@@ -188,8 +171,7 @@ let delete_min ts =
 
 let rec num_node = function
   | [] -> 0
-  | Node (_, _, xs, ts') :: ts ->
-      1 + List.length xs + num_node ts' + num_node ts
+  | Node (_, _, _, ts') :: ts -> 1 + num_node ts' + num_node ts
 
 let if_complete_list l =
   (* letlet len = List.length l in () = Printf.printf "_complete_list? %s\n" @@ IntList.to_string l in *)
@@ -213,6 +195,7 @@ let rec binomial_complete_tree = function
   | Node (0, _, [], []) -> true
   | Node (0, _, _, _) -> false
   | Node (num_nodes, _, xs, ts) ->
+      (* let _ = Printf.printf "num_nodes = %i\n" num_nodes in *)
       if List.length ts != num_nodes || List.length xs > num_nodes then false
       else if
         let if_comp = if_complete_list @@ List.map rank ts in
@@ -260,7 +243,7 @@ let t_head_update t x = match t with Node (r, _, xs, l) -> Node (r, x, xs, l)
 let t_head_l_update t x l =
   match t with Node (r, _, xs, _) -> Node (r, x, xs, l)
 
-let binomialhp ts =
+let skewhp ts =
   let rec to_binary res = function
     | 0 -> res
     | 1 -> true :: res
@@ -278,6 +261,7 @@ let binomialhp ts =
   in
   let bl = List.rev @@ to_binary [] @@ num_node ts in
   (* let () = Printf.printf "bl: %s\n" @@ List.split_by_comma string_of_bool bl in *)
+  (* let _ = raise @@ failwith "skewhp" in *)
   let bl = List.filter_mapi (fun idx b -> if b then Some idx else None) bl in
   (* let () = Printf.printf "bl: %s\n" @@ IntList.to_string bl in *)
   if List.length ts != List.length bl then false

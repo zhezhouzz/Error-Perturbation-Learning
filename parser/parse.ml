@@ -11,6 +11,8 @@ let to_basic_tp = function
   | "instr" -> T.IfcInstr
   | "binomialhp" -> T.Uninterp "binomialhp"
   | "binomialt" -> T.Uninterp "binomialt"
+  | "skewhp" -> T.Uninterp "skewhp"
+  | "skewt" -> T.Uninterp "skewt"
   | x -> raise @@ failwith @@ spf "parse: wrong tp(%s)" x
 
 let to_tp (elem, l) =

@@ -79,6 +79,17 @@ let binomialhp_setting =
     ("cons_rev", "binomialhp_cons_rev");
   ]
 
+let skewhp_setting =
+  [
+    ("cons", "skewhp_list_cons");
+    ("rank", "skewhp_rank");
+    ("ins_tree", "skewhp_ins_tree");
+    ("link", "skewhp_link");
+    ("nil", "skewhp_nil");
+    ("nil_rev", "skewhp_nil_rev");
+    ("cons_rev", "skewhp_cons_rev");
+  ]
+
 let modules =
   [
     ("Nat", nat_setting);
@@ -96,6 +107,7 @@ let modules =
     ("Physicistsq", list_setting);
     ("Realtimeq", list_setting);
     ("Binomialhp", binomialhp_setting);
+    ("Skewhp", skewhp_setting);
   ]
 
 let underline_type_reduction = function
@@ -114,6 +126,7 @@ let underline_type_reduction = function
   | "Physicistsq.t" -> "int list"
   | "Realtimeq.t" -> "int list"
   | "Binomialhp.t" -> "binomialhp"
+  | "Skewhp.t" -> "skewhp"
   | tp -> failwith (spf "unknown type(%s)" tp)
 
 let invocation_inspector_init module_name =

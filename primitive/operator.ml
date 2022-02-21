@@ -121,6 +121,19 @@ let info_table =
       "binomialhp_upper_bound";
       "binomialt_head";
       "binomialt_head_update";
+      (* skewhp *)
+      "skewhp_list_last_destruct";
+      "skewhp_list_destruct";
+      "skewhp_list_cons";
+      "skewhp_list_append";
+      "skewhp_single";
+      "skewhp_top";
+      "skewhp_lower_bound";
+      "skewhp_upper_bound";
+      "skewt_head";
+      "skewt_head_l";
+      "skewt_head_update";
+      "skewt_head_l_update";
     ]
   in
   let make_info name =

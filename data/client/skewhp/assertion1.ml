@@ -21,7 +21,7 @@ let op_pool =
 let libs = [| "Skewhp" |]
 
 let i_err =
-  ( SkCons (SkNode (1, 0, [ 1 ] SkNodeS (0, 2, [ 3; 4 ])), SkNil),
+  ( SkCons (SkNode (1, 0, [ 1 ], SkNodeS (0, 2, [])), SkNil),
     SkCons (SkNode (1, 5, [ 6 ], SkNodeS (0, 7, [])), SkNil) )
 (* (SkNodeS (0, 0), SkNodeS (0, 2)) *)
 

@@ -35,9 +35,9 @@ module BinomialhpTailCall = struct
     | Some x -> max x @@ List.length tree
 
   let deep tree =
-    let _ = Printf.printf "deep\n" in
+    (* let _ = Printf.printf "deep\n" in *)
     let x = deep_ tree in
-    let _ = Printf.printf "deep: %i\n" x in
+    (* let _ = Printf.printf "deep: %i\n" x in *)
     x
 end
 
