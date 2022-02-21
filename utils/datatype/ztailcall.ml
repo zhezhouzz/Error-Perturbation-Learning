@@ -29,10 +29,16 @@ end
 module BinomialhpTailCall = struct
   open Zbinomialhp
 
-  let deep tree =
+  let deep_ tree =
     match Zlist.IntList.max_opt @@ List.map rank tree with
     | None -> List.length tree
     | Some x -> max x @@ List.length tree
+
+  let deep tree =
+    let _ = Printf.printf "deep\n" in
+    let x = deep_ tree in
+    let _ = Printf.printf "deep: %i\n" x in
+    x
 end
 
 module SkewhpTailCall = struct
