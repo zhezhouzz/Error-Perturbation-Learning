@@ -1,0 +1,8 @@
+let i_err = (BiCons (BiNode (1, 0, BiCons (BiNode (0, 2, BiNil), BiNil)), BiNil), BiCons (BiNode (1, 4, BiCons (BiNode (0, 5, BiNil), BiNil)), BiNil))
+Default
+IN: (x0: binomialhp, x1: binomialhp) {
+(x2: int) = binomialhp_upper_bound(x0: binomialhp);
+(x3: binomialhp) = binomialhp_single(x2: int);
+(x4: int) = binomialhp_upper_bound(x0: binomialhp);
+(x5: int) = binomialhp_top(x1: binomialhp)}
+OUT: (x3: binomialhp, x3: binomialhp)

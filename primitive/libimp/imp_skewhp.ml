@@ -159,12 +159,12 @@ let table =
     };
     {
       imp_name = "skewhp_single";
-      imp_itps = [ Int; IntList ];
+      imp_itps = [ Int ];
       imp_otps = [ Uninterp "skewhp" ];
       nondet = false;
       imp_exec =
         (function
-        | [ I x; L l ] -> Some [ Skewhp [ Skewhp.Node (0, x, l, []) ] ]
+        | [ I x ] -> Some [ Skewhp [ Skewhp.Node (0, x, [], []) ] ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
