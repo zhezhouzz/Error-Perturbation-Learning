@@ -4,6 +4,12 @@
 )
 (executable
  (name main)
+ (modules main)
  (libraries core commands)
  (preprocess (pps ppx_jane))
 )
+
+(executable
+    (name App)
+    (modules app)
+    (libraries LoopInvGen base))

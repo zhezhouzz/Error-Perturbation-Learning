@@ -1,0 +1,18 @@
+(env
+    (debug  (ocamlopt_flags (:standard -g -Oclassic)))
+    (dev    (ocamlopt_flags (:standard -w -A)))
+    (dev    (flags (:standard -w -A)))
+    (_      (ocamlopt_flags (:standard -O3 -rounds 6))))
+
+(rule
+    (targets config.h)
+    (deps (alias Logging))
+    (mode fallback)
+    (action
+        (bash "cp %{project_root}/../../src/config.h .")))
+
+(library
+    (name LoopInvGen)
+    (libraries core str)
+    (preprocessor_deps (file config.h))
+    (preprocess (pps ppx_optcomp ppx_compare ppx_sexp_conv)))

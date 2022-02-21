@@ -1,0 +1,7 @@
+(library
+ (name comparepie)
+ (libraries LoopInvGen base)
+ (modules
+   benchmark_list
+ )
+)
