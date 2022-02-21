@@ -20,6 +20,7 @@ type t =
   | Physicistsq of Physicistsq.t
   | Realtimeq of Realtimeq.t
   | Skewhp of Skewhp.t
+  | Skewt of Skewhp.tree
   | NotADt
 
 let layout = function
@@ -45,6 +46,7 @@ let layout = function
   | Physicistsq x -> Physicistsq.to_string x
   | Realtimeq x -> Realtimeq.to_string x
   | Skewhp x -> Skewhp.to_string x
+  | Skewt x -> Skewhp.to_string [ x ]
   | NotADt -> "_"
 
 let layout_l l = sprintf "[%s]" @@ List.split_by_comma layout l
@@ -71,7 +73,8 @@ let formal_layout = function
   | Pairinghp x -> Pairinghp.to_string x
   | Physicistsq x -> Physicistsq.to_string x
   | Realtimeq x -> Realtimeq.to_string x
-  | Skewhp x -> Skewhp.to_string x
+  | Skewhp x -> Skewhp.formal_layout x
+  | Skewt x -> Skewhp.formal_layout [ x ]
   | NotADt -> "_"
 
 let formal_layout_l l = sprintf "(%s)" @@ List.split_by_comma formal_layout l
@@ -100,6 +103,7 @@ let eq x y =
     | Physicistsq x, Physicistsq y -> Physicistsq.eq x y
     | Realtimeq x, Realtimeq y -> Realtimeq.eq x y
     | Skewhp x, Skewhp y -> Skewhp.eq x y
+    | Skewt x, Skewt y -> Skewhp.eq [ x ] [ y ]
     | _, _ -> false
   in
   aux (x, y)
@@ -135,6 +139,7 @@ let compare x y =
     | Physicistsq x, Physicistsq y -> Physicistsq.compare x y
     | Realtimeq x, Realtimeq y -> Realtimeq.compare x y
     | Skewhp x, Skewhp y -> Skewhp.compare x y
+    | Skewt x, Skewt y -> Skewhp.compare [ x ] [ y ]
     | _, _ ->
         raise
         @@ failwith
@@ -158,6 +163,7 @@ let flatten_forall = function
   | Physicistsq x -> List.remove_duplicates @@ Physicistsq.flatten x
   | Realtimeq x -> List.remove_duplicates @@ Realtimeq.flatten x
   | Skewhp x -> List.remove_duplicates @@ Skewhp.flatten x
+  | Skewt x -> List.remove_duplicates @@ Skewhp.flatten [ x ]
 
 let flatten_forall_l l =
   List.fold_left
@@ -179,7 +185,8 @@ let flatten_forall_l l =
       | Pairinghp x -> r @ List.remove_duplicates @@ Pairinghp.flatten x
       | Physicistsq x -> r @ List.remove_duplicates @@ Physicistsq.flatten x
       | Realtimeq x -> r @ List.remove_duplicates @@ Realtimeq.flatten x
-      | Skewhp x -> r @ List.remove_duplicates @@ Skewhp.flatten x)
+      | Skewhp x -> r @ List.remove_duplicates @@ Skewhp.flatten x
+      | Skewt x -> r @ List.remove_duplicates @@ Skewhp.flatten [ x ])
     [] l
 
 let len = function
@@ -198,6 +205,7 @@ let len = function
   | Physicistsq x -> Physicistsq.length x
   | Realtimeq x -> Realtimeq.length x
   | Skewhp x -> SkewhpTailCall.deep x
+  | Skewt x -> SkewhpTailCall.deep [ x ]
 
 let layout_l_len l =
   sprintf "[%s]" @@ List.split_by_comma string_of_int @@ List.map len l
@@ -222,6 +230,7 @@ let get_tp v =
   | Physicistsq _ -> Tp.Uninterp "physicistsq"
   | Realtimeq _ -> Tp.Uninterp "realtimeq"
   | Skewhp _ -> Tp.Uninterp "skewhp"
+  | Skewt _ -> Tp.Uninterp "skewt"
 
 let get_tp_l = List.map get_tp
 

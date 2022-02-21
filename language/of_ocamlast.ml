@@ -73,6 +73,21 @@ let rec lit_of_ocamlexpr e =
           | [ V.I a; V.I b ] ->
               [ V.Binomialhp [ BinomialHeap.Node (a, b, []) ] ]
           | k -> raise @@ mk_exn e k)
+      | "SkNil", None -> [ V.Skewhp [] ]
+      | "SkCons", Some e -> (
+          match lit_of_ocamlexpr e with
+          | [ V.Skewhp a; V.Skewhp b ] -> [ V.Skewhp (a @ b) ]
+          | k -> raise @@ mk_exn e k)
+      | "SkNode", Some e -> (
+          match lit_of_ocamlexpr e with
+          | [ V.I a; V.I b; V.L l; V.Skewhp c ] ->
+              [ V.Skewhp [ Skewhp.Node (a, b, l, c) ] ]
+          | k -> raise @@ mk_exn e k)
+      | "SkNodeS", Some e -> (
+          match lit_of_ocamlexpr e with
+          | [ V.I a; V.I b; V.L l ] ->
+              [ V.Skewhp [ Skewhp.Node (a, b, l, []) ] ]
+          | k -> raise @@ mk_exn e k)
       | "NodeS", Some e -> (
           match lit_of_ocamlexpr e with
           | [ V.I x ] -> [ V.T (Tree.Node (x, Leaf, Leaf)) ]

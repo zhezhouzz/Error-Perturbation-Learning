@@ -14,6 +14,14 @@ let rec max_deep l =
   let aux = function Node (_, _, _, l) -> 1 + max_deep l in
   match IntList.max_opt @@ List.map aux l with None -> 0 | Some x -> x
 
+let rec formal_layout l =
+  match l with
+  | [] -> "SkNil"
+  | Node (r, x, l, l') :: t ->
+      Printf.sprintf "SkCons (BiNode (%i, %i, %s, %s), %s)" r x
+        (Printf.sprintf "[%s]" (IntList.to_string l))
+        (formal_layout l') (formal_layout t)
+
 let flatten_ input =
   let rec aux rs res t =
     match t with
@@ -31,8 +39,35 @@ let flatten_ input =
   let rs, res = aux [] [] input in
   (List.concat rs, List.concat res)
 
-let rec flatten t =
+let flatten_ input =
+  let rtab = Hashtbl.create 40000 in
+  let xtab = Hashtbl.create 40000 in
+  let update tab x = if Hashtbl.mem tab x then () else Hashtbl.add tab x () in
+  let rec aux t =
+    match t with
+    | [] -> ()
+    | _ ->
+        let ts =
+          List.fold_left
+            (fun ts tr ->
+              match tr with
+              | Node (r, x, l, t) ->
+                  let () = update rtab r in
+                  let () = List.iter (update xtab) (x :: l) in
+                  t :: ts)
+            [] t
+        in
+        List.iter aux ts
+  in
+  let () = aux input in
+  (Hashtbl.to_seq_keys rtab, Hashtbl.to_seq_keys xtab)
+
+let flatten t =
+  (* let _ = Printf.printf "flatten\n" in *)
   let x, y = flatten_ t in
+  let x = List.of_seq x in
+  let y = List.of_seq y in
+  (* Printf.printf "flatten end(%i, %i)\n" (List.length x) (List.length y); *)
   x @ y
 
 let to_string l =
@@ -55,7 +90,7 @@ let to_string l =
             update_below idx "}"
       in
       List.iter (fun t -> aux 0 t) l;
-      let elems = flatten l in
+      (* let elems = flatten l in *)
       (* let _ = *)
       (*   Printf.printf "%s\n" *)
       (*   @@ Printf.sprintf "flatten:%s\n" *)
@@ -65,29 +100,11 @@ let to_string l =
       let s =
         Array.fold_left
           (fun res str -> Printf.sprintf "%s\n%s" res str)
-          (Printf.sprintf "flatten:%s\n" @@ IntList.to_string elems)
+          "" (* (Printf.sprintf "flatten:%s\n" @@ IntList.to_string elems) *)
           arr
       in
       (* let _ = raise @@ failwith "end" in *)
       s
-
-(* let rec to_string t = *)
-(*   match t with *)
-(*   | [] -> "()" *)
-(*   | _ -> *)
-(*       let a, b = *)
-(*         List.fold_left *)
-(*           (fun (layer, rest) tr -> *)
-(*             match tr with *)
-(*             | Node (r, x, l, t) -> (layer @ [ (r, x, l) ], rest @ [ t ])) *)
-(*           ([], []) t *)
-(*       in *)
-(*       Printf.sprintf "%s\n%s" *)
-(*         (List.split_by " " *)
-(*            (fun (r, x, l) -> *)
-(*              Printf.sprintf "%i:%i~[%s] " r x @@ IntList.to_string l) *)
-(*            a) *)
-(*         (List.split_by " " (fun t -> Printf.sprintf "{%s}" @@ to_string t) b) *)
 
 let compare t1 t2 =
   let rec aux t1 t2 =
@@ -204,19 +221,44 @@ let rec binomial_complete_tree = function
       then List.for_all binomial_complete_tree ts
       else false
 
-let flatten_node t = snd @@ flatten_ t
+let flatten_node t = List.of_seq @@ snd @@ flatten_ t
 
-let mem t x = List.mem x @@ flatten_node t
+let fold_left f default input =
+  let rec aux res t =
+    match t with
+    | [] -> res
+    | _ ->
+        let res', ts =
+          List.fold_left
+            (fun (res, ts) tr ->
+              match tr with
+              | Node (_, x, l, t) -> (List.fold_left f res (x :: l), t :: ts))
+            (res, []) t
+        in
+        aux res' (List.concat ts)
+  in
+  aux default input
 
-let max_opt t = IntList.max_opt @@ flatten_node t
+let mem t x = fold_left (fun b x' -> b || x == x') false t
 
-let min_opt t = IntList.min_opt @@ flatten_node t
+let max_opt t =
+  fold_left
+    (fun opt x' -> match opt with None -> Some x' | Some x -> Some (max x x'))
+    None t
+
+let min_opt t =
+  fold_left
+    (fun opt x' -> match opt with None -> Some x' | Some x -> Some (min x x'))
+    None t
 
 let t_head = function Node (r, x, _, _) -> (r, x)
 
-let t_head_l = function Node (r, x, xs, _) -> (r, x :: xs)
+let t_head_l = function Node (r, x, xs, _) -> (r, x, xs)
 
 let t_head_update t x = match t with Node (r, _, xs, l) -> Node (r, x, xs, l)
+
+let t_head_l_update t x l =
+  match t with Node (r, _, xs, _) -> Node (r, x, xs, l)
 
 let binomialhp ts =
   let rec to_binary res = function

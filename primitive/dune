@@ -18,6 +18,7 @@
    imp_treei
    imp_treeb
    imp_binomialhp
+   imp_skewhp
    imps
    ; library implementation end
    randomgen

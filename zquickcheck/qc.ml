@@ -123,13 +123,13 @@ let helper max_depth size_conf f =
     Gen.(
       fun n ->
         if n > max_depth then
-          let () = Printf.printf "n = %i > max_depth(%i)\n" n max_depth in
+          (* let () = Printf.printf "n = %i > max_depth(%i)\n" n max_depth in *)
           return None
         else
-          let () =
-            Printf.printf "n = %i <= max_depth(%i); make 20\n" n max_depth
-          in
-          map (fun x -> Some x) @@ f 20)
+          (* let () = *)
+          (*   Printf.printf "n = %i <= max_depth(%i); make 20\n" n max_depth *)
+          (* in *)
+          map (fun x -> Some x) @@ f n)
   in
   match size_conf with
   | SmallNat -> Gen.sized body

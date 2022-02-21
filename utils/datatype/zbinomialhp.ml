@@ -61,15 +61,15 @@ let flatten_ input =
   (Hashtbl.to_seq_keys rtab, Hashtbl.to_seq_keys xtab)
 
 let flatten t =
-  let _ = Printf.printf "flatten\n" in
+  (* let _ = Printf.printf "flatten\n" in *)
   let x, y = flatten_ t in
   let x = List.of_seq x in
   let y = List.of_seq y in
-  Printf.printf "flatten end(%i, %i)\n" (List.length x) (List.length y);
+  (* Printf.printf "flatten end(%i, %i)\n" (List.length x) (List.length y); *)
   x @ y
 
 let to_string l =
-  let _ = Printf.printf "to_string\n" in
+  (* let _ = Printf.printf "to_string\n" in *)
   match l with
   | [] -> "_"
   | _ ->
@@ -96,31 +96,6 @@ let to_string l =
         (* @@ List.split_by_comma (fun (a, b) -> Printf.sprintf "%i:%i" a b) *)
         (* @@ flatten_ l) *)
         arr
-
-(* let rec aux t = *)
-(*   let a, b = *)
-(*     List.fold_left *)
-(*       (fun (layer, rest) tr -> *)
-(*          match tr with Node (r, x, t) -> (layer @ [ (r, x) ], rest @ [ t ])) *)
-(*       ([], []) t *)
-(*   in *)
-(*   let b, c = List.split @@ List.map aux b in *)
-(*   aLS b *)
-(*   let b = LS b, *)
-(* match t with *)
-(* | [] -> "_" *)
-(* | _ -> *)
-(*     let a, b = *)
-(*       List.fold_left *)
-(*         (fun (layer, rest) tr -> *)
-(*           match tr with Node (r, x, t) -> (layer @ [ (r, x) ], rest @ [ t ])) *)
-(*         ([], []) t *)
-(*     in *)
-(*     let b = List.map        *)
-(*     Printf.sprintf "%s\n%s" (nested_list_to_string (LO a)) *)
-(*       (nested_list_to_string ())       *)
-(*       (List.split_by ", " (fun (r, x) -> Printf.sprintf "%i:%i" r x) a) *)
-(*       (List.split_by " " (fun t -> Printf.sprintf "{%s}" @@ to_string t) b) *)
 
 let compare t1 t2 =
   let rec aux t1 t2 =
