@@ -11,7 +11,10 @@ config_file = "config/config.json"
 def invoc_cmd(cmd):
     if (verbose):
         print(" ".join(cmd))
-    subprocess.run(cmd)
+    try:
+        subprocess.run(cmd)
+    except subprocess.CalledProcessError as e:
+        print(e.output)
 
 def set_printing_samples(b):
     with open(config_file, 'r') as f:

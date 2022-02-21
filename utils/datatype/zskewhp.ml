@@ -14,11 +14,26 @@ let rec max_deep l =
   let aux = function Node (_, _, _, l) -> 1 + max_deep l in
   match IntList.max_opt @@ List.map aux l with None -> 0 | Some x -> x
 
+let flatten_ input =
+  let rec aux rs res t =
+    match t with
+    | [] -> (rs, res)
+    | _ ->
+        let rs', res', ts =
+          List.fold_left
+            (fun (rs, res, ts) tr ->
+              match tr with
+              | Node (r, x, l, t) -> (r :: rs, x :: (l @ res), t :: ts))
+            ([], [], []) t
+        in
+        aux (rs' :: rs) (res' :: res) (List.concat ts)
+  in
+  let rs, res = aux [] [] input in
+  (List.concat rs, List.concat res)
+
 let rec flatten t =
-  List.fold_left
-    (fun res tr ->
-      match tr with Node (r, x, l, t) -> [ r; x ] @ l @ res @ flatten t)
-    [] t
+  let x, y = flatten_ t in
+  x @ y
 
 let to_string l =
   match l with
@@ -189,11 +204,7 @@ let rec binomial_complete_tree = function
       then List.for_all binomial_complete_tree ts
       else false
 
-let flatten_node t =
-  List.fold_left
-    (fun res tr ->
-      match tr with Node (_, x, xs, t) -> [ x ] @ xs @ res @ flatten t)
-    [] t
+let flatten_node t = snd @@ flatten_ t
 
 let mem t x = List.mem x @@ flatten_node t
 

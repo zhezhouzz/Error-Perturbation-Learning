@@ -24,11 +24,17 @@ def invoc_cmd(cmd, output_file):
         if (verbose):
             print(" ".join(cmd + [">>", output_file]))
         with open(output_file, "a+") as ofile:
-            subprocess.run(cmd, stdout=ofile)
+            try:
+                subprocess.run(cmd, stdout=ofile)
+            except subprocess.CalledProcessError as e:
+                print(e.output)
     else:
         if (verbose):
             print(" ".join(cmd))
-        subprocess.run(cmd)
+        try:
+            subprocess.run(cmd)
+        except subprocess.CalledProcessError as e:
+            print(e.output)
 
 def syn(p_setting, num, time, output_file):
     target_file, assertion_file, _ = solve_tap(p_setting)
