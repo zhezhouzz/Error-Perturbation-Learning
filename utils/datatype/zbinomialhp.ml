@@ -38,23 +38,33 @@ let rec formal_layout l =
         (formal_layout t)
 
 let flatten_ input =
-  let rec aux res t =
+  let rtab = Hashtbl.create 40000 in
+  let xtab = Hashtbl.create 40000 in
+  let update tab x = if Hashtbl.mem tab x then () else Hashtbl.add tab x () in
+  let rec aux t =
     match t with
-    | [] -> res
+    | [] -> ()
     | _ ->
-        let res', ts =
+        let ts =
           List.fold_left
-            (fun (res, ts) tr ->
-              match tr with Node (r, x, t) -> ((r, x) :: res, t :: ts))
-            ([], []) t
+            (fun ts tr ->
+              match tr with
+              | Node (r, x, t) ->
+                  let () = update rtab r in
+                  let () = update xtab x in
+                  t :: ts)
+            [] t
         in
-        aux (res' :: res) (List.concat ts)
+        List.iter aux ts
   in
-  List.concat @@ aux [] input
+  let () = aux input in
+  (Hashtbl.to_seq_keys rtab, Hashtbl.to_seq_keys xtab)
 
 let flatten t =
   let _ = Printf.printf "flatten\n" in
-  let x, y = List.split @@ flatten_ t in
+  let x, y = flatten_ t in
+  let x = List.of_seq x in
+  let y = List.of_seq y in
   Printf.printf "flatten end(%i, %i)\n" (List.length x) (List.length y);
   x @ y
 
@@ -81,9 +91,10 @@ let to_string l =
       List.iter (fun t -> aux 0 t) l;
       Array.fold_left
         (fun res str -> Printf.sprintf "%s\n%s" res str)
-        (Printf.sprintf "flatten:%s\n"
-        @@ List.split_by_comma (fun (a, b) -> Printf.sprintf "%i:%i" a b)
-        @@ flatten_ l)
+        ""
+        (* (Printf.sprintf "flatten:%s\n" *)
+        (* @@ List.split_by_comma (fun (a, b) -> Printf.sprintf "%i:%i" a b) *)
+        (* @@ flatten_ l) *)
         arr
 
 (* let rec aux t = *)
@@ -202,7 +213,7 @@ let rec binomial_complete_tree = function
       then List.for_all binomial_complete_tree ts
       else false
 
-let flatten_node t = snd @@ List.split @@ flatten_ t
+let flatten_node t = List.of_seq @@ snd @@ flatten_ t
 
 let fold_left f default input =
   let rec aux res t =
