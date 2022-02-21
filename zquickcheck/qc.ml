@@ -122,7 +122,14 @@ let helper max_depth size_conf f =
   let body =
     Gen.(
       fun n ->
-        if n > max_depth then return None else map (fun x -> Some x) @@ f n)
+        if n > max_depth then
+          let () = Zlog.log_write @@ spf "n = %i > max_depth(%i)" n max_depth in
+          return None
+        else
+          let () =
+            Zlog.log_write @@ spf "n = %i <= max_depth(%i)" n max_depth
+          in
+          map (fun x -> Some x) @@ f n)
   in
   match size_conf with
   | SmallNat -> Gen.sized body
