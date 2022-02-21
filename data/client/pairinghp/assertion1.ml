@@ -11,6 +11,7 @@ let op_pool =
     "pairinghp_upper_bound";
     "pairinghp_lower_bound";
     "pairinghp_drop_bottom";
+    "pairinghp_single";
     "plus1";
     "minus1";
     "const0";

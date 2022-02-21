@@ -167,4 +167,14 @@ let table =
             | Pairinghp.T (x, l) -> Some [ I x; Pairingl l ])
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
+    {
+      imp_name = "pairinghp_single";
+      imp_itps = [ Int ];
+      imp_otps = [ Uninterp "pairinghp" ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ I x ] -> Some [ Pairinghp (Pairinghp.single x) ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
   ]

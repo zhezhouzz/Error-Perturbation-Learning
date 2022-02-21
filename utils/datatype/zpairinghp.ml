@@ -120,6 +120,8 @@ let min_opt t =
 
 let mem t x = fold_left (fun opt x' -> opt || x == x') false t
 
+let single x = T (x, [])
+
 let drop_bottom t =
   let rec aux t =
     match t with

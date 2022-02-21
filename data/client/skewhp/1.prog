@@ -1,8 +1,8 @@
-let i_err = (BiCons (BiNode (1, 0, BiCons (BiNode (0, 2, BiNil), BiNil)), BiNil), BiCons (BiNode (1, 4, BiCons (BiNode (0, 5, BiNil), BiNil)), BiNil))
+let i_err = (SkCons (SkNode (1, 0, [1], SkCons (SkNode (0, 2, [], SkNil), SkNil)), SkNil), SkCons (SkNode (1, 5, [6], SkCons (SkNode (0, 7, [], SkNil), SkNil)), SkNil))
 Default
-IN: (x0: binomialhp, x1: binomialhp) {
-(x2: int) = const0();
-(x3: binomialt, x4: binomialhp) = binomialhp_list_destruct(x1: binomialhp);
-(x5: binomialt) = binomialt_head_update(x3: binomialt, x2: int);
-(x6: binomialhp) = binomialhp_list_append(x4: binomialhp, x5: binomialt)}
-OUT: (x6: binomialhp, x0: binomialhp)
+IN: (x0: skewhp, x1: skewhp) {
+(x2: int) = skewhp_upper_bound(x1: skewhp);
+(x3: int) = skewhp_upper_bound(x0: skewhp);
+(x4: skewhp) = skewhp_single(x2: int);
+(x5: skewhp) = skewhp_single(x3: int)}
+OUT: (x5: skewhp, x4: skewhp)

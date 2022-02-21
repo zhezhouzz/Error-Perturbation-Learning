@@ -1,0 +1,8 @@
+let i_err = (PNode (1, PCons (PNode (2, PNil), PCons (PNode (3, PNil), PNil))), PNode (4, PCons (PNode (5, PNil), PCons (PNode (6, PNil), PNil))))
+Default
+IN: (x0: pairinghp, x1: pairinghp) {
+(x2: int) = pairinghp_upper_bound(x0: pairinghp);
+(x3: pairinghp) = pairinghp_append_to_right_most(x2: int, x0: pairinghp);
+(x4: int) = pairinghp_min(x1: pairinghp);
+(x5: int) = pairinghp_min(x1: pairinghp)}
+OUT: (x3: pairinghp, x1: pairinghp)

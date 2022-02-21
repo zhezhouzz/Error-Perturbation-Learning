@@ -62,8 +62,14 @@ module PairinghpTailCall = struct
   let deep tree =
     let rec aux m = function
       | [] -> m
-      | (depth, E) :: t -> aux (max depth m) t
+      | (depth, E) :: t ->
+          (* let _ = Printf.printf "E; depth: %i; m: %i\n" depth m in *)
+          aux (max depth m) t
+      | (depth, T (_, [])) :: t -> aux (max depth m) t
       | (depth, T (_, ls)) :: t ->
+          (* let _ = *)
+          (*   Printf.printf "len(ls) = %i; depth: %i\n" (List.length ls) depth *)
+          (* in *)
           let ls = List.map (fun x -> (depth + 1, x)) ls in
           aux m (ls @ t)
     in
