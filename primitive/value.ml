@@ -17,6 +17,7 @@ type t =
   | Binomialhp of BinomialHeap.t
   | Binomialt of BinomialHeap.tree
   | Pairinghp of Pairinghp.t
+  | Pairingl of Pairinghp.t list
   | Physicistsq of Physicistsq.t
   | Realtimeq of Realtimeq.t
   | Skewhp of Skewhp.t
@@ -43,6 +44,7 @@ let layout = function
   | Binomialhp x -> BinomialHeap.to_string x
   | Binomialt x -> BinomialHeap.to_string [ x ]
   | Pairinghp x -> Pairinghp.to_string x
+  | Pairingl x -> sprintf "[%s]" (List.split_by_comma Pairinghp.to_string x)
   | Physicistsq x -> Physicistsq.to_string x
   | Realtimeq x -> Realtimeq.to_string x
   | Skewhp x -> Skewhp.to_string x
@@ -70,7 +72,8 @@ let formal_layout = function
       @@ List.split_by ";" (fun (b1, i, b2) -> sprintf "%b,%i,%b" b1 i b2) bibl
   | Binomialhp x -> BinomialHeap.formal_layout x
   | Binomialt x -> BinomialHeap.formal_layout [ x ]
-  | Pairinghp x -> Pairinghp.to_string x
+  | Pairinghp x -> Pairinghp.formal_layout x
+  | Pairingl x -> Pairinghp.formal_layout_l x
   | Physicistsq x -> Physicistsq.to_string x
   | Realtimeq x -> Realtimeq.to_string x
   | Skewhp x -> Skewhp.formal_layout x
@@ -100,6 +103,7 @@ let eq x y =
     | Binomialhp x, Binomialhp y -> BinomialHeap.eq x y
     | Binomialt x, Binomialt y -> BinomialHeap.eq [ x ] [ y ]
     | Pairinghp x, Pairinghp y -> Pairinghp.eq x y
+    | Pairingl x, Pairingl y -> List.eq Pairinghp.eq x y
     | Physicistsq x, Physicistsq y -> Physicistsq.eq x y
     | Realtimeq x, Realtimeq y -> Realtimeq.eq x y
     | Skewhp x, Skewhp y -> Skewhp.eq x y
@@ -136,6 +140,7 @@ let compare x y =
     | Binomialhp x, Binomialhp y -> BinomialHeap.compare x y
     | Binomialt x, Binomialt y -> BinomialHeap.compare [ x ] [ y ]
     | Pairinghp x, Pairinghp y -> Pairinghp.compare x y
+    | Pairingl x, Pairingl y -> List.compare Pairinghp.compare x y
     | Physicistsq x, Physicistsq y -> Physicistsq.compare x y
     | Realtimeq x, Realtimeq y -> Realtimeq.compare x y
     | Skewhp x, Skewhp y -> Skewhp.compare x y
@@ -160,6 +165,8 @@ let flatten_forall = function
   | Binomialhp x -> List.remove_duplicates @@ BinomialHeap.flatten x
   | Binomialt x -> List.remove_duplicates @@ BinomialHeap.flatten [ x ]
   | Pairinghp x -> List.remove_duplicates @@ Pairinghp.flatten x
+  | Pairingl x ->
+      List.remove_duplicates @@ List.concat @@ List.map Pairinghp.flatten x
   | Physicistsq x -> List.remove_duplicates @@ Physicistsq.flatten x
   | Realtimeq x -> List.remove_duplicates @@ Realtimeq.flatten x
   | Skewhp x -> List.remove_duplicates @@ Skewhp.flatten x
@@ -183,6 +190,9 @@ let flatten_forall_l l =
       | Binomialhp x -> r @ List.remove_duplicates @@ BinomialHeap.flatten x
       | Binomialt x -> r @ List.remove_duplicates @@ BinomialHeap.flatten [ x ]
       | Pairinghp x -> r @ List.remove_duplicates @@ Pairinghp.flatten x
+      | Pairingl x ->
+          r @ List.remove_duplicates @@ List.concat
+          @@ List.map Pairinghp.flatten x
       | Physicistsq x -> r @ List.remove_duplicates @@ Physicistsq.flatten x
       | Realtimeq x -> r @ List.remove_duplicates @@ Realtimeq.flatten x
       | Skewhp x -> r @ List.remove_duplicates @@ Skewhp.flatten x
@@ -202,6 +212,7 @@ let len = function
   | Binomialhp x -> BinomialhpTailCall.deep x
   | Binomialt x -> BinomialhpTailCall.deep [ x ]
   | Pairinghp x -> PairinghpTailCall.deep x
+  | Pairingl x -> List.length x
   | Physicistsq x -> Physicistsq.length x
   | Realtimeq x -> Realtimeq.length x
   | Skewhp x -> SkewhpTailCall.deep x
@@ -227,6 +238,7 @@ let get_tp v =
   | Binomialhp _ -> Tp.Uninterp "binomialhp"
   | Binomialt _ -> Tp.Uninterp "binomialt"
   | Pairinghp _ -> Tp.Uninterp "pairinghp"
+  | Pairingl _ -> Tp.Uninterp "pairingl"
   | Physicistsq _ -> Tp.Uninterp "physicistsq"
   | Realtimeq _ -> Tp.Uninterp "realtimeq"
   | Skewhp _ -> Tp.Uninterp "skewhp"

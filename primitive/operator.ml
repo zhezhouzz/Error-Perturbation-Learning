@@ -134,6 +134,17 @@ let info_table =
       "skewt_head_l";
       "skewt_head_update";
       "skewt_head_l_update";
+      (* treeb *)
+      "pairinghp_node";
+      "pairinghp_cons";
+      "pairinghp_append_to_left_most";
+      "pairinghp_append_to_right_most";
+      "pairinghp_max";
+      "pairinghp_min";
+      "pairinghp_upper_bound";
+      "pairinghp_lower_bound";
+      "pairinghp_destruct";
+      "pairinghp_drop_bottom";
     ]
   in
   let make_info name =

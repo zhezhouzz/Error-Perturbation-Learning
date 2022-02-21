@@ -33,6 +33,12 @@
                 "pf": "1.prog"
             },
             {
+                "name": "pairinghp",
+                "target": "merge.ml",
+                "assert": "assertion1.ml",
+                "pf": "1.prog"
+            },
+            {
                 "name": "physicistsq",
                 "target": "check.ml",
                 "assert": "assertion1.ml",

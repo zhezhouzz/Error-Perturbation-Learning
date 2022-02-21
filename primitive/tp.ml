@@ -44,10 +44,13 @@ let of_string = function
   | "instr" -> IfcInstr
   | "instr list" -> IfcInstrList
   | "binomialhp" -> Uninterp "binomialhp"
+  | "binomialt" -> Uninterp "binomialt"
   | "pairinghp" -> Uninterp "pairinghp"
+  | "pairingl" -> Uninterp "pairingl"
   | "physicistsq" -> Uninterp "physicistsq"
   | "realtimeq" -> Uninterp "realtimeq"
   | "skewhp" -> Uninterp "skewhp"
+  | "skewt" -> Uninterp "skewt"
   | _ as tp -> failwith (Printf.sprintf "unknown type name(%s)" tp)
 
 let layout_l = Basic_dt.List.split_by_comma layout

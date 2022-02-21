@@ -90,6 +90,16 @@ let skewhp_setting =
     ("cons_rev", "skewhp_cons_rev");
   ]
 
+let pairinghp_setting =
+  [
+    ("leaf", "pairinghp_leaf");
+    ("node", "pairinghp_node");
+    ("cons", "pairinghp_cons");
+    ("leaf_rev", "pairinghp_leaf_rev");
+    ("node_rev", "pairinghp_node_rev");
+    ("cons_rev", "pairinghp_cons_rev");
+  ]
+
 let modules =
   [
     ("Nat", nat_setting);
@@ -108,6 +118,7 @@ let modules =
     ("Realtimeq", list_setting);
     ("Binomialhp", binomialhp_setting);
     ("Skewhp", skewhp_setting);
+    ("Pairinghp", pairinghp_setting);
   ]
 
 let underline_type_reduction = function
@@ -127,6 +138,7 @@ let underline_type_reduction = function
   | "Realtimeq.t" -> "int list"
   | "Binomialhp.t" -> "binomialhp"
   | "Skewhp.t" -> "skewhp"
+  | "Pairinghp.t" -> "pairinghp"
   | tp -> failwith (spf "unknown type(%s)" tp)
 
 let invocation_inspector_init module_name =

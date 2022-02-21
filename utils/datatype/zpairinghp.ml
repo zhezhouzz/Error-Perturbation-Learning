@@ -39,6 +39,16 @@ let to_string l =
     (Printf.sprintf "flatten:%s\n" @@ IntList.to_string @@ flatten l)
     arr
 
+let rec formal_layout t =
+  match t with
+  | E -> "PLeaf"
+  | T (x, l) -> Printf.sprintf "PNode (%i, %s)" x (formal_layout_l l)
+
+and formal_layout_l = function
+  | [] -> "PNil"
+  | h :: t ->
+      Printf.sprintf "PCons (%s, %s)" (formal_layout h) (formal_layout_l t)
+
 let compare t1 t2 =
   let rec aux t1 t2 =
     match (t1, t2) with
@@ -80,3 +90,66 @@ let pairinghp x =
     | h :: t -> check_tree h && check_list t
   and check_tree = function E -> true | T (_, l) -> check_list l in
   check_tree x
+
+let fold_left f default t =
+  let rec aux res = function
+    | E -> res
+    | T (x, l) -> List.fold_left (fun res t -> aux res t) (f res x) l
+  in
+  aux default t
+
+let pairinghp_sort t =
+  let f res x =
+    match res with
+    | false, _ -> res
+    | true, None -> (true, Some x)
+    | true, Some prev -> if prev < x then (true, Some x) else (false, None)
+  in
+  let b, _ = fold_left f (true, None) t in
+  b
+
+let max_opt t =
+  fold_left
+    (fun opt x' -> match opt with None -> Some x' | Some x -> Some (max x x'))
+    None t
+
+let min_opt t =
+  fold_left
+    (fun opt x' -> match opt with None -> Some x' | Some x -> Some (min x x'))
+    None t
+
+let mem t x = fold_left (fun opt x' -> opt || x == x') false t
+
+let drop_bottom t =
+  let rec aux t =
+    match t with
+    | E -> E
+    | T (_, []) -> E
+    | T (x, l) ->
+        let l' =
+          List.filter_map
+            (fun x -> match aux x with E -> None | x -> Some x)
+            l
+        in
+        T (x, l')
+  in
+  aux t
+
+let append_to_left_most_label y t =
+  let rec aux = function
+    | E -> T (y, [])
+    | T (x, []) -> T (x, [ T (y, []) ])
+    | T (x, h :: t) -> T (x, aux h :: t)
+  in
+  aux t
+
+let append_to_right_most_label y t =
+  let rec aux = function
+    | E -> T (y, [])
+    | T (x, []) -> T (x, [ T (y, []) ])
+    | T (x, l) -> (
+        match List.rev l with
+        | [] -> raise @@ failwith "never happen"
+        | h :: t -> T (x, List.rev (aux h :: t)))
+  in
+  aux t

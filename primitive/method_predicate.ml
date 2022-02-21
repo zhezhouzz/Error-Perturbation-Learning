@@ -54,6 +54,7 @@ let mem_apply = function
   | [ V.TB t; V.I e ] -> LabeledTree.exists (fun x -> x == e) t
   | [ V.Binomialhp t; V.I e ] -> BinomialHeap.mem t e
   | [ V.Skewhp t; V.I e ] -> Skewhp.mem t e
+  | [ V.Pairinghp t; V.I e ] -> Pairinghp.mem t e
   | _ -> raise @@ failwith "member_apply"
 
 let size_apply = function
@@ -163,6 +164,14 @@ let skewhp_apply = function
   | [ V.Skewhp t ] -> Skewhp.skewhp t
   | _ -> raise @@ failwith "skew"
 
+let pairinghp_apply = function
+  | [ V.Pairinghp t ] -> Pairinghp.pairinghp t
+  | _ -> raise @@ failwith "pairing"
+
+let pairinghp_sort_apply = function
+  | [ V.Pairinghp t ] -> Pairinghp.pairinghp_sort t
+  | _ -> raise @@ failwith "pairing_sort"
+
 let empty_info =
   let poly_name = "empty" in
   [
@@ -238,6 +247,13 @@ let mem_info =
       poly_name;
       name = "skewhp_mem";
       tps = [ T.Uninterp "skewhp"; T.Int ];
+      permu = false;
+      imp = mem_apply;
+    };
+    {
+      poly_name;
+      name = "pairinghp_mem";
+      tps = [ T.Uninterp "pairinghp"; T.Int ];
       permu = false;
       imp = mem_apply;
     };
@@ -714,12 +730,30 @@ let skewhp_info =
     };
   ]
 
+let pairinghp_info =
+  [
+    {
+      poly_name = "pairinghp";
+      name = "pairinghp";
+      tps = [ T.Uninterp "pairinghp" ];
+      permu = false;
+      imp = pairinghp_apply;
+    };
+    {
+      poly_name = "pairinghp_sort";
+      name = "pairinghp_sort";
+      tps = [ T.Uninterp "pairinghp" ];
+      permu = false;
+      imp = pairinghp_sort_apply;
+    };
+  ]
+
 let mp_table =
   empty_info @ mem_info @ hd_info @ lt_info @ eq_info @ ord_info
   @ (left_info @ right_info @ para_info)
   @ (left_adj_info @ right_adj_info @ para_adj_info)
   @ size_info @ size_plus1_info @ len_info @ last_info @ once_info @ rb_info
-  @ leftist_info @ binomialhp_info @ skewhp_info
+  @ leftist_info @ binomialhp_info @ skewhp_info @ pairinghp_info
 
 let imp_map =
   List.fold_left (fun m r -> StrMap.add r.name r.imp m) StrMap.empty mp_table

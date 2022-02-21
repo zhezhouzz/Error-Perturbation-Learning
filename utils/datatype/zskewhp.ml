@@ -18,7 +18,7 @@ let rec formal_layout l =
   match l with
   | [] -> "SkNil"
   | Node (r, x, l, l') :: t ->
-      Printf.sprintf "SkCons (BiNode (%i, %i, %s, %s), %s)" r x
+      Printf.sprintf "SkCons (SkNode (%i, %i, %s, %s), %s)" r x
         (Printf.sprintf "[%s]" (IntList.to_string l))
         (formal_layout l') (formal_layout t)
 

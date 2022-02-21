@@ -88,6 +88,20 @@ let rec lit_of_ocamlexpr e =
           | [ V.I a; V.I b; V.L l ] ->
               [ V.Skewhp [ Skewhp.Node (a, b, l, []) ] ]
           | k -> raise @@ mk_exn e k)
+      | "PLeaf", None -> [ V.Pairinghp E ]
+      | "PNil", None -> [ V.Pairingl [] ]
+      | "PCons", Some e -> (
+          match lit_of_ocamlexpr e with
+          | [ V.Pairinghp a; V.Pairingl b ] -> [ V.Pairingl (a :: b) ]
+          | k -> raise @@ mk_exn e k)
+      | "PNode", Some e -> (
+          match lit_of_ocamlexpr e with
+          | [ V.I a; V.Pairingl b ] -> [ V.Pairinghp (Pairinghp.T (a, b)) ]
+          | k -> raise @@ mk_exn e k)
+      | "PNodeS", Some e -> (
+          match lit_of_ocamlexpr e with
+          | [ V.I a ] -> [ V.Pairinghp (Pairinghp.T (a, [])) ]
+          | k -> raise @@ mk_exn e k)
       | "NodeS", Some e -> (
           match lit_of_ocamlexpr e with
           | [ V.I x ] -> [ V.T (Tree.Node (x, Leaf, Leaf)) ]

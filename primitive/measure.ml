@@ -28,6 +28,7 @@ let measure = function
   | Binomialhp x -> 3 * BinomialhpTailCall.deep x
   | Binomialt x -> 3 * BinomialhpTailCall.deep [ x ]
   | Pairinghp x -> 3 * PairinghpTailCall.deep x
+  | Pairingl x -> 3 * List.length x
   | Physicistsq x -> Physicistsq.length x
   | Realtimeq x -> Realtimeq.length x
   | Skewhp x -> 3 * SkewhpTailCall.deep x

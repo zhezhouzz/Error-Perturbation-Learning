@@ -13,6 +13,8 @@ let to_basic_tp = function
   | "binomialt" -> T.Uninterp "binomialt"
   | "skewhp" -> T.Uninterp "skewhp"
   | "skewt" -> T.Uninterp "skewt"
+  | "pairinghp" -> T.Uninterp "pairinghp"
+  | "pairingl" -> T.Uninterp "pairingl"
   | x -> raise @@ failwith @@ spf "parse: wrong tp(%s)" x
 
 let to_tp (elem, l) =
@@ -64,6 +66,7 @@ let parse_ linebuf =
       raise @@ failwith (layout_position @@ Lexing.lexeme_end_p linebuf)
 
 let parse filename =
+  (* let _ = Printf.printf "parsing: %s\n" filename in *)
   let linebuf = Lexing.from_channel (open_in filename) in
   parse_ linebuf
 
