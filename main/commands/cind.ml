@@ -8,8 +8,6 @@ open Caux
 
 let cind_num_sampling = 100
 
-let num_op_pools_per_bound = 3
-
 let one_pass env selected_op_pool bound =
   let () =
     Zlog.log_write @@ Printf.sprintf "pool: %s"
@@ -38,7 +36,7 @@ let one_pass env selected_op_pool bound =
   in
   acc
 
-let random_select env name (s, e) bound =
+let random_select env name (s, e) num_op_pools_per_bound bound =
   let open Primitive.Operator in
   let pool_arr = Array.of_list @@ get_pool_by_name name in
   let acc_arr = Array.init (Array.length pool_arr + 1) ~f:(fun _ -> 0.0) in
@@ -75,6 +73,7 @@ let ind =
       and name = anon ("name of datatype" %: string)
       and s = anon ("number of initial operators" %: int)
       and e = anon ("number of final operators" %: int)
+      and num_op_pools_per_bound = anon ("number op pools per bound" %: int)
       and time_in_second = anon ("total_time in second" %: int) in
       fun () ->
         Config.exec_main configfile (fun () ->
@@ -83,7 +82,7 @@ let ind =
               (fun () ->
                 let env = mk_env_from_files source_file meta_file in
                 let accs =
-                  random_select env name (s, e)
+                  random_select env name (s, e) num_op_pools_per_bound
                     Synthesizer.Syn.(TimeBound (float time_in_second))
                 in
                 Printf.printf "client: %s\nname: %s\nacc: %i -> %i\n%s\n"
