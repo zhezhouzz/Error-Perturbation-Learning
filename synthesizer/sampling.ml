@@ -177,36 +177,6 @@ let biased_cost_sampling (bias : Value.t list -> bool) tps
   in
   loop 0 cache
 
-(* There is a bug in QCheck *)
-let range_subset ~size low high st =
-  let open QCheck.Gen in
-  if not (low <= high && size <= high - low + 1) then
-    invalid_arg "Gen.range_subset";
-  (* The algorithm below is attributed to Floyd, see for example
-     https://eyalsch.wordpress.com/2010/04/01/random-sample/
-     https://math.stackexchange.com/questions/178690
-     Note: the code be made faster by checking membership in [arr]
-     directly instead of using an additional Set. None of our
-     dependencies implements dichotomic search, so using Set is
-     easier.
-  *)
-  let module ISet = Set.Make (Int) in
-  let s = ref ISet.empty in
-  let arr = Array.make size 0 in
-  (* let () = Printf.printf "high:%i size:%i len(arr):%i\n" high size size in *)
-  for i = high - size to high - 1 do
-    let pos = int_range low i st in
-    (* let () = Printf.printf "i:%i pos:%i\n" i pos in *)
-    let choice = if ISet.mem pos !s then i else pos in
-    (* let () = Printf.printf "idx:%i choice:%i\n" (i - low) choice in *)
-    arr.(i - high + size) <- choice;
-    s := ISet.add choice !s
-  done;
-  arr
-
-let array_subset size arr st =
-  range_subset ~size 0 (Array.length arr - 1) st |> Array.map (fun i -> arr.(i))
-
 let sampling_to_data (init_set : Value.t list list) f num =
   (* let max_pool = num / 8 in *)
   let res = ref [] in
@@ -243,7 +213,7 @@ let sampling_to_data (init_set : Value.t list list) f num =
       (*       else if List.length pool' > max_pool then ( *)
       (*         let arr = Array.of_list pool' in *)
       (*         Printf.printf "len:%i n:%i\n" (Array.length arr) max_pool; *)
-      (*         Array.to_list @@ QCheck.Gen.generate1 (array_subset max_pool arr)) *)
+      (*         Array.to_list @@ QCheck.Gen.generate1 (Randomgen.array_subset max_pool arr)) *)
       (*       else pool') *)
       (* in *)
       aux pool'

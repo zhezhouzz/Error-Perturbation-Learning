@@ -1,0 +1,129 @@
+2022-02-22 13:35:12.912575-05:00  (  info )  
+2022-02-22 13:35:12.922622-05:00  (  info )  ===============================================================================
+2022-02-22 13:35:12.922657-05:00  (  info )  New PI task with 34 POS + 23 NEG tests
+2022-02-22 13:35:12.923074-05:00  ( debug )  Invoking synthesizer with LIA logic.
+                                             Conflict group (x :Int):
+                                               POS (34):
+                                                 (4095)
+                                                 (3809)
+                                                 (3709)
+                                                 (3628)
+                                                 (3616)
+                                                 (3596)
+                                                 (3540)
+                                                 (3436)
+                                                 (3317)
+                                                 (3312)
+                                                 (3307)
+                                                 (3157)
+                                                 (3037)
+                                                 (2939)
+                                                 (2674)
+                                                 (2514)
+                                                 (2348)
+                                                 (2347)
+                                                 (2045)
+                                                 (2034)
+                                                 (2030)
+                                                 (1833)
+                                                 (1808)
+                                                 (1695)
+                                                 (1508)
+                                                 (1332)
+                                                 (874)
+                                                 (710)
+                                                 (674)
+                                                 (565)
+                                                 (433)
+                                                 (394)
+                                                 (231)
+                                                 (201)
+                                               NEG (23):
+                                                 (-73)
+                                                 (-86)
+                                                 (-387)
+                                                 (-937)
+                                                 (-1108)
+                                                 (-1190)
+                                                 (-1235)
+                                                 (-1307)
+                                                 (-1408)
+                                                 (-1454)
+                                                 (-1476)
+                                                 (-1873)
+                                                 (-2253)
+                                                 (-2448)
+                                                 (-2517)
+                                                 (-2790)
+                                                 (-3138)
+                                                 (-3230)
+                                                 (-3737)
+                                                 (-3777)
+                                                 (-3945)
+                                                 (-4032)
+                                                 (-4096)
+2022-02-22 13:35:12.923089-05:00  ( debug )  Running enumerative synthesis with logic `LIA`:
+2022-02-22 13:35:12.923274-05:00  ( debug )    $ Exploration order (G,k):
+                                                (1,2) > (2,2) > (3,2) > (4,2) > (1,3) > (2,3) > (3,3) > (1,4) > (4,3) > (1,5) > (2,4) > (3,4) > (4,4) > (1,6) > (2,5) > (3,5) > (4,5) > (1,7) > (2,6) > (3,6) > (1,8) > (4,6) > (2,7) > (1,9) > (3,7) > (4,7) > (1,10) > (2,8) > (3,8) > (4,8) > (1,11) > (2,9) > (3,9) > (1,12) > (4,9) > (2,10) > (1,13) > (3,10) > (4,10) > (2,11) > (1,14) > (3,11) > (1,15) > (2,12) > (4,11) > (3,12) > (1,16) > (2,13) > (4,12) > (1,17) > (3,13) > (2,14) > (4,13) > (1,18) > (3,14) > (2,15) > (1,19) > (4,14) > (3,15) > (1,20) > (2,16) > (4,15) > (1,21) > (2,17) > (3,16) > (4,16) > (1,22) > (2,18) > (3,17) > (1,23) > (4,17) > (2,19) > (3,18) > (1,24) > (4,18) > (1,25) > (2,20) > (3,19) > (4,19) > (1,26) > (2,21) > (3,20) > (1,27) > (4,20) > (2,22) > (3,21) > (1,28) > (4,21) > (2,23) > (1,29) > (3,22) > (1,30) > (2,24) > (4,22) > (3,23) > (1,31) > (2,25) > (4,23) > (3,24) > (2,26) > (4,24) > (3,25) > (2,27) > (4,25) > (3,26) > (2,28) > (4,26) > (3,27) > (2,29) > (4,27) > (3,28) > (2,30) > (4,28) > (3,29) > (2,31) > (4,29) > (3,30) > (4,30) > (3,31) > (4,31)
+2022-02-22 13:35:12.923288-05:00  ( debug )  Attempting to unify not : [Bool] -> Bool
+2022-02-22 13:35:12.923296-05:00  ( debug )  with [(true : Bool)]
+2022-02-22 13:35:12.923301-05:00  ( debug )  Attempting to unify not : [Bool] -> Bool
+2022-02-22 13:35:12.923303-05:00  ( debug )  with [(false : Bool)]
+2022-02-22 13:35:12.923329-05:00  ( debug )  Attempting to unify int-eq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923333-05:00  ( debug )  with [(1 : Int) , (1 : Int)]
+2022-02-22 13:35:12.923337-05:00  ( debug )  Attempting to unify int-eq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923339-05:00  ( debug )  with [(1 : Int) , (0 : Int)]
+2022-02-22 13:35:12.923342-05:00  ( debug )  Attempting to unify int-eq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923344-05:00  ( debug )  with [(1 : Int) , (x : Int)]
+2022-02-22 13:35:12.923354-05:00  ( debug )  Attempting to unify int-eq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923357-05:00  ( debug )  with [(0 : Int) , (1 : Int)]
+2022-02-22 13:35:12.923359-05:00  ( debug )  Attempting to unify int-eq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923361-05:00  ( debug )  with [(0 : Int) , (0 : Int)]
+2022-02-22 13:35:12.923363-05:00  ( debug )  Attempting to unify int-eq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923365-05:00  ( debug )  with [(0 : Int) , (x : Int)]
+2022-02-22 13:35:12.923372-05:00  ( debug )  Attempting to unify int-eq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923374-05:00  ( debug )  with [(x : Int) , (1 : Int)]
+2022-02-22 13:35:12.923380-05:00  ( debug )  Attempting to unify int-eq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923383-05:00  ( debug )  with [(x : Int) , (0 : Int)]
+2022-02-22 13:35:12.923388-05:00  ( debug )  Attempting to unify int-eq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923390-05:00  ( debug )  with [(x : Int) , (x : Int)]
+2022-02-22 13:35:12.923393-05:00  ( debug )  Attempting to unify and : [Bool,Bool] -> Bool
+2022-02-22 13:35:12.923395-05:00  ( debug )  with [(true : Bool) , (true : Bool)]
+2022-02-22 13:35:12.923397-05:00  ( debug )  Attempting to unify and : [Bool,Bool] -> Bool
+2022-02-22 13:35:12.923399-05:00  ( debug )  with [(true : Bool) , (false : Bool)]
+2022-02-22 13:35:12.923401-05:00  ( debug )  Attempting to unify and : [Bool,Bool] -> Bool
+2022-02-22 13:35:12.923403-05:00  ( debug )  with [(false : Bool) , (true : Bool)]
+2022-02-22 13:35:12.923405-05:00  ( debug )  Attempting to unify and : [Bool,Bool] -> Bool
+2022-02-22 13:35:12.923407-05:00  ( debug )  with [(false : Bool) , (false : Bool)]
+2022-02-22 13:35:12.923409-05:00  ( debug )  Attempting to unify or : [Bool,Bool] -> Bool
+2022-02-22 13:35:12.923411-05:00  ( debug )  with [(true : Bool) , (true : Bool)]
+2022-02-22 13:35:12.923413-05:00  ( debug )  Attempting to unify or : [Bool,Bool] -> Bool
+2022-02-22 13:35:12.923415-05:00  ( debug )  with [(true : Bool) , (false : Bool)]
+2022-02-22 13:35:12.923416-05:00  ( debug )  Attempting to unify or : [Bool,Bool] -> Bool
+2022-02-22 13:35:12.923419-05:00  ( debug )  with [(false : Bool) , (true : Bool)]
+2022-02-22 13:35:12.923420-05:00  ( debug )  Attempting to unify or : [Bool,Bool] -> Bool
+2022-02-22 13:35:12.923422-05:00  ( debug )  with [(false : Bool) , (false : Bool)]
+2022-02-22 13:35:12.923431-05:00  ( debug )  Attempting to unify int-geq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923434-05:00  ( debug )  with [(1 : Int) , (1 : Int)]
+2022-02-22 13:35:12.923436-05:00  ( debug )  Attempting to unify int-geq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923438-05:00  ( debug )  with [(1 : Int) , (0 : Int)]
+2022-02-22 13:35:12.923440-05:00  ( debug )  Attempting to unify int-geq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923443-05:00  ( debug )  with [(1 : Int) , (x : Int)]
+2022-02-22 13:35:12.923448-05:00  ( debug )  Attempting to unify int-geq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923450-05:00  ( debug )  with [(0 : Int) , (1 : Int)]
+2022-02-22 13:35:12.923452-05:00  ( debug )  Attempting to unify int-geq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923455-05:00  ( debug )  with [(0 : Int) , (0 : Int)]
+2022-02-22 13:35:12.923456-05:00  ( debug )  Attempting to unify int-geq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923458-05:00  ( debug )  with [(0 : Int) , (x : Int)]
+2022-02-22 13:35:12.923464-05:00  ( debug )  Attempting to unify int-geq : [Int,Int] -> Bool
+2022-02-22 13:35:12.923467-05:00  ( debug )  with [(x : Int) , (1 : Int)]
+2022-02-22 13:35:12.923476-05:00  ( debug )    % Enumerated 26 expressions (24 pruned)
+2022-02-22 13:35:12.923478-05:00  ( debug )    % Solution (@ size 3): (>= x 1)
+2022-02-22 13:35:12.923479-05:00  ( debug )    % Constraints: ()
+2022-02-22 13:35:12.923481-05:00  ( debug )  Synthesized feature:
+                                                 (>= x 1)
+2022-02-22 13:35:12.923500-05:00  ( debug )  Attempting BFL with 1 features
+2022-02-22 13:35:12.923502-05:00  ( debug )    > max literals per clause = 1
+2022-02-22 13:35:12.923549-05:00  (  info )  New PI task with 1 POS + 3 NEG tests
+2022-02-22 13:35:12.923555-05:00  ( debug )  Attempting BFL with 2 features
+2022-02-22 13:35:12.923556-05:00  ( debug )    > max literals per clause = 1

@@ -29,6 +29,7 @@ let command =
       ("verify", Cverify.verify);
       ("moti", Cmoti.moti);
       ("moti-search", Cmoti.search);
+      ("ind", Cind.ind);
     ]
 
 let () = Command.run command

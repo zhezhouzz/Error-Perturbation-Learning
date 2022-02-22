@@ -40,6 +40,9 @@ let stat_merge s1 s2 =
       s1.in_sigma_out_phi_unique_num + s2.in_sigma_out_phi_unique_num;
   }
 
+let get_acc { sampling_num; in_sigma_out_phi_unique_num; _ } =
+  float in_sigma_out_phi_unique_num /. float sampling_num
+
 let layout
     {
       sampling_num;

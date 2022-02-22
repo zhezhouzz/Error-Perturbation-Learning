@@ -12,6 +12,7 @@
    ctime
    cifc
    cverify
+   cind
  )
  (preprocess (pps ppx_jane))
 )
