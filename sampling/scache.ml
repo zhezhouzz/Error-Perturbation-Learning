@@ -247,7 +247,10 @@ let eval_sampling (init_set : Value.t list list) fs measure bound =
     let num_none = num_none + expected_n - List.length outs in
     let samples = next_pool mem outs Config.MeasureOnly conds in
     if List.length samples == 0 then
-      if allow_stuck then ([], num_none, List.map (Mem.itov mem) !res)
+      if allow_stuck then
+        ( [],
+          max num_none @@ (bound - List.length !res),
+          List.map (Mem.itov mem) !res )
       else
         let () =
           Zlog.log_write @@ spf "data:\n%s\n"
