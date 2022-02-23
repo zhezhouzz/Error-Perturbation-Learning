@@ -210,13 +210,13 @@ let biased_cost bias (env : Env.t) =
           @@ failwith
                (spf "[%s:%i] the env is not initialized" __FILE__ __LINE__)
       | Some cur_p ->
-          let () =
-            Zlog.log_write
-              (Printf.sprintf "[%s:%i] prog(non-det: %b):\n%s\n" __FILE__
-                 __LINE__
-                 (Language.Oplang.check_non_det cur_p.prog)
-                 (Language.Oplang.layout cur_p.prog))
-          in
+          (* let () = *)
+          (*   Zlog.log_write *)
+          (*     (Printf.sprintf "[%s:%i] prog(non-det: %b):\n%s\n" __FILE__ *)
+          (*        __LINE__ *)
+          (*        (Language.Oplang.check_non_det cur_p.prog) *)
+          (*        (Language.Oplang.layout cur_p.prog)) *)
+          (* in *)
           let conds =
             S.mk_conds env.measure_cond env.sigma
               (fun v -> snd @@ env.client env.library_inspector v)

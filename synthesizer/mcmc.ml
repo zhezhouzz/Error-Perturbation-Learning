@@ -9,6 +9,17 @@ let metropolis_hastings_core cond mutate cal_cost init =
     | None -> ()
     | Some (_, prev_cost) ->
         if cur_cost < prev_cost then (
+          let () =
+            match cur.Env.cur_p with
+            | None -> raise @@ failwith "the env has not prog initialized"
+            | Some x ->
+                Zlog.log_write
+                  (Printf.sprintf "[%s:%i] prog(non-det: %b):\n%s\ncost = %f"
+                     __FILE__ __LINE__
+                     (Language.Oplang.check_non_det x.prog)
+                     (Language.Oplang.layout x.prog)
+                     cur_cost)
+          in
           best_one := Some (cur, cur_cost);
           match cur_id with
           | None -> ()
