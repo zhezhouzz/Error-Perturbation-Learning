@@ -9,7 +9,7 @@
                 "pf": "res1.prog"
             },
             {
-                "name": "batchedsq",
+                "name": "batchedq",
                 "target": "tail.ml",
                 "assert": "assertion1.ml",
                 "pf": "res3.prog"

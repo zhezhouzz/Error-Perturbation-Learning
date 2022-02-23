@@ -24,15 +24,18 @@ def plot (ls):
     plt.ylabel("The accuracy of learned perturbation function")
     plt.show()
 
-if __name__ == '__main__':
-    filenames = sys.argv[1]
-    names = [".result/" + x + ".ind" for x in filenames.split(',')]
+def run_ind(filenames):
+    names = [".result/" + x + ".ind" for x in filenames]
     ls = []
     for name in names:
-        ls.append(load_res(name))
-        # try:
-        #     ls.append(load_res(name))
-        # except:
-        #     cwd = os.getcwd()
-        #     print("{} cannot found under {}".format(name, cwd))
+        # ls.append(load_res(name))
+        try:
+            ls.append(load_res(name))
+        except:
+            cwd = os.getcwd()
+            print("{} cannot found under {}".format(name, cwd))
     plot (ls)
+
+if __name__ == '__main__':
+    filenames = sys.argv[1].split(',')
+    run_ind(filenames)
