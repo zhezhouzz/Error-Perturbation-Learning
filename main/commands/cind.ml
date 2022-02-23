@@ -90,7 +90,7 @@ let random_v2 (env, pool, (s, e), num_op_pools_per_bound, bound) =
   for n = 0 to num_op_pools_per_bound - 1 do
     let pool = QCheck.Gen.generate1 (QCheck.Gen.shuffle_l pool) in
     for i = s to e do
-      let pool = List.sub ~pos:s ~len:(i - s + 1) pool in
+      let pool = basic_op_pool @ List.sub ~pos:0 ~len:i pool in
       (* if fails (mostly cannot find initial perturbation function), return 0.0       *)
       let acc = try one_pass env pool bound with _ -> 0.0 in
       acc_mat.(i).(n) <- acc
