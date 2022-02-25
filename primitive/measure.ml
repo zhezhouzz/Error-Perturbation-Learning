@@ -40,16 +40,16 @@ let bound_max = 60
 
 let coef = 2
 
+let measure_size x =
+  let s = IntList.sum @@ List.map measure x in
+  (* Zlog.log_write @@ spf "size:%i" s; *)
+  s
+
 let mk_measure_cond input =
-  let size x =
-    let s = IntList.sum @@ List.map measure x in
-    (* Zlog.log_write @@ spf "size:%i" s; *)
-    s
-  in
-  let s = coef * size input in
+  let s = coef * measure_size input in
   let bound = min bound_max @@ max bound_min s in
   let () =
     Zlog.log_write
     @@ spf "mk_measure_cond(%i, %i, %i) -> %i" bound_min s bound_max bound
   in
-  fun v -> size v <= bound
+  fun v -> measure_size v <= bound

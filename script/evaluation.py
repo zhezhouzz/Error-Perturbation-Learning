@@ -141,6 +141,7 @@ if __name__ == "__main__":
         for b in bs:
             eval_baseline_num(b, qc_config, sizebound, outfile)
     elif action == "ind":
+        subprocess.run(["mkdir", ".result"])
         for b in bs:
             eval_ind(b, "list", "0", "18", "5", "120")
         names = [b['name']for b in bs]

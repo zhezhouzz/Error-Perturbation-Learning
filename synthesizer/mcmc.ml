@@ -93,5 +93,9 @@ let metropolis_hastings_time ~time_bound:(bound : float) (* in second *)
                                  (init : 'a) : 'a * float =
   (*Here we only need one "f", some library will return a set of "f" or distribution of "f", we dont need it. *)
   let start_time = Sys.time () in
-  let cond _ = Sys.time () -. start_time > bound in
+  let cond _ =
+    let t = Sys.time () -. start_time in
+    (* let _ = Printf.printf "exec time: %f (%f) |> %b\n" t bound (t > bound) in *)
+    t > bound
+  in
   metropolis_hastings_core cond mutate cal_cost init
