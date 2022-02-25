@@ -109,7 +109,7 @@ let random_v2 env pool (s, e) num_op_pools_per_bound bound =
 
 let num_run_from_init_set = 2
 
-let inner_repeat_num = 2
+let inner_repeat_num = 3
 
 let indudctive_run env init_op_set rest_op_set e bound =
   let rs =
@@ -117,7 +117,12 @@ let indudctive_run env init_op_set rest_op_set e bound =
   in
   let cal_acc_arr rest_op_set =
     Array.init e ~f:(fun k ->
-        let len = k + 1 in
+        let len = k in
+        (* let () = *)
+        (*   Printf.printf "e:%i len: %i; len(rest_op_set):%i\n" e len *)
+        (*   @@ List.length rest_op_set *)
+        (* in *)
+        (* let () = raise @@ failwith "zz" in *)
         let pool =
           Primitive.Operator.basic_op_pool @ init_op_set
           @ List.sub rest_op_set ~pos:0 ~len
