@@ -271,11 +271,11 @@ let eval_sampling (init_set : Value.t list list) fs measure bound =
       else aux mem num_none samples
   in
   let pool, num_none, data = aux mem 0 @@ List.nth gs 0 in
-  (* let () = *)
-  (*   if !Config.conf.show_samples_in_log then *)
-  (*     Zlog.log_write *)
-  (*     @@ spf "num_none = %i\ndata:\n%s\n" num_none *)
-  (*     @@ List.split_by "\n" Value.layout_l data *)
-  (*   else () *)
-  (* in *)
+  let () =
+    if !Config.conf.show_samples_in_log then
+      Zlog.log_write
+      @@ spf "num_none = %i\ndata:\n%s\n" num_none
+      @@ List.split_by "\n" Value.layout_l data
+    else ()
+  in
   (pool, num_none, data)

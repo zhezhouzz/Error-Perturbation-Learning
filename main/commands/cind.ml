@@ -14,7 +14,8 @@ let one_pass env selected_op_pool bound =
     @@ List.to_string ~f:(fun x -> x) selected_op_pool
   in
   (* set pool & remove size bound *)
-  let masure v = Primitive.Measure.measure_size v <= 1000 in
+  (* let masure v = Primitive.Measure.measure_size v <= 1000 in *)
+  let masure _ = true in
   let env =
     Synthesizer.Env.
       { env with op_pool = selected_op_pool; measure_cond = masure }
@@ -159,21 +160,20 @@ let random_v3 env pool (s, e) bound =
           indudctive_run env init_op_set rest_op_set (e - s + 1) bound ))
       ps
   in
-  let () =
-    List.iter
-      ~f:(fun (a, b, res) ->
-        Printf.printf "init: %s; rest: %s\n"
-          (List.to_string ~f:(fun x -> x) a)
-          (List.to_string ~f:(fun x -> x) b);
-        List.iter
-          ~f:(fun arr ->
-            Printf.printf "\t[%s]\n"
-            @@ List.to_string ~f:string_of_float
-            @@ Array.to_list arr)
-          res)
-      res
-  in
-  (* let res = List.map ~f:(fun (_, _, mat) -> Array.transpose_exn mat) res in *)
+  (* let () = *)
+  (*   List.iter *)
+  (*     ~f:(fun (a, b, res) -> *)
+  (*       Printf.printf "init: %s; rest: %s\n" *)
+  (*         (List.to_string ~f:(fun x -> x) a) *)
+  (*         (List.to_string ~f:(fun x -> x) b); *)
+  (*       List.iter *)
+  (*         ~f:(fun arr -> *)
+  (*           Printf.printf "\t[%s]\n" *)
+  (*           @@ List.to_string ~f:string_of_float *)
+  (*           @@ Array.to_list arr) *)
+  (*         res) *)
+  (*     res *)
+  (* in *)
   List.concat @@ List.map ~f:(fun (_, _, x) -> x) res
 
 let random_select env name (s, e) bound =
