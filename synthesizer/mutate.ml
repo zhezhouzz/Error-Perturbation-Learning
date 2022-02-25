@@ -84,7 +84,7 @@ let mutate_ op_pool cache =
   in
   let counter = ref 0 in
   let rec loop () =
-    if !counter > 6 + (2 * List.length op_pool) then raise InitializationError
+    if !counter > 6 + (1 * List.length op_pool) then raise InitializationError
     else
       let mutation = Gen.generate1 gen in
       let r =

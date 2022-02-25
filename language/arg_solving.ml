@@ -198,7 +198,9 @@ let nodup_qeury ctx (total, vs, m, v0, v1) =
 
 let solve max_solution ctx cache =
   let counter = ref 0 in
+  (* let () = Zlog.time_tick_init () in *)
   let rec loop no_dup cache =
+    (* let () = Zlog.time_tick 0.3 in *)
     if List.length cache.solutions > max_solution then (
       Zlog.log_write "the solution maximal number is overed";
       cache)

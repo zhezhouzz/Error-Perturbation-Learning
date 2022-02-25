@@ -48,3 +48,14 @@ let debug_event eventname f =
       in
       result
   | Opt -> ()
+
+let time_tick_start_time = ref (Sys.time ())
+
+let time_tick_init () = time_tick_start_time := Sys.time ()
+
+let time_tick bound =
+  let t' = Sys.time () in
+  let diff = t' -. !time_tick_start_time in
+  let () = log_write @@ Printf.sprintf "time diff:%f" diff in
+  if diff > bound then raise @@ failwith "time_tick"
+  else time_tick_start_time := t'

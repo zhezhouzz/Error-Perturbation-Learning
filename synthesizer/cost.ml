@@ -222,10 +222,12 @@ let biased_cost bias (env : Env.t) =
               (fun v -> snd @@ env.client env.library_inspector v)
               env.phi bias
           in
+          (* let () = Zlog.time_tick_init () in *)
           let scache =
             S.mk_generation !Config.conf.bias_method env.init_sampling_set conds
               cur_p.prog env.sampling_rounds
           in
+          (* let () = Zlog.time_tick 0.002 in *)
           (* let () = *)
           (*   Zlog.log_write *)
           (*     (Printf.sprintf "sample cache:\n%s\n" *)

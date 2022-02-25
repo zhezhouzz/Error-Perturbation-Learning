@@ -191,6 +191,8 @@ let log_show_init_set iter init_set =
 
 module S = Sampling.Scache
 
+exception SynthesisHasNoGoodResult
+
 let synthesize_multi_core env max_length bound =
   let rec loop current init_set iter =
     if iter >= iter_bound || List.length current >= max_length then current
@@ -209,8 +211,7 @@ let synthesize_multi_core env max_length bound =
               env.sampling_rounds
           in
           let good_list = S.Mem.all_outs_unique scache.mem in
-          if List.length good_list == 0 then
-            raise @@ failwith "synthesized f has no good result"
+          if List.length good_list == 0 then raise SynthesisHasNoGoodResult
           else
             let init_set =
               Primitive.Value_aux.remove_duplicates_l (init_set @ good_list)

@@ -125,7 +125,11 @@ let indudctive_run env init_op_set rest_op_set e bound =
           List.init num_run_from_init_set ~f:(fun _ ->
               let acc =
                 try one_pass env pool bound
-                with Synthesizer.Mutate.InitializationError -> 0.0
+                with
+                | Synthesizer.Mutate.InitializationError
+                | Synthesizer.Syn.SynthesisHasNoGoodResult
+                ->
+                  0.0
               in
               acc)
         in

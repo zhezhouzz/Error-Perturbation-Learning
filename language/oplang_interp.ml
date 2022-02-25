@@ -9,6 +9,12 @@ let build_env_list tvars values =
     raise @@ failwith "runtime error: argsment mismatch during interpret..."
 
 let interp { fin; body; fout } (input : V.t list) =
+  (* let _ = *)
+  (*   Zlog.log_write @@ spf "len(input) = %i" (Measure.measure_size input) *)
+  (* in *)
+  (* let _ = *)
+  (*   if Measure.measure_size input > 20 then raise @@ failwith "zz" else () *)
+  (* in *)
   let env = IntMap.from_kv_list @@ build_env_list fin input in
   let step env { op; args; res } =
     if Operator.is_unused op then Some env

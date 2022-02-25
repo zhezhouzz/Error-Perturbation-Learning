@@ -28,7 +28,7 @@ let metropolis_hastings_core cond mutate cal_cost init =
         else ()
   in
   let rec loop (cur, cur_cost) =
-    (* (if !counter mod 20 == 0 then Printf.printf "MCMC: %i\n" !counter else ()); *)
+    if !counter > 40 then raise @@ failwith "too many" else ();
     let cur_id =
       Syn_stat.add
         (match cur.Env.cur_p with
@@ -95,7 +95,10 @@ let metropolis_hastings_time ~time_bound:(bound : float) (* in second *)
   let start_time = Sys.time () in
   let cond _ =
     let t = Sys.time () -. start_time in
-    (* let _ = Printf.printf "exec time: %f (%f) |> %b\n" t bound (t > bound) in *)
+    let _ =
+      Zlog.log_write
+      @@ Printf.sprintf "record exec time: %f (%f) |> %b" t bound (t > bound)
+    in
     t > bound
   in
   metropolis_hastings_core cond mutate cal_cost init
