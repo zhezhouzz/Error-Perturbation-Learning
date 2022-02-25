@@ -107,7 +107,7 @@ let random_v2 env pool (s, e) num_op_pools_per_bound bound =
   done;
   acc_mat
 
-let num_run_from_init_set = 1
+let num_run_from_init_set = 2
 
 let inner_repeat_num = 2
 

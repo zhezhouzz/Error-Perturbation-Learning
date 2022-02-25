@@ -67,11 +67,11 @@ def eval_baseline_num(p_setting, qc_config, num, outfile):
     cmd = cmd_prefix + ["baseline", config_file, target_file, assertion_file, qc_config, num]
     invoc_cmd(cmd, outfile)
 
-def eval_ind(p_setting, tname, s, e, num_iters, num_bound):
+def eval_ind(p_setting, tname, s, e, num_bound):
     target_file, assertion_file, _ = solve_tap(p_setting)
     outfile = ".result/{}.ind".format(p_setting['name'])
     subprocess.run(["rm", outfile])
-    cmd = cmd_prefix + ["ind", config_file, target_file, assertion_file, tname, s,e, num_iters, num_bound]
+    cmd = cmd_prefix + ["ind", config_file, target_file, assertion_file, tname, s,e, num_bound]
     invoc_cmd(cmd, outfile)
 
 if __name__ == "__main__":
@@ -141,11 +141,12 @@ if __name__ == "__main__":
         for b in bs:
             eval_baseline_num(b, qc_config, sizebound, outfile)
     elif action == "ind":
+        verbose=True
         subprocess.run(["mkdir", ".result"])
         for b in bs:
-            eval_ind(b, "list", "0", "18", "5", "120")
+            eval_ind(b, "list", "5", "16", "100")
         names = [b['name']for b in bs]
-        run_ind(names)
+        # run_ind(names)
     else:
         print("unknown command {}".format(action))
         exit()
