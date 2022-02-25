@@ -177,7 +177,7 @@ let theta =
     ("pairinghp", pairinghp_ops);
   ]
 
-let basic_op_pool = [ "const0"; "const1"; "plus1"; "minus1"; "random_int" ]
+let basic_op_pool = [ "const0"; "const1"; "plus1"; "minus1" ]
 
 let get_pool_by_name name =
   match List.find_opt (fun (x, _) -> String.equal x name) theta with
