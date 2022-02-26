@@ -14,6 +14,8 @@ type libf = {
 
 type inspector = { names : string list; m : (string, libf) Hashtbl.t }
 
+let dummy_inspector = { names = []; m = Hashtbl.create 1 }
+
 let make_interfaces imp_name =
   let imps =
     List.filter (fun imp -> String.equal imp_name imp.Imp.imp_name) Imps.imps

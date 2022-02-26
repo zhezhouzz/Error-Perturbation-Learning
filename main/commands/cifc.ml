@@ -68,7 +68,9 @@ let ifc_syn =
                 (fun () ->
                   (* Synthesizer.Syn.synthesize_piecewise env max_length num_burn_in *)
                   (*   num_sampling *)
-                  Synthesizer.Syn.synthesize_multi_core env max_length
+                  Synthesizer.Syn.synthesize_multi_core env
+                    (fun _ -> true)
+                    max_length
                     (Synthesizer.Syn.TimeBound (float_of_int bound_time)))
             in
             let () =

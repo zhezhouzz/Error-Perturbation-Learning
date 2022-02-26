@@ -1,0 +1,7 @@
+(library
+ (name zpie)
+ (libraries LoopInvGen base primitive utils synthesizer)
+ (modules
+   syn_pre
+ )
+)

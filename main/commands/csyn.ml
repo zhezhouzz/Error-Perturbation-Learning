@@ -37,9 +37,47 @@ let syn source_file meta_file max_length bound =
       (fun () ->
         (* Synthesizer.Syn.synthesize_piecewise env max_length num_burn_in *)
         (*   num_sampling *)
-        Synthesizer.Syn.synthesize_multi_core env max_length bound)
+        Synthesizer.Syn.synthesize_multi_core env
+          (fun _ -> true)
+          max_length bound)
   in
   (env.i_err, result)
+
+let syn_pie name qc_file num_qc bound =
+  let env = Zpie.Syn_pre.setting_decode_to_env name in
+  let env =
+    Zlog.event_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () -> Synthesizer.Mkenv.random_init_prog env)
+  in
+  let qc_conf = Qc_config.load_config qc_file in
+  let client_cond inp =
+    match snd @@ env.client env.library_inspector inp with
+    | None -> false
+    | Some outp -> env.sigma inp && (not @@ env.phi (inp @ outp))
+  in
+  let gtests, btests =
+    Zquickcheck.Qc_baseline.make_tests qc_conf env.tps client_cond num_qc
+  in
+  let pie_precond, pie_precond_str = Zpie.Syn_pre.pie name (gtests, btests) in
+  let () = Printf.printf "pie pre: %s\n" pie_precond_str in
+  let () = raise @@ failwith "zz" in
+  let bias x = not @@ pie_precond x in
+  let prog = Synthesizer.Syn.synthesize_multi_time_bias env bias bound in
+  let (_, num_none, data), cost_time =
+    Zlog.event_time_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "sampling")
+      (fun () ->
+        Sampling.Scache.eval_sampling [ env.i_err ]
+          ((List.map ~f:snd @@ fst prog) @ [ snd prog ])
+          (Primitive.Measure.mk_measure_cond env.i_err)
+          env.sampling_rounds)
+  in
+  let data = List.filter ~f:client_cond data in
+  let gtests, btests = (gtests, btests @ data) in
+  let pie_precond', pie_precond_str' = Zpie.Syn_pre.pie name (gtests, btests) in
+  let () = Printf.printf "pie pre': %s\n" pie_precond_str' in
+  (pie_precond, pie_precond')
 
 let synthesize_piecewise =
   Command.basic ~summary:"synthesize-piecewise"
@@ -101,6 +139,21 @@ let synthesize_time =
             let () =
               Printf.printf "%s\n"
               @@ Language.Piecewise.layout_with_i_err i_err result
+            in
+            ()))
+
+let synthesize_pie =
+  Command.basic ~summary:"synthesize-pie"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and name = anon ("pie benchmark name" %: string)
+      and qc_file = anon ("qc file" %: regular_file)
+      and num_qc = anon ("num qc" %: int)
+      and bound_time = anon ("time in second" %: int) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let pre, pre' =
+              syn_pie name qc_file num_qc (float_of_int bound_time)
             in
             ()))
 

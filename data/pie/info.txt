@@ -1,0 +1,22 @@
+From PIE's benchmarks:
+
+List:
+  List.nth (l, n)
+    precondition: ((0 <= n) & (len(l) > n))
+    postcondition: terminates normally
+  List.rev (a)
+    precondition: (l = rev(l))
+    postcondition: (l = res)
+  List.append (l0, l1)
+    precondition: ((! empty(l0)) || (! empty(l1)))
+    postcondition: (len(res) > 0)
+BatAvlTree:
+  BatAvlTree.create (l,v,r)
+    precondition: ((height(l) <= (height(r) + 1)) & (height(r) <= (height(l) + 1)))
+    postcondition: terminates normally
+  BatAvlTree.concat (l,r)
+    precondition: (! (empty(r) & empty(l)))
+    postcondition: (height(res) > 0)
+  BatAvlTree.left_branch (t)
+    precondition: (! empty(left(t)))
+    postcondition: (height(res) > 0)

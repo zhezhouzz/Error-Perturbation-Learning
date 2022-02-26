@@ -54,6 +54,27 @@ let mk_env_from_files source_file meta_file =
   Synthesizer.Mkenv.mk_env_v2 sigma client libs phi tps i_err op_pool preds
     sampling_rounds p_size
 
+let mk_env_from_files_with_fname_args_phi source_file meta_file =
+  let prog = Ocaml_parser.Frontend.parse ~sourcefile:source_file in
+  let meta = Ocaml_parser.Frontend.parse ~sourcefile:meta_file in
+  let ( sigma,
+        client,
+        libs,
+        i_err,
+        phi,
+        tps,
+        op_pool,
+        preds,
+        sampling_rounds,
+        p_size ) =
+    Language.Of_ocamlast.load_client_and_meta prog meta
+  in
+  ( Synthesizer.Mkenv.mk_env_v2 sigma client libs phi tps i_err op_pool preds
+      sampling_rounds p_size,
+    client.fname,
+    client.args,
+    phi )
+
 let regular_file =
   Command.Arg_type.create (fun filename ->
       match Sys.is_file filename with

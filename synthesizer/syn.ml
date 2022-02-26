@@ -193,11 +193,11 @@ module S = Sampling.Scache
 
 exception SynthesisHasNoGoodResult
 
-let synthesize_multi_core env max_length bound =
+let synthesize_multi_core env bias max_length bound =
   let rec loop current init_set iter =
     if iter >= iter_bound || List.length current >= max_length then current
     else
-      match synthesize_f (fun _ -> true) init_set bound env with
+      match synthesize_f bias init_set bound env with
       | None -> raise @@ failwith "synthesize_f fails"
       | Some (env, new_f) ->
           let conds =
@@ -227,7 +227,13 @@ let synthesize_multi_core env max_length bound =
   | h :: t -> (List.map (fun f -> (Spec.dummy_pre env.tps, f)) t, h)
 
 let synthesize_multi env max_length num_burn_in num_sampling =
-  synthesize_multi_core env max_length (IterBound (num_burn_in, num_sampling))
+  synthesize_multi_core env
+    (fun _ -> true)
+    max_length
+    (IterBound (num_burn_in, num_sampling))
 
 let synthesize_multi_time env max_length time_bound =
-  synthesize_multi_core env max_length (TimeBound time_bound)
+  synthesize_multi_core env (fun _ -> true) max_length (TimeBound time_bound)
+
+let synthesize_multi_time_bias env bias time_bound =
+  synthesize_multi_core env bias 1 (TimeBound time_bound)

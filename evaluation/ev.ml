@@ -77,6 +77,15 @@ let layout_eval benchname stat cost_time =
 
 open Basic_dt
 
+let filter_out (data : V.t list list) (sigma : V.t list -> bool)
+    (client : V.t list -> V.t list option) (phi : V.t list -> bool) =
+  List.filter
+    (fun input ->
+      match client input with
+      | None -> false
+      | Some output -> sigma input && (not @@ phi (input @ output)))
+    data
+
 let evaluation (num_none : int) (data : V.t list list)
     (sigma : V.t list -> bool) (client : V.t list -> V.t list option)
     (phi : V.t list -> bool) =

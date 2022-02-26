@@ -30,6 +30,7 @@ let command =
       ("moti", Cmoti.moti);
       ("moti-search", Cmoti.search);
       ("ind", Cind.ind);
+      ("pie", Csyn.synthesize_pie);
     ]
 
 let () = Command.run command

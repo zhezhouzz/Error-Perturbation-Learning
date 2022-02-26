@@ -1,6 +1,6 @@
 (library
  (name commands)
- (libraries utils core language synthesizer parser classify ocaml_parser evaluation zquickcheck analysis ifc)
+ (libraries utils core language synthesizer parser classify ocaml_parser evaluation zquickcheck analysis ifc LoopInvGen zpie)
  (modules
    caux
    ctest

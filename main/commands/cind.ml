@@ -23,7 +23,8 @@ let one_pass env selected_op_pool bound =
   let _, prog =
     Zlog.event_
       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-      (fun () -> Synthesizer.Syn.synthesize_multi_core env 1 bound)
+      (fun () ->
+        Synthesizer.Syn.synthesize_multi_core env (fun _ -> true) 1 bound)
   in
   let _, none_num, data =
     Sampling.Scache.eval_sampling [ env.i_err ] [ prog ] masure
@@ -107,7 +108,7 @@ let random_v2 env pool (s, e) num_op_pools_per_bound bound =
   done;
   acc_mat
 
-let num_run_from_init_set = 2
+let num_run_from_init_set = 3
 
 let inner_repeat_num = 3
 
@@ -143,7 +144,7 @@ let indudctive_run env init_op_set rest_op_set e bound =
   in
   List.map ~f:cal_acc_arr rs
 
-let outer_repeat_num = 2
+let outer_repeat_num = 3
 
 let random_v3 env pool (s, e) bound =
   let num_init_op_set = s in
