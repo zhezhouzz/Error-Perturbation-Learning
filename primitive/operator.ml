@@ -38,6 +38,9 @@ let list_ops =
     "insert";
     "cons";
     "append";
+    "top";
+    "tail";
+    "list_len";
     "list_head";
     "list_tail";
     "list_last";
@@ -178,6 +181,26 @@ let theta =
   ]
 
 let basic_op_pool = [ "const0"; "const1"; "plus1"; "minus1" ]
+
+let ind_op_pool =
+  [
+    "replace";
+    "insert";
+    "cons";
+    "append";
+    "list_head";
+    "list_tail";
+    "list_last";
+    "list_destruct";
+    "list_last_destruct";
+    "list_mid_partition";
+    "list_alter_partition";
+    "max";
+    "min";
+    "list_upper_bound";
+    "list_lower_bound";
+    "list_single";
+  ]
 
 let get_pool_by_name name =
   match List.find_opt (fun (x, _) -> String.equal x name) theta with

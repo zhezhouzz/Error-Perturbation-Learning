@@ -61,7 +61,7 @@ let syn_pie name qc_file num_qc bound =
   in
   let pie_precond, pie_precond_str = Zpie.Syn_pre.pie name (gtests, btests) in
   let () = Printf.printf "pie pre: %s\n" pie_precond_str in
-  let () = raise @@ failwith "zz" in
+  (* let () = raise @@ failwith "zz" in *)
   let bias x = not @@ pie_precond x in
   let prog = Synthesizer.Syn.synthesize_multi_time_bias env bias bound in
   let (_, num_none, data), cost_time =

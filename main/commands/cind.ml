@@ -45,9 +45,10 @@ let one_pass env selected_op_pool bound =
   in
   acc
 
-let random_select_helper name (s, e) =
+let random_select_helper _ (s, e) =
   let open Primitive.Operator in
-  let pool = get_pool_by_name name in
+  (* let pool = get_pool_by_name name in *)
+  let pool = ind_op_pool in
   let () =
     if e > List.length pool then
       raise

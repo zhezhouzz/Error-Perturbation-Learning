@@ -293,6 +293,16 @@ let table =
           | _ -> raise @@ exn __FILE__ __LINE__);
       };
       {
+        imp_name = "list_len";
+        imp_itps = [ IntList ];
+        imp_otps = [ Int ];
+        nondet = false;
+        imp_exec =
+          (function
+          | [ L l ] -> Some [ I (List.length l) ]
+          | _ -> raise @@ exn __FILE__ __LINE__);
+      };
+      {
         imp_name = "max";
         imp_itps = [ IntList ];
         imp_otps = [ Int ];
@@ -362,7 +372,7 @@ let table =
         nondet = false;
         imp_exec =
           (function
-          | [ L [] ] -> None
+          | [ L [] ] -> Some [ L [] ]
           | [ L (_ :: t) ] -> Some [ L t ]
           | _ -> raise @@ exn __FILE__ __LINE__);
       };

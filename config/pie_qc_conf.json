@@ -1,0 +1,53 @@
+{
+    "int_conf": {
+        "element": "-1,39"
+    },
+    "list_conf": {
+        "element": "-1,39",
+        "size": "20"
+    },
+    "tree_conf": {
+        "element": "-1,39",
+        "size": "5",
+        "fq": {
+            "fq_leaf": 1,
+            "fq_node": 3
+        }
+    },
+    "treei_conf": {
+        "element": "-1,19",
+        "size": "5",
+        "fq": {
+            "fq_leaf": 1,
+            "fq_node": 3
+        }
+    },
+    "treeb_conf": {
+        "element": "-10,19",
+        "size": "5",
+        "fq": {
+            "fq_leaf": 1,
+            "fq_node": 3
+        }
+    },
+    "binomialhp_conf": {
+        "element": "-10,19",
+        "size": "5"
+    },
+    "pairinghp_conf": {
+        "element": "-10,19",
+        "size": "5"
+    },
+    "physicistsq_conf": {
+        "element": "-10,19",
+        "size": "20"
+    },
+    "realtimeq_conf": {
+        "element": "-10,19",
+        "size": "20"
+    },
+    "skewhp_conf": {
+        "element": "-10,19",
+        "size": "5"
+    }
+}

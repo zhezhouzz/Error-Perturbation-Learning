@@ -117,7 +117,13 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
     match !Config.conf.bias_method with
     | Config.SamplingCutOff | Config.Correct | Config.MeasureOnly ->
         fun _ -> 1.0
-    | Config.CostPenalty -> fun v -> if bias v then 1.0 else bias_penalty
+    | Config.CostPenalty ->
+        fun v ->
+          let p = if bias v then 1.0 else bias_penalty in
+          (* let () = *)
+          (*   Zlog.log_write @@ spf "v:%s; bias_penalty: %f\n" (V.layout_l v) p *)
+          (* in *)
+          p
   in
   let no_new = ref true in
   let f i =
@@ -140,6 +146,10 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
               match result with
               | None -> alpha_none
               | Some v' ->
+                  (* let () = *)
+                  (*   Zlog.log_write *)
+                  (*   @@ spf "v:%s; in sigma: %b\n" (V.layout_l v) (sigma v) *)
+                  (* in *)
                   if phi (v @ v') then alpha_out_pre_not_err
                   else if sigma v then
                     let k_non_trivial =

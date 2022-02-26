@@ -1,4 +1,4 @@
-module ME = Synthesizer.Mkenv
+module E = Synthesizer.Env
 open LoopInvGen
 module PV = Value
 module V = Primitive.Value
@@ -82,6 +82,7 @@ type pie_bench = {
   features : ((PV.t list -> bool) * string) list;
   i_err : V.t list;
   op_pool : string list;
+  p_size : int;
   sampling_rounds : int;
 }
 
@@ -89,12 +90,10 @@ let pool =
   [
     "cons";
     "append";
+    "top";
+    "tail";
     "list_destruct";
-    "list_last_destruct";
-    "list_mid_partition";
-    "list_alter_partition";
-    "max";
-    "min";
+    "list_len";
     "plus1";
     "minus1";
     "const0";
@@ -109,24 +108,34 @@ let pie_settings =
       client =
         (fun [@warning "-8"] [ Value.List (INT, l); Value.Int n ] ->
           let x = List.nth l n in
-          let () = Printf.printf "n:%i\n" n in
+          (* let () = Printf.printf "len(l): %i; n:%i\n" (List.length l) n in *)
           x);
       post =
         (fun [@warning "-8"] [ Value.List _; Value.Int _ ] res ->
           match res with Ok _ -> true | Error _ -> false);
       features =
         [
-          ((fun [@warning "-8"] [ Value.List _; Value.Int n ] -> 0 <= n), "0<=");
-          ( (fun [@warning "-8"] [ Value.List (INT, l); Value.Int n ] ->
-              List.length l >= n),
-            "len_>=" );
+          ( (fun [@warning "-8"] [ Value.List _; Value.Int n ] -> 0 <= n),
+            "0 <= n" );
+          ( (fun [@warning "-8"] [ Value.List _; Value.Int n ] -> 1 <= n),
+            "1 <= n" );
           ( (fun [@warning "-8"] [ Value.List (INT, l); Value.Int n ] ->
               List.length l > n),
-            "len_>" );
+            "len(l) > n" );
+          ( (fun [@warning "-8"] [ Value.List (INT, l); Value.Int n ] ->
+              List.exists
+                (fun y ->
+                  match y with Value.Int y when n == y -> true | _ -> false)
+                l),
+            "mem(l, n)" );
+          ( (fun [@warning "-8"] [ Value.List (INT, l); Value.Int n ] ->
+              List.length l >= n),
+            "len(l) >= n" );
         ];
-      i_err = [ V.L [ -1; 1; 2; 5; 7; 10; 12; 13 ]; V.I 10 ];
+      i_err = [ V.L [ -1; 1; 2; 5; 7; 10; 12; 13 ]; V.I 9 ];
       op_pool = pool;
-      sampling_rounds = 8;
+      p_size = 3;
+      sampling_rounds = 16;
     };
   ]
 
@@ -142,11 +151,24 @@ let setting_decode client_name =
 let setting_decode_to_env client_name =
   let s = setting_decode client_name in
   let tps = List.map fst s.args in
-  ME.mk_env_v2_ (Spec.dummy_pre tps)
-    (fun _ -> true)
-    (fun _ x -> ([], pie_fun_to_prim_fun s.client x))
-    Language.Bblib.dummy_inspector (pie_post_to_post s.post) tps s.i_err
-    s.op_pool [] s.sampling_rounds 4
+  E.
+    {
+      sigma_raw = Spec.dummy_pre tps;
+      sigma = (fun _ -> true);
+      client = (fun _ x -> ([], pie_fun_to_prim_fun s.client x));
+      library_inspector = Language.Bblib.dummy_inspector;
+      phi = pie_post_to_post s.post;
+      measure_cond = Primitive.Measure.mk_measure_cond s.i_err;
+      tps;
+      op_pool = s.op_pool;
+      preds = [];
+      i_err = s.i_err;
+      i_err_non_trivial_info = [];
+      init_sampling_set = [ s.i_err ];
+      sampling_rounds = s.sampling_rounds;
+      p_size = s.p_size;
+      cur_p = None;
+    }
 
 let pie client_name (g, b) =
   let s = setting_decode client_name in
