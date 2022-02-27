@@ -150,8 +150,11 @@ let pie_settings =
           match res with Ok _ -> true | Error _ -> false);
       features =
         [
-          ( (fun [@warning "-8"] [ Value.List _; Value.Int n ] -> 0 <= n),
-            "0 <= n" );
+          (* ( (fun [@warning "-8"] [ Value.List _; Value.Int n ] -> 0 <= n), *)
+          (*   "0 <= n" ); *)
+          ( (fun [@warning "-8"] [ Value.List _; Value.Int n ] -> 0 == n),
+            "0 == n" );
+          ((fun [@warning "-8"] [ Value.List _; Value.Int n ] -> 0 < n), "0 < n");
           ( (fun [@warning "-8"] [ Value.List (INT, l); Value.Int n ] ->
               List.length l > n),
             "len(l) > n" );
@@ -161,9 +164,15 @@ let pie_settings =
                   match y with Value.Int y when n == y -> true | _ -> false)
                 l),
             "mem(l, n)" );
+          ( (fun [@warning "-8"] [ Value.List (INT, l); Value.Int _ ] ->
+              List.length l == 0),
+            "len(l) == 0" );
           ( (fun [@warning "-8"] [ Value.List (INT, l); Value.Int n ] ->
               List.length l >= n),
             "len(l) >= n" );
+          ( (fun [@warning "-8"] [ Value.List (INT, l); Value.Int n ] ->
+              List.length l == n),
+            "len(l) == n" );
           ( (fun [@warning "-8"] [ Value.List (INT, l); Value.Int _ ] ->
               List.check_list_unique PV.equal l),
             "unique(l)" );
@@ -171,9 +180,10 @@ let pie_settings =
       i_g = [ V.L [ 0 ]; V.I 0 ];
       i_err = [ V.L [ -1; 1; 2; 5; 7; 10; 12; 13 ]; V.I 9 ];
       op_pool = pool;
-      p_size = 2;
+      p_size = 3;
       sampling_rounds = 16;
-      ans = [ [ "T0 <= n" ]; [ "Tlen(l) > n" ] ];
+      (* ans = [ [ "T0 <= n" ]; [ "Tlen(l) > n" ] ]; *)
+      ans = [ [ "T0 < n"; "T0 == n" ]; [ "Tlen(l) > n" ] ];
     };
     {
       name = "list_rev";
@@ -203,7 +213,7 @@ let pie_settings =
       i_g = [ V.L [ 0 ] ];
       i_err = [ V.L [ -1; 1 ] ];
       op_pool = pool;
-      p_size = 2;
+      p_size = 3;
       sampling_rounds = 16;
       ans = [ [ "Fl = rev(l)" ] ];
     };
@@ -233,9 +243,9 @@ let pie_settings =
           ( (fun [@warning "-8"] [ _; Value.List (INT, l2) ] ->
               List.length l2 <= 1),
             "len(l2) <= 1" );
-          ( (fun [@warning "-8"] [ Value.List (INT, l1); Value.List (INT, l2) ] ->
-              List.eq Value.equal l1 l2),
-            "l1 = l2" );
+          (* ( (fun [@warning "-8"] [ Value.List (INT, l1); Value.List (INT, l2) ] -> *)
+          (*     List.eq Value.equal l1 l2), *)
+          (*   "l1 = l2" ); *)
           ( (fun [@warning "-8"] [ Value.List (INT, l1); _ ] ->
               List.check_list_unique PV.equal l1),
             "unique(l1)" );
@@ -246,7 +256,7 @@ let pie_settings =
       i_g = [ V.L []; V.L [] ];
       i_err = [ V.L [ 0 ]; V.L [ 0 ] ];
       op_pool = pool;
-      p_size = 2;
+      p_size = 3;
       sampling_rounds = 16;
       ans = [ [ "Tlen(l1) == 0" ]; [ "Tlen(l2) == 0" ] ];
     };

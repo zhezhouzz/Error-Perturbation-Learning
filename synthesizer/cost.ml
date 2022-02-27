@@ -125,9 +125,9 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
     | Config.CostPenalty ->
         fun v ->
           let p = if bias v then 1.0 else bias_penalty in
-          let () =
-            Zlog.log_write @@ spf "v:%s; bias_penalty: %f\n" (V.layout_l v) p
-          in
+          (* let () = *)
+          (*   Zlog.log_write @@ spf "v:%s; bias_penalty: %f\n" (V.layout_l v) p *)
+          (* in *)
           p
   in
   let no_new = ref true in
@@ -143,7 +143,7 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
                 no_new := false;
                 1.0
           in
-          let () = Zlog.log_write @@ spf "\tk_dupliate: %f" k_dupliate in
+          (* let () = Zlog.log_write @@ spf "\tk_dupliate: %f" k_dupliate in *)
           let v = S.Mem.itov mem j in
           let delta =
             let invocation_record, result = prog v in
@@ -151,12 +151,12 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
               match result with
               | None -> alpha_none
               | Some v' ->
-                  let () =
-                    Zlog.log_write
-                    @@ spf "v:%s; in sigma: %b; in phi: %b\n" (V.layout_l v)
-                         (sigma v)
-                         (phi (v @ v'))
-                  in
+                  (* let () = *)
+                  (*   Zlog.log_write *)
+                  (*   @@ spf "v:%s; in sigma: %b; in phi: %b\n" (V.layout_l v) *)
+                  (*        (sigma v) *)
+                  (*        (phi (v @ v')) *)
+                  (* in *)
                   if phi (v @ v') then alpha_out_pre_not_err
                   else if sigma v then
                     let k_non_trivial =
@@ -165,7 +165,7 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
                     k_non_trivial *. k_bias_penalty v *. alpha_in_pre_is_err
                   else alpha_out_pre_is_err
             in
-            let () = Zlog.log_write @@ spf "\talpha: %f" alpha in
+            (* let () = Zlog.log_write @@ spf "\talpha: %f" alpha in *)
             alpha
           in
           delta *. k_dupliate
@@ -178,14 +178,14 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
     | None -> empty_generation_penalty
   in
   let c = if !no_new then no_new_output_panalty *. c else c in
-  let () =
-    Zlog.log_write @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) c
-  in
-  let () =
-    Zlog.log_write
-    @@ spf "g: %s"
-         (List.split_by_comma (fun i -> V.layout_l @@ S.Mem.itov mem i) g)
-  in
+  (* let () = *)
+  (*   Zlog.log_write @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) c *)
+  (* in *)
+  (* let () = *)
+  (*   Zlog.log_write *)
+  (*   @@ spf "g: %s" *)
+  (*        (List.split_by_comma (fun i -> V.layout_l @@ S.Mem.itov mem i) g) *)
+  (* in *)
   c
 
 let cost_duplicate_iter jump_entry =

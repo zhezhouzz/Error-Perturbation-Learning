@@ -43,7 +43,7 @@ let syn source_file meta_file max_length bound =
   in
   (env.i_err, result)
 
-let pie_times = 40
+let pie_times = 30
 
 let syn_pie name qc_file num_qc bound =
   let env = Zpie.Syn_pre.setting_decode_to_env name in
@@ -73,28 +73,30 @@ let syn_pie name qc_file num_qc bound =
     (* let () = Printf.printf "pie pre: %s\n" pie_precond_str in *)
     (* let () = raise @@ failwith "zz" in *)
     let bias = pie_precond in
-    let prog = Synthesizer.Syn.synthesize_multi_time_bias env bias bound in
-    let (_, num_none, data), cost_time =
-      Zlog.event_time_
-        (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "sampling")
-        (fun () ->
-          Sampling.Scache.eval_sampling [ env.i_err ]
-            ((List.map ~f:snd @@ fst prog) @ [ snd prog ])
-            (Primitive.Measure.mk_measure_cond env.i_err)
-            env.sampling_rounds)
-    in
-    let data = List.filter ~f:client_cond data in
-    (* let () = *)
-    (*   List.iter *)
-    (*     ~f:(fun d -> Printf.printf "data: %s\n" @@ Primitive.Value.layout_l d) *)
-    (*     data *)
-    (* in *)
-    let gtests, btests = (gtests, btests @ data) in
-    let pie_precond', pie_pre', pie_pre_correct', pie_precond_str' =
-      Zpie.Syn_pre.pie name (gtests, btests)
-    in
-    (* let () = Printf.printf "pie pre': %s\n" pie_precond_str' in *)
-    (pie_pre_correct, pie_pre_correct')
+    try
+      let prog = Synthesizer.Syn.synthesize_multi_time_bias env bias bound in
+      let (_, num_none, data), cost_time =
+        Zlog.event_time_
+          (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
+             "sampling") (fun () ->
+            Sampling.Scache.eval_sampling [ env.i_err ]
+              ((List.map ~f:snd @@ fst prog) @ [ snd prog ])
+              (Primitive.Measure.mk_measure_cond env.i_err)
+              env.sampling_rounds)
+      in
+      let data = List.filter ~f:client_cond data in
+      (* let () = *)
+      (*   List.iter *)
+      (*     ~f:(fun d -> Printf.printf "data: %s\n" @@ Primitive.Value.layout_l d) *)
+      (*     data *)
+      (* in *)
+      let gtests, btests = (gtests, btests @ data) in
+      let pie_precond', pie_pre', pie_pre_correct', pie_precond_str' =
+        Zpie.Syn_pre.pie name (gtests, btests)
+      in
+      (* let () = Printf.printf "pie pre': %s\n" pie_precond_str' in *)
+      (pie_pre_correct, pie_pre_correct')
+    with _ -> (pie_pre_correct, false)
   in
   let res = List.init ~f:test pie_times in
   (* let c, _ = Basic_dt.List.split res in *)
