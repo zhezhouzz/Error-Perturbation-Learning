@@ -158,7 +158,7 @@ if __name__ == "__main__":
         for b in bs:
             eval_ind(b, "list", "5", "16", "50")
         names = [b['name']for b in bs]
-    elif action == "ind_polt":
+    elif action == "ind_plot":
         verbose=True
         run_ind(names)
     else:
