@@ -74,6 +74,12 @@ def eval_ind(p_setting, tname, s, e, num_bound):
     cmd = cmd_prefix + ["ind", config_file, target_file, assertion_file, tname, s,e, num_bound]
     invoc_cmd(cmd, outfile)
 
+def eval_pie(name, qc_config, num_qc, bound):
+    outfile = ".result/{}.pie".format(name)
+    subprocess.run(["rm", outfile])
+    cmd = cmd_prefix + ["pie", config_file, name, qc_config,  num_qc, bound]
+    invoc_cmd(cmd, outfile)
+
 if __name__ == "__main__":
     # print(os.path.isfile("zhouzhe"))
     with open(benchmarks_config_file) as f:
@@ -96,6 +102,12 @@ if __name__ == "__main__":
                         help="show executing commands")
     args = parser.parse_args()
     action = args.action
+    if action == "pie":
+        verbose=True
+        subprocess.run(["mkdir", ".result"])
+        for name in args.benchmarks.split(','):
+            eval_pie(name, "config/pie_qc_conf.json", "10", "10")
+        exit()
     timebound = str(args.timebound)
     sizebound = str(args.sizebound)
     verbose=args.verbose
@@ -146,7 +158,9 @@ if __name__ == "__main__":
         for b in bs:
             eval_ind(b, "list", "5", "16", "50")
         names = [b['name']for b in bs]
-        # run_ind(names)
+    elif action == "ind_polt":
+        verbose=True
+        run_ind(names)
     else:
         print("unknown command {}".format(action))
         exit()
