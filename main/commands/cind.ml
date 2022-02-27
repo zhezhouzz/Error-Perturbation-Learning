@@ -113,9 +113,9 @@ let random_v2 env pool (s, e) num_op_pools_per_bound bound =
   done;
   acc_mat
 
-let num_run_from_init_set = 3
+let num_run_from_init_set = 2
 
-let inner_repeat_num = 3
+let inner_repeat_num = 2
 
 let indudctive_run env init_op_set rest_op_set e bound =
   let rs =
@@ -149,7 +149,7 @@ let indudctive_run env init_op_set rest_op_set e bound =
   in
   List.map ~f:cal_acc_arr rs
 
-let outer_repeat_num = 3
+let outer_repeat_num = 2
 
 let random_v3 env pool (s, e) bound =
   let num_init_op_set = s in

@@ -156,7 +156,7 @@ if __name__ == "__main__":
         verbose=True
         subprocess.run(["mkdir", ".result"])
         for b in bs:
-            eval_ind(b, "list", "5", "16", "50")
+            eval_ind(b, "list", "4", "16", "60")
         names = [b['name']for b in bs]
     elif action == "ind_plot":
         verbose=True
