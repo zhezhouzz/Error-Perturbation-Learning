@@ -4,6 +4,8 @@ open Basic_dt
 open Env
 module Spec = Specification.Spec
 
+exception InitializationError
+
 (* HACK: do not distinguish int and nat here *)
 let verify_i_err_gen_info tps client inspector sigma phi i_err =
   let tps' = V.get_tp_l i_err in
@@ -70,7 +72,7 @@ let random_init_prog env =
   in
   let counter = ref 0 in
   let rec loop () =
-    if !counter > 100 then raise @@ failwith "mkenv too many init"
+    if !counter > 100 then raise InitializationError
     else
       let ops = QCheck.Gen.generate1 gen in
       let _ =

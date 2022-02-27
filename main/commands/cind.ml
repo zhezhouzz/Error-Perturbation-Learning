@@ -102,7 +102,11 @@ let random_v2 env pool (s, e) num_op_pools_per_bound bound =
       (* if fails (mostly cannot find initial perturbation function), return 0.0       *)
       let acc =
         try one_pass env pool bound
-        with Synthesizer.Mutate.InitializationError -> 0.0
+        with
+        | Synthesizer.Mkenv.InitializationError
+        | Synthesizer.Syn.SynthesisHasNoGoodResult
+        ->
+          0.0
       in
       acc_mat.(i).(n) <- acc
     done
@@ -134,7 +138,7 @@ let indudctive_run env init_op_set rest_op_set e bound =
               let acc =
                 try one_pass env pool bound
                 with
-                | Synthesizer.Mutate.InitializationError
+                | Synthesizer.Mkenv.InitializationError
                 | Synthesizer.Syn.SynthesisHasNoGoodResult
                 ->
                   0.0

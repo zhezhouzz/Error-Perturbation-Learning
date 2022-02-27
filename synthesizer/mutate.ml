@@ -66,8 +66,6 @@ let apply_mutation muation_op cache =
           in
           Arg_solving.arg_assign cache.tps ops)
 
-exception InitializationError
-
 let mutate_ op_pool cache =
   let open Config in
   let open Arg_solving in
@@ -84,7 +82,8 @@ let mutate_ op_pool cache =
   in
   let counter = ref 0 in
   let rec loop () =
-    if !counter > 6 + (2 * List.length op_pool) then raise InitializationError
+    if !counter > 6 + (2 * List.length op_pool) then
+      raise Mkenv.InitializationError
     else
       let mutation = Gen.generate1 gen in
       let r =
