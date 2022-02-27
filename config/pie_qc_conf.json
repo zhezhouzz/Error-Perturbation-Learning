@@ -1,10 +1,10 @@
 {
     "int_conf": {
-        "element": "-1,39"
+        "element": "-1,10"
     },
     "list_conf": {
-        "element": "-1,39",
-        "size": "20"
+        "element": "-1,10",
+        "size": "10"
     },
     "tree_conf": {
         "element": "-1,39",

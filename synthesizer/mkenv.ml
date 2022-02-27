@@ -72,7 +72,7 @@ let random_init_prog env =
   in
   let counter = ref 0 in
   let rec loop () =
-    if !counter > 100 then raise InitializationError
+    if !counter > 200 then raise InitializationError
     else
       let ops = QCheck.Gen.generate1 gen in
       let _ =

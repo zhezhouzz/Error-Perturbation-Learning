@@ -72,36 +72,41 @@ let non_trival r1 r2 =
 (* 1. iteration times: 1/(1 + mean(abs(c_i - c_i'))) within [0.5, 1] *)
 (* 2. relative difference comparison: C(n,2) / (Sigma ((c_i - c-j) != (c_i' - c_j')) + C(n,2)) *)
 let non_trival_v2 r1 r2 =
-  let r =
-    try List.combine r1 r2
-    with _ -> raise @@ failwith "diff_invocation_record_v2"
-  in
-  let a =
-    match
-      List.mean_opt (fun (n1, n2) -> float_of_int @@ abs @@ (n1 - n2)) r
-    with
-    | Some a -> a
-    | None -> 0.0
-  in
-  let a = max 0.2 (2.0 /. (2.0 +. a)) in
-  let b1, b2 =
-    Sugar.map2 (fun l -> List.map (fun (x, y) -> x - y) @@ List.c_n_2 l) (r1, r2)
-  in
-  let b =
-    try List.combine b1 b2
-    with _ -> raise @@ failwith "diff_invocation_record_v2"
-  in
-  let b = List.map (fun (b1, b2) -> b1 == b2) b in
-  let c_b_2_num = float_of_int @@ List.length b in
-  let b =
-    max 0.3
-      (List.fold_left (fun sum x -> if x then sum +. 1.0 else sum) 0.0 b
-      /. c_b_2_num)
-  in
-  let result = a *. b in
-  (* let _ = Zlog.log_write @@ Printf.sprintf "|<%s> - <%s>| = %f * %f = %f" *)
-  (*     (List.split_by_comma string_of_int r1) (List.split_by_comma string_of_int r2) a b result in *)
-  result
+  match r1 with
+  | [] -> 1.0
+  | _ ->
+      let r =
+        try List.combine r1 r2
+        with _ -> raise @@ failwith "diff_invocation_record_v2"
+      in
+      let a =
+        match
+          List.mean_opt (fun (n1, n2) -> float_of_int @@ abs @@ (n1 - n2)) r
+        with
+        | Some a -> a
+        | None -> 0.0
+      in
+      let a = max 0.2 (2.0 /. (2.0 +. a)) in
+      let b1, b2 =
+        Sugar.map2
+          (fun l -> List.map (fun (x, y) -> x - y) @@ List.c_n_2 l)
+          (r1, r2)
+      in
+      let b =
+        try List.combine b1 b2
+        with _ -> raise @@ failwith "diff_invocation_record_v2"
+      in
+      let b = List.map (fun (b1, b2) -> b1 == b2) b in
+      let c_b_2_num = float_of_int @@ List.length b in
+      let b =
+        max 0.3
+          (List.fold_left (fun sum x -> if x then sum +. 1.0 else sum) 0.0 b
+          /. c_b_2_num)
+      in
+      let result = a *. b in
+      (* let _ = Zlog.log_write @@ Printf.sprintf "|<%s> - <%s>| = %f * %f = %f" *)
+      (*     (List.split_by_comma string_of_int r1) (List.split_by_comma string_of_int r2) a b result in *)
+      result
 
 let no_new_output_panalty = 4.5
 
@@ -120,9 +125,9 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
     | Config.CostPenalty ->
         fun v ->
           let p = if bias v then 1.0 else bias_penalty in
-          (* let () = *)
-          (*   Zlog.log_write @@ spf "v:%s; bias_penalty: %f\n" (V.layout_l v) p *)
-          (* in *)
+          let () =
+            Zlog.log_write @@ spf "v:%s; bias_penalty: %f\n" (V.layout_l v) p
+          in
           p
   in
   let no_new = ref true in
@@ -138,7 +143,7 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
                 no_new := false;
                 1.0
           in
-          (* let () = Zlog.log_write @@ spf "\tk_dupliate: %f" k_dupliate in *)
+          let () = Zlog.log_write @@ spf "\tk_dupliate: %f" k_dupliate in
           let v = S.Mem.itov mem j in
           let delta =
             let invocation_record, result = prog v in
@@ -146,10 +151,12 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
               match result with
               | None -> alpha_none
               | Some v' ->
-                  (* let () = *)
-                  (*   Zlog.log_write *)
-                  (*   @@ spf "v:%s; in sigma: %b\n" (V.layout_l v) (sigma v) *)
-                  (* in *)
+                  let () =
+                    Zlog.log_write
+                    @@ spf "v:%s; in sigma: %b; in phi: %b\n" (V.layout_l v)
+                         (sigma v)
+                         (phi (v @ v'))
+                  in
                   if phi (v @ v') then alpha_out_pre_not_err
                   else if sigma v then
                     let k_non_trivial =
@@ -158,6 +165,7 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
                     k_non_trivial *. k_bias_penalty v *. alpha_in_pre_is_err
                   else alpha_out_pre_is_err
             in
+            let () = Zlog.log_write @@ spf "\talpha: %f" alpha in
             alpha
           in
           delta *. k_dupliate
@@ -170,14 +178,14 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
     | None -> empty_generation_penalty
   in
   let c = if !no_new then no_new_output_panalty *. c else c in
-  (* let () = *)
-  (*   Zlog.log_write @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) c *)
-  (* in *)
-  (* let () = *)
-  (*   Zlog.log_write *)
-  (*   @@ spf "g: %s" *)
-  (*        (List.split_by_comma (fun i -> V.layout_l @@ S.Mem.itov mem i) g) *)
-  (* in *)
+  let () =
+    Zlog.log_write @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) c
+  in
+  let () =
+    Zlog.log_write
+    @@ spf "g: %s"
+         (List.split_by_comma (fun i -> V.layout_l @@ S.Mem.itov mem i) g)
+  in
   c
 
 let cost_duplicate_iter jump_entry =

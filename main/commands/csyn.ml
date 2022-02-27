@@ -43,6 +43,8 @@ let syn source_file meta_file max_length bound =
   in
   (env.i_err, result)
 
+let pie_times = 40
+
 let syn_pie name qc_file num_qc bound =
   let env = Zpie.Syn_pre.setting_decode_to_env name in
   let env =
@@ -56,28 +58,53 @@ let syn_pie name qc_file num_qc bound =
     | None -> false
     | Some outp -> env.sigma inp && (not @@ env.phi (inp @ outp))
   in
-  let gtests, btests =
-    Zquickcheck.Qc_baseline.make_tests qc_conf env.tps client_cond num_qc
+  let test _ =
+    let gtests, btests =
+      Zquickcheck.Qc_baseline.make_tests qc_conf env.tps client_cond num_qc
+    in
+    (* let () = *)
+    (*   List.iter *)
+    (*     ~f:(fun d -> Printf.printf "data: %s\n" @@ Primitive.Value.layout_l d) *)
+    (*     (gtests @ btests) *)
+    (* in *)
+    let pie_precond, pie_pre, pie_pre_correct, pie_precond_str =
+      Zpie.Syn_pre.pie name (gtests, btests)
+    in
+    (* let () = Printf.printf "pie pre: %s\n" pie_precond_str in *)
+    (* let () = raise @@ failwith "zz" in *)
+    let bias = pie_precond in
+    let prog = Synthesizer.Syn.synthesize_multi_time_bias env bias bound in
+    let (_, num_none, data), cost_time =
+      Zlog.event_time_
+        (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "sampling")
+        (fun () ->
+          Sampling.Scache.eval_sampling [ env.i_err ]
+            ((List.map ~f:snd @@ fst prog) @ [ snd prog ])
+            (Primitive.Measure.mk_measure_cond env.i_err)
+            env.sampling_rounds)
+    in
+    let data = List.filter ~f:client_cond data in
+    (* let () = *)
+    (*   List.iter *)
+    (*     ~f:(fun d -> Printf.printf "data: %s\n" @@ Primitive.Value.layout_l d) *)
+    (*     data *)
+    (* in *)
+    let gtests, btests = (gtests, btests @ data) in
+    let pie_precond', pie_pre', pie_pre_correct', pie_precond_str' =
+      Zpie.Syn_pre.pie name (gtests, btests)
+    in
+    (* let () = Printf.printf "pie pre': %s\n" pie_precond_str' in *)
+    (pie_pre_correct, pie_pre_correct')
   in
-  let pie_precond, pie_precond_str = Zpie.Syn_pre.pie name (gtests, btests) in
-  let () = Printf.printf "pie pre: %s\n" pie_precond_str in
-  (* let () = raise @@ failwith "zz" in *)
-  let bias x = not @@ pie_precond x in
-  let prog = Synthesizer.Syn.synthesize_multi_time_bias env bias bound in
-  let (_, num_none, data), cost_time =
-    Zlog.event_time_
-      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "sampling")
-      (fun () ->
-        Sampling.Scache.eval_sampling [ env.i_err ]
-          ((List.map ~f:snd @@ fst prog) @ [ snd prog ])
-          (Primitive.Measure.mk_measure_cond env.i_err)
-          env.sampling_rounds)
+  let res = List.init ~f:test pie_times in
+  (* let c, _ = Basic_dt.List.split res in *)
+  let bad = List.map ~f:(fun (a, b) -> not a) res in
+  let improves = List.map ~f:(fun (a, b) -> (not a) && b) res in
+  let cal_rate res =
+    (float_of_int @@ List.length @@ List.filter ~f:(fun x -> x) res)
+    /. (float_of_int @@ List.length res)
   in
-  let data = List.filter ~f:client_cond data in
-  let gtests, btests = (gtests, btests @ data) in
-  let pie_precond', pie_precond_str' = Zpie.Syn_pre.pie name (gtests, btests) in
-  let () = Printf.printf "pie pre': %s\n" pie_precond_str' in
-  (pie_precond, pie_precond')
+  (cal_rate bad, cal_rate improves /. cal_rate bad)
 
 let synthesize_piecewise =
   Command.basic ~summary:"synthesize-piecewise"
@@ -152,8 +179,13 @@ let synthesize_pie =
       and bound_time = anon ("time in second" %: int) in
       fun () ->
         Config.exec_main configfile (fun () ->
-            let pre, pre' =
+            let c, c_impr =
               syn_pie name qc_file num_qc (float_of_int bound_time)
+            in
+            let () =
+              Printf.printf
+                "name:%s\ninit_wrong_rate: %f%%\nimprove_rate: %f%%\n" name
+                (c *. 100.0) (c_impr *. 100.0)
             in
             ()))
 

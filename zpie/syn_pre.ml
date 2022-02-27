@@ -23,15 +23,23 @@ let pie_v_to_prim_v = function
 
 exception PrimException
 
-let prim_fun_to_pie_fun (f : V.t list -> V.t list option) inp =
-  match f (List.map pie_v_to_prim_v inp) with
-  | None -> raise PrimException
-  | Some [ x ] -> prim_v_to_pie_v x
+let dummy_v = V.I 2932
+
+let pie_res_to_res = function
+  | Ok v -> Some [ V.B true; pie_v_to_prim_v v ]
+  | Error _ -> Some [ V.B false; dummy_v ]
+
+let res_to_pie_res = function
+  | Some [ V.B false; _ ] -> Error PrimException
+  | Some [ V.B true; v ] -> Ok (prim_v_to_pie_v v)
   | _ -> raise @@ failwith "should not happen"
 
+let prim_fun_to_pie_fun (f : V.t list -> V.t list option) inp =
+  res_to_pie_res @@ f (List.map pie_v_to_prim_v inp)
+
 let pie_fun_to_prim_fun (f : Value.t list -> Value.t) inp =
-  try Some [ pie_v_to_prim_v @@ f (List.map prim_v_to_pie_v inp) ]
-  with _ -> None
+  try Some [ V.B true; pie_v_to_prim_v @@ f (List.map prim_v_to_pie_v inp) ]
+  with _ -> Some [ V.B false; dummy_v ]
 
 let tp_to_pie_tp = function
   | T.Int -> Type.INT
@@ -51,18 +59,24 @@ let prepost_to_pie_args (pre, _) =
 let args_to_pie_args args =
   List.map (fun (tp, name) -> (name, tp_to_pie_tp tp)) args
 
-let post_to_pie_post post inp res =
-  match res with
-  | Ok v -> Spec.eval post (List.map pie_v_to_prim_v @@ inp @ [ v ])
-  | Error _ -> false
-
 open Basic_dt
 
-let pie_post_to_post post inp =
+let post_to_pie_post post pie_inp pie_res =
+  match pie_res_to_res pie_res with
+  | None -> false
+  | Some res ->
+      let inp = List.map pie_v_to_prim_v pie_inp in
+      post (res @ inp)
+
+let pie_post_to_post pie_post inp =
   match List.last_destruct_opt inp with
   | None -> raise @@ failwith "should not happen"
-  | Some (inp, outp) ->
-      post (List.map prim_v_to_pie_v inp) (Ok (prim_v_to_pie_v outp))
+  | Some (inp, outp) -> (
+      match List.last_destruct_opt inp with
+      | Some (_, V.B false) -> false
+      | Some (inp, V.B true) ->
+          pie_post (List.map prim_v_to_pie_v inp) (Ok (prim_v_to_pie_v outp))
+      | _ -> raise @@ failwith "should not happen")
 
 let cnf_to_prim_pre cnf =
   let open CNF in
@@ -74,16 +88,38 @@ let cnf_to_prim_pre cnf =
   let reduction_cnf input cnf = List.for_all (reduction_clause input) cnf in
   fun input -> reduction_cnf (List.map prim_v_to_pie_v input) cnf
 
+let cnf_normalize a =
+  let open CNF in
+  let concat l = List.fold_left ( ^ ) "" l in
+  let a =
+    List.map
+      (List.map (function
+        | Pos (_, str) -> "T" ^ str
+        | Neg (_, str) -> "F" ^ str))
+      a
+  in
+  let a = List.map (List.sort compare) a in
+  let a = List.sort (fun a b -> compare (concat a) (concat b)) a in
+  a
+
+let cnf_eq a b =
+  let lit_eq = String.equal in
+  let clause_eq a b = List.eq lit_eq a b in
+  let cnf_eq a b = List.eq clause_eq a b in
+  cnf_eq a b
+
 type pie_bench = {
   name : string;
   args : T.tvar list;
   client : PV.t list -> PV.t;
   post : PV.t list -> (PV.t, exn) result -> bool;
   features : ((PV.t list -> bool) * string) list;
+  i_g : V.t list;
   i_err : V.t list;
   op_pool : string list;
   p_size : int;
   sampling_rounds : int;
+  ans : string list list;
 }
 
 let pool =
@@ -108,7 +144,6 @@ let pie_settings =
       client =
         (fun [@warning "-8"] [ Value.List (INT, l); Value.Int n ] ->
           let x = List.nth l n in
-          (* let () = Printf.printf "len(l): %i; n:%i\n" (List.length l) n in *)
           x);
       post =
         (fun [@warning "-8"] [ Value.List _; Value.Int _ ] res ->
@@ -117,8 +152,6 @@ let pie_settings =
         [
           ( (fun [@warning "-8"] [ Value.List _; Value.Int n ] -> 0 <= n),
             "0 <= n" );
-          ( (fun [@warning "-8"] [ Value.List _; Value.Int n ] -> 1 <= n),
-            "1 <= n" );
           ( (fun [@warning "-8"] [ Value.List (INT, l); Value.Int n ] ->
               List.length l > n),
             "len(l) > n" );
@@ -131,11 +164,91 @@ let pie_settings =
           ( (fun [@warning "-8"] [ Value.List (INT, l); Value.Int n ] ->
               List.length l >= n),
             "len(l) >= n" );
+          ( (fun [@warning "-8"] [ Value.List (INT, l); Value.Int _ ] ->
+              List.check_list_unique PV.equal l),
+            "unique(l)" );
         ];
+      i_g = [ V.L [ 0 ]; V.I 0 ];
       i_err = [ V.L [ -1; 1; 2; 5; 7; 10; 12; 13 ]; V.I 9 ];
       op_pool = pool;
-      p_size = 3;
+      p_size = 2;
       sampling_rounds = 16;
+      ans = [ [ "T0 <= n" ]; [ "Tlen(l) > n" ] ];
+    };
+    {
+      name = "list_rev";
+      args = [ (T.IntList, "l") ];
+      client =
+        (fun [@warning "-8"] [ Value.List (INT, l) ] ->
+          let x = List.rev l in
+          Value.List (INT, x));
+      post =
+        (fun [@warning "-8"] [ Value.List (INT, l) ] res ->
+          match res with
+          | Ok (Value.List (INT, l')) -> not @@ List.eq Value.equal l l'
+          | _ -> false);
+      features =
+        [
+          ( (fun [@warning "-8"] [ Value.List (INT, l) ] -> List.length l == 0),
+            "len(l) == 0" );
+          ( (fun [@warning "-8"] [ Value.List (INT, l) ] -> List.length l <= 1),
+            "len(l) <= 1" );
+          ( (fun [@warning "-8"] [ Value.List (INT, l) ] ->
+              List.eq Value.equal l (List.rev l)),
+            "l = rev(l)" );
+          ( (fun [@warning "-8"] [ Value.List (INT, l) ] ->
+              List.check_list_unique PV.equal l),
+            "unique(l)" );
+        ];
+      i_g = [ V.L [ 0 ] ];
+      i_err = [ V.L [ -1; 1 ] ];
+      op_pool = pool;
+      p_size = 2;
+      sampling_rounds = 16;
+      ans = [ [ "Fl = rev(l)" ] ];
+    };
+    {
+      name = "list_append";
+      args = [ (T.IntList, "l1"); (T.IntList, "l2") ];
+      client =
+        (fun [@warning "-8"] [ Value.List (INT, l1); Value.List (INT, l2) ] ->
+          let x = l1 @ l2 in
+          Value.List (INT, x));
+      post =
+        (fun [@warning "-8"] [ Value.List (INT, _); Value.List (INT, _) ] res ->
+          match res with
+          | Ok (Value.List (INT, l')) -> List.length l' == 0
+          | _ -> false);
+      features =
+        [
+          ( (fun [@warning "-8"] [ Value.List (INT, l1); _ ] ->
+              List.length l1 == 0),
+            "len(l1) == 0" );
+          ( (fun [@warning "-8"] [ _; Value.List (INT, l2) ] ->
+              List.length l2 == 0),
+            "len(l2) == 0" );
+          ( (fun [@warning "-8"] [ Value.List (INT, l1); _ ] ->
+              List.length l1 <= 1),
+            "len(l1) <= 1" );
+          ( (fun [@warning "-8"] [ _; Value.List (INT, l2) ] ->
+              List.length l2 <= 1),
+            "len(l2) <= 1" );
+          ( (fun [@warning "-8"] [ Value.List (INT, l1); Value.List (INT, l2) ] ->
+              List.eq Value.equal l1 l2),
+            "l1 = l2" );
+          ( (fun [@warning "-8"] [ Value.List (INT, l1); _ ] ->
+              List.check_list_unique PV.equal l1),
+            "unique(l1)" );
+          ( (fun [@warning "-8"] [ _; Value.List (INT, l2) ] ->
+              List.check_list_unique PV.equal l2),
+            "unique(l2)" );
+        ];
+      i_g = [ V.L []; V.L [] ];
+      i_err = [ V.L [ 0 ]; V.L [ 0 ] ];
+      op_pool = pool;
+      p_size = 2;
+      sampling_rounds = 16;
+      ans = [ [ "Tlen(l1) == 0" ]; [ "Tlen(l2) == 0" ] ];
     };
   ]
 
@@ -175,12 +288,34 @@ let pie client_name (g, b) =
   let job =
     Job.create_unlabeled ~f:s.client ~args:(args_to_pie_args s.args)
       ~post:s.post ~features:s.features
-      (List.map (List.map prim_v_to_pie_v) (g @ b))
+      (List.map (List.map prim_v_to_pie_v) (s.i_g :: (g @ b)))
   in
   let result, _ =
     PIE.learnPreCond job
       ~config:{ PIE.Config.default with disable_synth = true }
   in
   match result with
-  | None -> ((fun _ -> false), "false")
-  | Some pred -> (cnf_to_prim_pre pred, CNF.to_string pred ~stringify:snd)
+  | None ->
+      let pre_correct = cnf_eq [] s.ans in
+      ((fun _ -> false), [], pre_correct, "false")
+  | Some pred ->
+      let prim_pred = cnf_to_prim_pre pred in
+      (* let data = *)
+      (*   [ *)
+      (*     [ V.L [ 7; 8 ]; V.I (-1) ]; *)
+      (*     [ V.L [ 7; 8 ]; V.I 0 ]; *)
+      (*     [ V.L [ 7; 8 ]; V.I 1 ]; *)
+      (*     [ V.L [ 7; 8 ]; V.I 2 ]; *)
+      (*     [ V.L [ 7; 8 ]; V.I 3 ]; *)
+      (*     [ V.L [ 7; 8 ]; V.I 7 ]; *)
+      (*     [ V.L [ 7; 8 ]; V.I 9 ]; *)
+      (*   ] *)
+      (* in *)
+      (* let () = *)
+      (*   List.iter *)
+      (*     (fun v -> *)
+      (*       Printf.printf "inp: %s ~> %b\n" (V.layout_l v) (prim_pred v)) *)
+      (*     data *)
+      (* in *)
+      let pre_correct = cnf_eq (cnf_normalize pred) s.ans in
+      (prim_pred, pred, pre_correct, CNF.to_string pred ~stringify:snd)
