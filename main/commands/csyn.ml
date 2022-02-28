@@ -70,7 +70,7 @@ let syn_pie name qc_file num_qc bound =
     let pie_precond, pie_pre, pie_pre_correct, pie_precond_str =
       Zpie.Syn_pre.pie name (gtests, btests)
     in
-    (* let () = Printf.printf "pie pre: %s\n" pie_precond_str in *)
+    let () = Zlog.log_write @@ Printf.sprintf "pie pre: %s\n" pie_precond_str in
     (* let () = raise @@ failwith "zz" in *)
     let bias = pie_precond in
     try
@@ -94,7 +94,9 @@ let syn_pie name qc_file num_qc bound =
       let pie_precond', pie_pre', pie_pre_correct', pie_precond_str' =
         Zpie.Syn_pre.pie name (gtests, btests)
       in
-      (* let () = Printf.printf "pie pre': %s\n" pie_precond_str' in *)
+      let () =
+        Zlog.log_write @@ Printf.sprintf "pie pre': %s\n" pie_precond_str'
+      in
       (pie_pre_correct, pie_pre_correct')
     with _ -> (pie_pre_correct, false)
   in
