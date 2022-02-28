@@ -106,7 +106,7 @@ if __name__ == "__main__":
         verbose=True
         subprocess.run(["mkdir", ".result"])
         for name in args.benchmarks.split(','):
-            eval_pie(name, "config/pie_qc_conf.json", "20", "20")
+            eval_pie(name, "config/pie_qc_conf.json", "20", "60")
         exit()
     timebound = str(args.timebound)
     sizebound = str(args.sizebound)

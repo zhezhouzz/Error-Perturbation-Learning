@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.collections import LineCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm
+import matplotlib.ticker as mtick
 import json
 import sys
 import math
@@ -18,10 +19,13 @@ def load_res(filename):
 def plot (ls):
     cs = ['red', 'blue', 'black', 'green']
     for idx, l in enumerate(ls):
-        x = range(0, len(l))
-        plt.plot(x, l, color=cs[idx], linewidth=1.0)
+        x = range(3, len(l) + 3)
+        plt.plot(x, l, color= cs[idx], linewidth=1.0)
+        plt.xticks(np.arange(min(x), max(x)+1, 1.0))
+        plt.gca().set_yticklabels(['{:.0f}%'.format(x*100) for x in plt.gca().get_yticks()])
     plt.xlabel("The number of perturbation operators available")
     plt.ylabel("The accuracy of learned perturbation function")
+    plt.grid(True)
     plt.show()
 
 def run_ind(filenames):

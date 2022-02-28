@@ -135,15 +135,18 @@ let indudctive_run env init_op_set rest_op_set e bound =
         in
         let accs =
           List.init num_run_from_init_set ~f:(fun _ ->
-              let acc =
-                try one_pass env pool bound
-                with
-                | Synthesizer.Mkenv.InitializationError
-                | Synthesizer.Syn.SynthesisHasNoGoodResult
-                ->
-                  0.0
+              let ct = ref 0 in
+              let rec get_acc () =
+                try one_pass env pool bound with
+                | Synthesizer.Syn.SynthesisHasNoGoodResult -> 0.0
+                | Synthesizer.Mkenv.InitializationError ->
+                    if !ct < len then (
+                      ct := !ct + 1;
+                      get_acc ())
+                    else 0.0
               in
-              acc)
+
+              get_acc ())
         in
         list_mean accs)
   in
