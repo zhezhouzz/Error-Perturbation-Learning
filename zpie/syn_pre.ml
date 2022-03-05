@@ -204,18 +204,23 @@ let pie_settings =
           ( (fun [@warning "-8"] [ Value.List (INT, l) ] -> List.length l <= 1),
             "len(l) <= 1" );
           ( (fun [@warning "-8"] [ Value.List (INT, l) ] ->
+              match (List.destruct_opt l, List.last_destruct_opt l) with
+              | Some (h, _), Some (_, la) -> Value.equal h la
+              | _, _ -> false),
+            "hd(l) == last(l)" );
+          ( (fun [@warning "-8"] [ Value.List (INT, l) ] ->
               List.eq Value.equal l (List.rev l)),
-            "l = rev(l)" );
+            "l == rev(l)" );
           ( (fun [@warning "-8"] [ Value.List (INT, l) ] ->
               List.check_list_unique PV.equal l),
             "unique(l)" );
         ];
       i_g = [ V.L [ 0 ] ];
-      i_err = [ V.L [ -1; 1 ] ];
+      i_err = [ V.L [ 1; 1 ] ];
       op_pool = pool;
       p_size = 3;
-      sampling_rounds = 16;
-      ans = [ [ [ "Fl = rev(l)" ] ] ];
+      sampling_rounds = 8;
+      ans = [ [ [ "Fl == rev(l)" ] ] ];
     };
     {
       name = "list_append";
@@ -245,7 +250,7 @@ let pie_settings =
             "len(l2) <= 1" );
           ( (fun [@warning "-8"] [ Value.List (INT, l1); Value.List (INT, l2) ] ->
               List.eq Value.equal l1 l2),
-            "l1 = l2" );
+            "l1 == l2" );
           (* ( (fun [@warning "-8"] [ Value.List (INT, l1); _ ] -> *)
           (*     List.check_list_unique PV.equal l1), *)
           (*   "unique(l1)" ); *)
@@ -261,8 +266,8 @@ let pie_settings =
       ans =
         [
           [ [ "Tlen(l1) == 0" ]; [ "Tlen(l2) == 0" ] ];
-          [ [ "Tlen(l1) == 0" ]; [ "Tl1 == l2" ] ];
-          [ [ "Tlen(l2) == 0" ]; [ "Tl1 == l2" ] ];
+          [ [ "Tl1 == l2" ]; [ "Tlen(l1) == 0" ] ];
+          [ [ "Tl1 == l2" ]; [ "Tlen(l2) == 0" ] ];
         ];
     };
   ]
@@ -276,9 +281,30 @@ let setting_decode client_name =
       @@ Printf.sprintf "cannot find the setting of benchmark %s" client_name
   | Some s -> s
 
-let setting_decode_to_env client_name =
+let setting_decode_to_cond client_name =
   let s = setting_decode client_name in
   let tps = List.map fst s.args in
+  ( tps,
+    fun x ->
+      match pie_fun_to_prim_fun s.client x with
+      | None -> false
+      | Some outp -> pie_post_to_post s.post (x @ outp) )
+
+let setting_decode_to_env client_name i_err =
+  let s = setting_decode client_name in
+  let tps = List.map fst s.args in
+  let i_err = match i_err with None -> s.i_err | Some x -> x in
+  (* let _ = *)
+  (*   Printf.printf "i_err: %s ~> (%s) \n" (V.layout_l i_err) *)
+  (*     (match pie_fun_to_prim_fun s.client i_err with *)
+  (*     | None -> "none" *)
+  (*     | Some y -> V.layout_l y) *)
+  (* in *)
+  let _ =
+    if (snd @@ setting_decode_to_cond client_name) i_err then
+      Printf.printf "bad!!!\n"
+    else ()
+  in
   E.
     {
       sigma_raw = Spec.dummy_pre tps;
@@ -290,7 +316,7 @@ let setting_decode_to_env client_name =
       tps;
       op_pool = s.op_pool;
       preds = [];
-      i_err = s.i_err;
+      i_err;
       i_err_non_trivial_info = [];
       init_sampling_set = [ s.i_err ];
       sampling_rounds = s.sampling_rounds;
@@ -298,12 +324,12 @@ let setting_decode_to_env client_name =
       cur_p = None;
     }
 
-let pie client_name (g, b) =
+let pie client_name data =
   let s = setting_decode client_name in
   let job =
     Job.create_unlabeled ~f:s.client ~args:(args_to_pie_args s.args)
       ~post:s.post ~features:s.features
-      (List.map (List.map prim_v_to_pie_v) (s.i_g :: (g @ b)))
+      (List.map (List.map prim_v_to_pie_v) (s.i_g :: data))
   in
   let result, _ =
     PIE.learnPreCond job
@@ -335,4 +361,10 @@ let pie client_name (g, b) =
       let pre_correct =
         List.exists (fun a -> cnf_eq (cnf_normalize pred) a) s.ans
       in
+      (* let _ = *)
+      (*   Zlog.log_write *)
+      (*   @@ Printf.sprintf "pie pre: - %b ~ %s | %s\n" pre_correct *)
+      (*        (List.to_string (List.to_string (fun x -> x)) (cnf_normalize pred)) *)
+      (*        (CNF.to_string pred ~stringify:snd) *)
+      (* in *)
       (prim_pred, pred, pre_correct, CNF.to_string pred ~stringify:snd)

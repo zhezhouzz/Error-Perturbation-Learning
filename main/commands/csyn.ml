@@ -43,24 +43,16 @@ let syn source_file meta_file max_length bound =
   in
   (env.i_err, result)
 
-let pie_times = 50
+let pie_times = 1
+
+let pf_additional_num = 5
 
 let syn_pie name qc_file num_qc bound =
-  let env = Zpie.Syn_pre.setting_decode_to_env name in
-  let env =
-    Zlog.event_
-      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-      (fun () -> Synthesizer.Mkenv.random_init_prog env)
-  in
   let qc_conf = Qc_config.load_config qc_file in
-  let client_cond inp =
-    match snd @@ env.client env.library_inspector inp with
-    | None -> false
-    | Some outp -> env.sigma inp && (not @@ env.phi (inp @ outp))
-  in
+  let tps, client_cond = Zpie.Syn_pre.setting_decode_to_cond name in
   let test _ =
     let gtests, btests =
-      Zquickcheck.Qc_baseline.make_tests qc_conf env.tps client_cond num_qc
+      Zquickcheck.Qc_baseline.make_tests qc_conf tps client_cond num_qc
     in
     (* let () = *)
     (*   List.iter *)
@@ -68,12 +60,22 @@ let syn_pie name qc_file num_qc bound =
     (*     (gtests @ btests) *)
     (* in *)
     let pie_precond, pie_pre, pie_pre_correct, pie_precond_str =
-      Zpie.Syn_pre.pie name (gtests, btests)
+      Zpie.Syn_pre.pie name (gtests @ btests)
     in
     let () = Zlog.log_write @@ Printf.sprintf "pie pre: %s\n" pie_precond_str in
     (* let () = raise @@ failwith "zz" in *)
     let bias = pie_precond in
     try
+      let i_err =
+        if Int.equal 0 @@ List.length btests then None
+        else Some (QCheck.Gen.generate1 (QCheck.Gen.oneofl btests))
+      in
+      let env = Zpie.Syn_pre.setting_decode_to_env name i_err in
+      let env =
+        Zlog.event_
+          (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+          (fun () -> Synthesizer.Mkenv.random_init_prog env)
+      in
       let prog = Synthesizer.Syn.synthesize_multi_time_bias env bias bound in
       let (_, num_none, data), cost_time =
         Zlog.event_time_
@@ -82,17 +84,15 @@ let syn_pie name qc_file num_qc bound =
             Sampling.Scache.eval_sampling [ env.i_err ]
               ((List.map ~f:snd @@ fst prog) @ [ snd prog ])
               (Primitive.Measure.mk_measure_cond env.i_err)
-              env.sampling_rounds)
+              pf_additional_num)
       in
-      let data = List.filter ~f:client_cond data in
       (* let () = *)
       (*   List.iter *)
       (*     ~f:(fun d -> Printf.printf "data: %s\n" @@ Primitive.Value.layout_l d) *)
       (*     data *)
       (* in *)
-      let gtests, btests = (gtests, btests @ data) in
       let pie_precond', pie_pre', pie_pre_correct', pie_precond_str' =
-        Zpie.Syn_pre.pie name (gtests, btests)
+        Zpie.Syn_pre.pie name (gtests @ btests @ data)
       in
       let () =
         Zlog.log_write @@ Printf.sprintf "pie pre': %s\n" pie_precond_str'
@@ -103,13 +103,16 @@ let syn_pie name qc_file num_qc bound =
   let res = List.init ~f:test pie_times in
   (* let c, _ = Basic_dt.List.split res in *)
   let qc = List.map ~f:(fun (a, _) -> a) res in
+  (* let () = *)
+  (*   Printf.printf "qc:\n%s\n" (Basic_dt.List.to_string string_of_bool qc) *)
+  (* in *)
   let qc_pf = List.map ~f:(fun (_, b) -> b) res in
   let improves = List.map ~f:(fun (a, b) -> (not a) && b) res in
   let cal_rate res =
     (float_of_int @@ List.length @@ List.filter ~f:(fun x -> x) res)
     /. (float_of_int @@ List.length res)
   in
-  (cal_rate qc_pf, cal_rate qc_pf)
+  (cal_rate qc, cal_rate qc_pf)
 
 let synthesize_piecewise =
   Command.basic ~summary:"synthesize-piecewise"
@@ -188,8 +191,7 @@ let synthesize_pie =
               syn_pie name qc_file num_qc (float_of_int bound_time)
             in
             let () =
-              Printf.printf
-                "name:%s\ninit_wrong_rate: %f%%\nimprove_rate: %f%%\n" name
+              Printf.printf "name:%s\nqc_acc: %f%%\npf_acc: %f%%\n" name
                 (c *. 100.0) (c_impr *. 100.0)
             in
             ()))
