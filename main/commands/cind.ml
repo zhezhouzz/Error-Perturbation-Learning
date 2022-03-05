@@ -154,14 +154,25 @@ let indudctive_run env init_op_set rest_op_set e bound =
 
 let outer_repeat_num = 2
 
-let dump_data (init_op_set, rest_op_set, mat) =
+let dump_data data =
   let open Yojson.Basic.Util in
-  let opset_encode s = `List (List.map ~f:(fun x -> `String x) s) in
-  `Assoc
-    [
-      ("init_op_set", opset_encode init_op_set);
-      ("rest_op_set", opset_encode rest_op_set);
-    ]
+  let aux (init_op_set, rest_op_set, acc_mat) =
+    let opset_encode s = `List (List.map ~f:(fun x -> `String x) s) in
+    let mat_decode mat =
+      `List
+        (List.map
+           ~f:(fun a ->
+             `List (List.map ~f:(fun x -> `Float x) @@ Array.to_list a))
+           mat)
+    in
+    `Assoc
+      [
+        ("init_op_set", opset_encode init_op_set);
+        ("rest_op_set", opset_encode rest_op_set);
+        ("acc_mat", mat_decode acc_mat);
+      ]
+  in
+  `List (List.map ~f:aux data)
 
 let random_v3 env pool (s, e) bound =
   let num_init_op_set = s in
@@ -183,6 +194,7 @@ let random_v3 env pool (s, e) bound =
           indudctive_run env init_op_set rest_op_set (e - s + 1) bound ))
       ps
   in
+  let json = dump_data res in
   (* let () = *)
   (*   List.iter *)
   (*     ~f:(fun (a, b, res) -> *)
@@ -197,7 +209,7 @@ let random_v3 env pool (s, e) bound =
   (*         res) *)
   (*     res *)
   (* in *)
-  List.concat @@ List.map ~f:(fun (_, _, x) -> x) res
+  (json, List.concat @@ List.map ~f:(fun (_, _, x) -> x) res)
 
 let random_select env name (s, e) bound =
   (* random_v1 @@ random_select_helper env name (s, e) num_op_pools_per_bound bound *)
@@ -210,6 +222,7 @@ let ind =
       let%map_open configfile = anon ("configfile" %: regular_file)
       and source_file = anon ("source file" %: regular_file)
       and meta_file = anon ("meta file" %: regular_file)
+      and output_json_file = anon ("output json file" %: regular_file)
       and name = anon ("name of datatype" %: string)
       and s = anon ("number of initial operators" %: int)
       and e = anon ("number of final operators" %: int)
@@ -221,10 +234,11 @@ let ind =
               (fun () ->
                 let env = mk_env_from_files source_file meta_file in
                 let ind_len = e - s + 1 in
-                let acc_mat =
+                let json, acc_mat =
                   random_select env name (s, e)
                     Synthesizer.Syn.(TimeBound (float time_in_second))
                 in
+                let () = Yojson.Basic.to_file output_json_file json in
                 let accs = Array.init ~f:(fun _ -> 0.0) ind_len in
                 let arr_add_to a b =
                   Array.iteri ~f:(fun idx v -> b.(idx) <- b.(idx) +. v) a

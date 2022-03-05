@@ -71,7 +71,9 @@ def eval_ind(p_setting, tname, s, e, num_bound):
     target_file, assertion_file, _ = solve_tap(p_setting)
     outfile = ".result/{}.ind".format(p_setting['name'])
     subprocess.run(["rm", outfile])
-    cmd = cmd_prefix + ["ind", config_file, target_file, assertion_file, tname, s,e, num_bound]
+    outjsonfile = outfile + ".json"
+    subprocess.run(["touch", outjsonfile])
+    cmd = cmd_prefix + ["ind", config_file, target_file, assertion_file, outjsonfile, tname, s,e, num_bound]
     invoc_cmd(cmd, outfile)
 
 def eval_pie(name, qc_config, num_qc, num_qc2, bound):
@@ -106,7 +108,7 @@ if __name__ == "__main__":
         verbose=True
         subprocess.run(["mkdir", ".result"])
         for name in args.benchmarks.split(','):
-            eval_pie(name, "config/pie_qc_conf.json", "100", "100", "60")
+            eval_pie(name, "config/pie_qc_conf.json", "100", "100", "100")
         exit()
     timebound = str(args.timebound)
     sizebound = str(args.sizebound)
