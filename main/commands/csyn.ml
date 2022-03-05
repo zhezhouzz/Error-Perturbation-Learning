@@ -43,7 +43,7 @@ let syn source_file meta_file max_length bound =
   in
   (env.i_err, result)
 
-let pie_times = 1
+let pie_times = 50
 
 let pf_additional_num = 5
 
