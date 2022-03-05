@@ -74,10 +74,10 @@ def eval_ind(p_setting, tname, s, e, num_bound):
     cmd = cmd_prefix + ["ind", config_file, target_file, assertion_file, tname, s,e, num_bound]
     invoc_cmd(cmd, outfile)
 
-def eval_pie(name, qc_config, num_qc, bound):
+def eval_pie(name, qc_config, num_qc, num_qc2, bound):
     outfile = ".result/{}.pie".format(name)
     subprocess.run(["rm", outfile])
-    cmd = cmd_prefix + ["pie", config_file, name, qc_config,  num_qc, bound]
+    cmd = cmd_prefix + ["pie", config_file, name, qc_config,  num_qc, num_qc2, bound]
     invoc_cmd(cmd, outfile)
 
 if __name__ == "__main__":
