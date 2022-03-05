@@ -1,9 +1,9 @@
 {
     "int_conf": {
-        "element": "-5,5"
+        "element": "-3,3"
     },
     "list_conf": {
-        "element": "-1,10",
+        "element": "-3,3",
         "size": "10"
     },
     "tree_conf": {

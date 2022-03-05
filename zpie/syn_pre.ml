@@ -119,7 +119,7 @@ type pie_bench = {
   op_pool : string list;
   p_size : int;
   sampling_rounds : int;
-  ans : string list list;
+  ans : string list list list;
 }
 
 let pool =
@@ -183,7 +183,7 @@ let pie_settings =
       p_size = 3;
       sampling_rounds = 16;
       (* ans = [ [ "T0 <= n" ]; [ "Tlen(l) > n" ] ]; *)
-      ans = [ [ "T0 < n"; "T0 == n" ]; [ "Tlen(l) > n" ] ];
+      ans = [ [ [ "T0 < n"; "T0 == n" ]; [ "Tlen(l) > n" ] ] ];
     };
     {
       name = "list_rev";
@@ -215,7 +215,7 @@ let pie_settings =
       op_pool = pool;
       p_size = 3;
       sampling_rounds = 16;
-      ans = [ [ "Fl = rev(l)" ] ];
+      ans = [ [ [ "Fl = rev(l)" ] ] ];
     };
     {
       name = "list_append";
@@ -243,22 +243,27 @@ let pie_settings =
           ( (fun [@warning "-8"] [ _; Value.List (INT, l2) ] ->
               List.length l2 <= 1),
             "len(l2) <= 1" );
-          (* ( (fun [@warning "-8"] [ Value.List (INT, l1); Value.List (INT, l2) ] -> *)
-          (*     List.eq Value.equal l1 l2), *)
-          (*   "l1 = l2" ); *)
-          ( (fun [@warning "-8"] [ Value.List (INT, l1); _ ] ->
-              List.check_list_unique PV.equal l1),
-            "unique(l1)" );
-          ( (fun [@warning "-8"] [ _; Value.List (INT, l2) ] ->
-              List.check_list_unique PV.equal l2),
-            "unique(l2)" );
+          ( (fun [@warning "-8"] [ Value.List (INT, l1); Value.List (INT, l2) ] ->
+              List.eq Value.equal l1 l2),
+            "l1 = l2" );
+          (* ( (fun [@warning "-8"] [ Value.List (INT, l1); _ ] -> *)
+          (*     List.check_list_unique PV.equal l1), *)
+          (*   "unique(l1)" ); *)
+          (* ( (fun [@warning "-8"] [ _; Value.List (INT, l2) ] -> *)
+          (*     List.check_list_unique PV.equal l2), *)
+          (*   "unique(l2)" ); *)
         ];
       i_g = [ V.L []; V.L [] ];
       i_err = [ V.L [ 0 ]; V.L [ 0 ] ];
       op_pool = pool;
       p_size = 3;
       sampling_rounds = 16;
-      ans = [ [ "Tlen(l1) == 0" ]; [ "Tlen(l2) == 0" ] ];
+      ans =
+        [
+          [ [ "Tlen(l1) == 0" ]; [ "Tlen(l2) == 0" ] ];
+          [ [ "Tlen(l1) == 0" ]; [ "Tl1 == l2" ] ];
+          [ [ "Tlen(l2) == 0" ]; [ "Tl1 == l2" ] ];
+        ];
     };
   ]
 
@@ -306,7 +311,7 @@ let pie client_name (g, b) =
   in
   match result with
   | None ->
-      let pre_correct = cnf_eq [] s.ans in
+      let pre_correct = List.exists (fun a -> cnf_eq [] a) s.ans in
       ((fun _ -> false), [], pre_correct, "false")
   | Some pred ->
       let prim_pred = cnf_to_prim_pre pred in
@@ -327,5 +332,7 @@ let pie client_name (g, b) =
       (*       Printf.printf "inp: %s ~> %b\n" (V.layout_l v) (prim_pred v)) *)
       (*     data *)
       (* in *)
-      let pre_correct = cnf_eq (cnf_normalize pred) s.ans in
+      let pre_correct =
+        List.exists (fun a -> cnf_eq (cnf_normalize pred) a) s.ans
+      in
       (prim_pred, pred, pre_correct, CNF.to_string pred ~stringify:snd)

@@ -43,7 +43,7 @@ let syn source_file meta_file max_length bound =
   in
   (env.i_err, result)
 
-let pie_times = 30
+let pie_times = 50
 
 let syn_pie name qc_file num_qc bound =
   let env = Zpie.Syn_pre.setting_decode_to_env name in
@@ -102,13 +102,14 @@ let syn_pie name qc_file num_qc bound =
   in
   let res = List.init ~f:test pie_times in
   (* let c, _ = Basic_dt.List.split res in *)
-  let bad = List.map ~f:(fun (a, b) -> not a) res in
+  let qc = List.map ~f:(fun (a, _) -> a) res in
+  let qc_pf = List.map ~f:(fun (_, b) -> b) res in
   let improves = List.map ~f:(fun (a, b) -> (not a) && b) res in
   let cal_rate res =
     (float_of_int @@ List.length @@ List.filter ~f:(fun x -> x) res)
     /. (float_of_int @@ List.length res)
   in
-  (cal_rate bad, cal_rate improves /. cal_rate bad)
+  (cal_rate qc_pf, cal_rate qc_pf)
 
 let synthesize_piecewise =
   Command.basic ~summary:"synthesize-piecewise"
