@@ -45,7 +45,7 @@ let syn source_file meta_file max_length bound =
 
 let pie_times = 60
 
-let pf_additional_num = 5
+let pf_additional_num = 6
 
 let syn_pie name qc_file num_qc num_qc2 bound =
   let qc_conf = Qc_config.load_config qc_file in

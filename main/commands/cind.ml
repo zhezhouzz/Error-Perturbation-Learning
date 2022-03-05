@@ -94,10 +94,10 @@ let random_v2 env pool (s, e) num_op_pools_per_bound bound =
       ~dimy:num_op_pools_per_bound 0.0
   in
   for n = 0 to num_op_pools_per_bound - 1 do
-    let () = Printf.printf "n:%i\n" n in
+    (* let () = Printf.printf "n:%i\n" n in *)
     let pool = QCheck.Gen.generate1 (QCheck.Gen.shuffle_l pool) in
     for i = s to e do
-      let () = Printf.printf "\ti:%i\n" i in
+      (* let () = Printf.printf "\ti:%i\n" i in *)
       let pool = basic_op_pool @ List.sub ~pos:0 ~len:i pool in
       (* if fails (mostly cannot find initial perturbation function), return 0.0       *)
       let acc =
@@ -153,6 +153,15 @@ let indudctive_run env init_op_set rest_op_set e bound =
   List.map ~f:cal_acc_arr rs
 
 let outer_repeat_num = 2
+
+let dump_data (init_op_set, rest_op_set, mat) =
+  let open Yojson.Basic.Util in
+  let opset_encode s = `List (List.map ~f:(fun x -> `String x) s) in
+  `Assoc
+    [
+      ("init_op_set", opset_encode init_op_set);
+      ("rest_op_set", opset_encode rest_op_set);
+    ]
 
 let random_v3 env pool (s, e) bound =
   let num_init_op_set = s in

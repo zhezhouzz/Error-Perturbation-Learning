@@ -273,12 +273,9 @@ let pie_settings =
         ];
       i_g = [ V.L []; V.L [] ];
       i_err = [ V.L [ 0 ]; V.L [ 0 ] ];
-      op_pool =
-        [
-          "cons"; "append"; "list_destruct"; "plus1"; "minus1"; "const0"; "nil";
-        ];
+      op_pool = [ "cons"; "append"; "tail"; "top"; "const0"; "nil" ];
       p_size = 3;
-      sampling_rounds = 5;
+      sampling_rounds = 6;
       ans =
         [
           [ [ "Tlen(l1) == 0" ]; [ "Tlen(l2) == 0" ] ];
