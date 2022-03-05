@@ -43,11 +43,11 @@ let syn source_file meta_file max_length bound =
   in
   (env.i_err, result)
 
-let pie_times = 50
+let pie_times = 1
 
 let pf_additional_num = 5
 
-let syn_pie name qc_file num_qc bound =
+let syn_pie name qc_file num_qc num_qc2 bound =
   let qc_conf = Qc_config.load_config qc_file in
   let tps, client_cond = Zpie.Syn_pre.setting_decode_to_cond name in
   let test _ =
@@ -63,6 +63,15 @@ let syn_pie name qc_file num_qc bound =
       Zpie.Syn_pre.pie name (gtests @ btests)
     in
     let () = Zlog.log_write @@ Printf.sprintf "pie pre: %s\n" pie_precond_str in
+    let gtests2, btests2 =
+      Zquickcheck.Qc_baseline.make_tests qc_conf tps client_cond num_qc2
+    in
+    let pie_precond2, pie_pre2, pie_pre_correct2, pie_precond_str2 =
+      Zpie.Syn_pre.pie name (gtests @ btests @ gtests2 @ btests2)
+    in
+    let () =
+      Zlog.log_write @@ Printf.sprintf "pie pre2: %s\n" pie_precond_str2
+    in
     (* let () = raise @@ failwith "zz" in *)
     let bias = pie_precond in
     try
@@ -97,22 +106,23 @@ let syn_pie name qc_file num_qc bound =
       let () =
         Zlog.log_write @@ Printf.sprintf "pie pre': %s\n" pie_precond_str'
       in
-      (pie_pre_correct, pie_pre_correct')
-    with _ -> (pie_pre_correct, false)
+      (pie_pre_correct, pie_pre_correct2, pie_pre_correct')
+    with _ -> (pie_pre_correct, pie_pre_correct2, false)
   in
   let res = List.init ~f:test pie_times in
   (* let c, _ = Basic_dt.List.split res in *)
-  let qc = List.map ~f:(fun (a, _) -> a) res in
+  let qc = List.map ~f:(fun (a, _, _) -> a) res in
+  let qc2 = List.map ~f:(fun (_, b, _) -> b) res in
   (* let () = *)
   (*   Printf.printf "qc:\n%s\n" (Basic_dt.List.to_string string_of_bool qc) *)
   (* in *)
-  let qc_pf = List.map ~f:(fun (_, b) -> b) res in
-  let improves = List.map ~f:(fun (a, b) -> (not a) && b) res in
+  let qc_pf = List.map ~f:(fun (_, _, c) -> c) res in
+  (* let improves = List.map ~f:(fun (a, b) -> (not a) && b) res in *)
   let cal_rate res =
     (float_of_int @@ List.length @@ List.filter ~f:(fun x -> x) res)
     /. (float_of_int @@ List.length res)
   in
-  (cal_rate qc, cal_rate qc_pf)
+  (cal_rate qc, cal_rate qc2, cal_rate qc_pf)
 
 let synthesize_piecewise =
   Command.basic ~summary:"synthesize-piecewise"
@@ -184,15 +194,17 @@ let synthesize_pie =
       and name = anon ("pie benchmark name" %: string)
       and qc_file = anon ("qc file" %: regular_file)
       and num_qc = anon ("num qc" %: int)
+      and num_qc2 = anon ("num qc2" %: int)
       and bound_time = anon ("time in second" %: int) in
       fun () ->
         Config.exec_main configfile (fun () ->
-            let c, c_impr =
-              syn_pie name qc_file num_qc (float_of_int bound_time)
+            let c, c2, c_impr =
+              syn_pie name qc_file num_qc num_qc2 (float_of_int bound_time)
             in
             let () =
-              Printf.printf "name:%s\nqc_acc: %f%%\npf_acc: %f%%\n" name
-                (c *. 100.0) (c_impr *. 100.0)
+              Printf.printf
+                "name:%s\nqc_acc: %f%%\nqc2_acc: %f%%\npf_acc: %f%%\n" name
+                (c *. 100.0) (c2 *. 100.0) (c_impr *. 100.0)
             in
             ()))
 

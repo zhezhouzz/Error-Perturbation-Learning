@@ -39,7 +39,8 @@ let identity_panalty len = 1.5 *. float_of_int len
 let duplicate_panalty = 2.0
 
 let duplicate_level prev i j =
-  if i == j then Some (identity_panalty @@ List.length prev)
+  (* let () = Zlog.log_write @@ spf "dupl: i: %i v.x. j: %i" i j in *)
+  if i == j then Some (identity_panalty @@ (List.length prev + 1))
   else if j < i then
     let dup = S.duplicate prev j in
     let dup_times =
@@ -162,12 +163,22 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
                     let k_non_trivial =
                       non_trival_v2 i_err_non_trivial_info invocation_record
                     in
+                    (* let () = *)
+                    (*   Zlog.log_write *)
+                    (*   @@ spf *)
+                    (* "\tk_non_trivial:%f k_bias_penalty:%f \ *)
+                       (*         alpha_in_pre_is_err:%f" *)
+                    (*        k_non_trivial (k_bias_penalty v) alpha_in_pre_is_err *)
+                    (* in *)
                     k_non_trivial *. k_bias_penalty v *. alpha_in_pre_is_err
                   else alpha_out_pre_is_err
             in
             (* let () = Zlog.log_write @@ spf "\talpha: %f" alpha in *)
             alpha
           in
+          (* let () = *)
+          (*   Zlog.log_write @@ spf "\tdelta: %f; k_dupliate: %f" delta k_dupliate *)
+          (* in *)
           delta *. k_dupliate
         in
         List.mean_exn one js
@@ -256,7 +267,7 @@ let biased_cost bias (env : Env.t) =
               (fun v -> env.client env.library_inspector v)
               env.i_err_non_trivial_info scache
           in
-          let () = Zlog.log_write (Printf.sprintf "cost = %f\n" cost) in
+          let () = Zlog.log_write (Printf.sprintf "cost = %f" cost) in
           cost)
 
 let test (env : Env.t) =

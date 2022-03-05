@@ -134,6 +134,8 @@ let pool =
     "minus1";
     "const0";
     "const1";
+    "nil";
+    "list_id";
   ]
 
 let pie_settings =
@@ -262,7 +264,7 @@ let pie_settings =
       i_err = [ V.L [ 0 ]; V.L [ 0 ] ];
       op_pool = pool;
       p_size = 3;
-      sampling_rounds = 16;
+      sampling_rounds = 8;
       ans =
         [
           [ [ "Tlen(l1) == 0" ]; [ "Tlen(l2) == 0" ] ];

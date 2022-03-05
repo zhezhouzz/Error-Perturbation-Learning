@@ -95,7 +95,7 @@ let mutate_ op_pool cache =
       match r with
       | Some r ->
           Zlog.log_write
-            (Printf.sprintf "mutation:\n%s\n"
+            (Printf.sprintf "mutation: %s"
                (match mutation with
                | None -> raise @@ failwith "die in mutate_"
                | Some mutation -> layout_mutation mutation));

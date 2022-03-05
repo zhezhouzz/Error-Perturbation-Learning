@@ -53,6 +53,8 @@ let list_ops =
     "list_upper_bound";
     "list_lower_bound";
     "list_single";
+    "nil";
+    "list_id";
   ]
 
 let iblist_ops = [ "iblist_destruct"; "iblist_cons" ]

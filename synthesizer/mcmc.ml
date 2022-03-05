@@ -4,22 +4,23 @@ let metropolis_hastings_core cond mutate cal_cost init =
   (*Here we only need one "f", some library will return a set of "f" or distribution of "f", we dont need it. *)
   let counter = ref 0 in
   let best_one = ref (Some (init, cal_cost init)) in
+  let layout_pf (cur, cur_cost) =
+    match cur.Env.cur_p with
+    | None -> raise @@ failwith "the env has not prog initialized"
+    | Some x ->
+        Zlog.log_write
+          (Printf.sprintf "[%s:%i] prog(non-det: %b):\n%scost = %f" __FILE__
+             __LINE__
+             (Language.Oplang.check_non_det x.prog)
+             (Language.Oplang.layout x.prog)
+             cur_cost)
+  in
   let update_best_one (cur_id, cur, cur_cost) =
     match !best_one with
     | None -> ()
     | Some (_, prev_cost) ->
         if cur_cost < prev_cost then (
-          let () =
-            match cur.Env.cur_p with
-            | None -> raise @@ failwith "the env has not prog initialized"
-            | Some x ->
-                Zlog.log_write
-                  (Printf.sprintf "[%s:%i] prog(non-det: %b):\n%s\ncost = %f"
-                     __FILE__ __LINE__
-                     (Language.Oplang.check_non_det x.prog)
-                     (Language.Oplang.layout x.prog)
-                     cur_cost)
-          in
+          layout_pf (cur, cur_cost);
           best_one := Some (cur, cur_cost);
           match cur_id with
           | None -> ()
@@ -27,6 +28,7 @@ let metropolis_hastings_core cond mutate cal_cost init =
               Zlog.log_write (Printf.sprintf "\tnow the best one is %i" id))
         else ()
   in
+
   let rec loop (cur, cur_cost) =
     (* if !counter > 40 then raise @@ failwith "too many" else (); *)
     let cur_id =
@@ -46,6 +48,7 @@ let metropolis_hastings_core cond mutate cal_cost init =
             let next_cost = cal_cost next in
             (next, next_cost))
       in
+      (* let () = layout_pf (next, next_cost) in *)
       let _ = counter := !counter + 1 in
       if next_cost < cur_cost then loop (next, next_cost)
       else if Random.float 1.0 < cur_cost /. next_cost then

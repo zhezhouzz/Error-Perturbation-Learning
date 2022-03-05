@@ -88,6 +88,7 @@ let basic_constraint cs =
   let must_used_constraint =
     IntMap.fold
       (fun source (tp, l) cs ->
+        (* if List.exists (fun x -> x == source) inputs then cs else *)
         List.map (fun place -> (tp, place, source)) l :: cs)
       m []
   in
@@ -111,7 +112,11 @@ let must_used_to_z3 ctx cs (_, v1) =
     let holes = List.map (fun v -> tpedvar_to_z3 ctx @@ to_tvar v) c in
     mk_ge ctx (mk_add ctx holes) v1
   in
-  mk_and ctx (List.map aux cs)
+  let z =
+    match cs with [] -> mk_true ctx | _ -> mk_and ctx (List.map aux cs)
+  in
+  (* let () = Printf.printf "must used: %s\n" @@ Expr.to_string z in *)
+  z
 
 let must_boolean_to_z3 ctx total (v0, v1) =
   let vs = List.map (fun v -> tpedvar_to_z3 ctx @@ to_tvar v) total in
@@ -157,9 +162,9 @@ let init_cache ctx tps ops prog_with_holes =
     let query =
       mk_and ctx
         [
-          total_z3;
           one_hole_one_arg_to_z3 ctx one_arg (v0, v1);
           must_used_to_z3 ctx must_used (v0, v1);
+          total_z3;
         ]
     in
     (* let () = Printf.printf "constraint:\n%s\n" (Expr.to_string query) in *)
@@ -201,6 +206,11 @@ let solve max_solution ctx cache =
   (* let () = Zlog.time_tick_init () in *)
   let rec loop no_dup cache =
     (* let () = Zlog.time_tick 0.3 in *)
+    (* let () = *)
+    (*   Zlog.log_write *)
+    (*   @@ spf "len(cache.solutions): %i" *)
+    (*   @@ List.length cache.solutions *)
+    (* in *)
     if List.length cache.solutions > max_solution then (
       Zlog.log_write "the solution maximal number is overed";
       cache)
@@ -280,7 +290,9 @@ let arg_assign ?(max_solution = 35) tps ops =
     (* let () = Printf.printf "\tops:%s\n" @@ StrList.to_string cache.ops in *)
     match cache.solutions with
     | [] -> None
-    | _ -> Some (shift_within_in_cache cache 0))
+    | _ ->
+        let idx = Random.int (List.length cache.solutions) in
+        Some (shift_within_in_cache cache idx))
 
 let cached_varaint_set cache =
   let idxs = List.init (List.length cache.solutions) (fun i -> i) in
