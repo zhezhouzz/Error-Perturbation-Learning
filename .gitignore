@@ -1,2 +1,3 @@
 .result/*
 .pyc
+script/__pycache__/*
