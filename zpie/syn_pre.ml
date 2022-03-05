@@ -122,22 +122,6 @@ type pie_bench = {
   ans : string list list list;
 }
 
-let pool =
-  [
-    "cons";
-    "append";
-    "top";
-    "tail";
-    "list_destruct";
-    "list_len";
-    "plus1";
-    "minus1";
-    "const0";
-    "const1";
-    "nil";
-    "list_id";
-  ]
-
 let pie_settings =
   [
     {
@@ -181,7 +165,21 @@ let pie_settings =
         ];
       i_g = [ V.L [ 0 ]; V.I 0 ];
       i_err = [ V.L [ -1; 1; 2; 5; 7; 10; 12; 13 ]; V.I 9 ];
-      op_pool = pool;
+      op_pool =
+        [
+          "cons";
+          "append";
+          "top";
+          "tail";
+          "list_destruct";
+          "list_len";
+          "plus1";
+          "minus1";
+          "const0";
+          "const1";
+          "nil";
+          "list_id";
+        ];
       p_size = 3;
       sampling_rounds = 16;
       (* ans = [ [ "T0 <= n" ]; [ "Tlen(l) > n" ] ]; *)
@@ -219,9 +217,22 @@ let pie_settings =
         ];
       i_g = [ V.L [ 0 ] ];
       i_err = [ V.L [ 1; 1 ] ];
-      op_pool = pool;
+      op_pool =
+        [
+          "cons";
+          "append";
+          "top";
+          "tail";
+          "list_destruct";
+          "list_len";
+          "plus1";
+          "minus1";
+          "const0";
+          "const1";
+          "list_id";
+        ];
       p_size = 3;
-      sampling_rounds = 8;
+      sampling_rounds = 5;
       ans = [ [ [ "Fl == rev(l)" ] ] ];
     };
     {
@@ -262,9 +273,12 @@ let pie_settings =
         ];
       i_g = [ V.L []; V.L [] ];
       i_err = [ V.L [ 0 ]; V.L [ 0 ] ];
-      op_pool = pool;
+      op_pool =
+        [
+          "cons"; "append"; "list_destruct"; "plus1"; "minus1"; "const0"; "nil";
+        ];
       p_size = 3;
-      sampling_rounds = 8;
+      sampling_rounds = 5;
       ans =
         [
           [ [ "Tlen(l1) == 0" ]; [ "Tlen(l2) == 0" ] ];
