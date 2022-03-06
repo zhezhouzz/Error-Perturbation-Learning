@@ -79,6 +79,7 @@ let metropolis_hastings_core_moti cond mutate cal_cost init =
     if cur_cost <= 0.001 then Some !counter
     else if cond !counter then None
     else
+      let _ = Zlog.log_write @@ Printf.sprintf "MCMC [%i]" !counter in
       let next, next_cost = mcmc_jump mutate (cur, cal_cost) in
       (* let () = layout_pf (next, next_cost) in *)
       let _ = counter := !counter + 1 in

@@ -6,19 +6,20 @@ let op_pool =
     "cons";
     "list_destruct";
     "list_head";
-    "list_tail";
     "list_last";
-    "plus";
-    "minus";
-    "const0";
-    "const1";
+    "plus1";
+    "minus1";
+    "list_upper_bound";
+    "list_lower_bound";
+    "min";
+    "max";
   |]
 
 let libs = [| "List" |]
 
 let i_err = ([ 1; 2 ], [ 3; 4 ])
 
-let sampling_rounds = 14
+let sampling_rounds = 10
 
 let p_size = 4
 
