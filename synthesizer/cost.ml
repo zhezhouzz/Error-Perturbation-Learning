@@ -250,17 +250,17 @@ let cal_cost (conds : S.conds) prog
                 cost_count_error conds.pre conds.sigma prog conds.phi
                   i_err_non_trivial_info prev g cache.mem)
         in
-        let () =
-          Zlog.log_write
-          @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) cost
-        in
-        let () =
-          Zlog.log_write
-          @@ spf "g: %s"
-               (List.split_by_comma
-                  (fun i -> V.layout_l @@ S.Mem.itov cache.mem i)
-                  g)
-        in
+        (* let () = *)
+        (*   Zlog.log_write *)
+        (*   @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) cost *)
+        (* in *)
+        (* let () = *)
+        (*   Zlog.log_write *)
+        (*   @@ spf "g: %s" *)
+        (*        (List.split_by_comma *)
+        (*           (fun i -> V.layout_l @@ S.Mem.itov cache.mem i) *)
+        (*           g) *)
+        (* in *)
         (* let () = Zlog.log_write (Printf.sprintf "cost-: %f" cost) in *)
         aux (sum +. cost) prev
   in

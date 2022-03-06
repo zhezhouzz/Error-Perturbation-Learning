@@ -87,10 +87,11 @@ let mutate_ op_pool cache =
     else
       let mutation = Gen.generate1 gen in
       let r =
-        Zlog.event_
-          (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
-             (string_of_int !counter))
-          (fun () -> apply_mutation mutation cache)
+        (* Zlog.event_ *)
+        (*   (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ *)
+        (*      (string_of_int !counter)) *)
+        (*   (fun () -> apply_mutation mutation cache) *)
+        apply_mutation mutation cache
       in
       match r with
       | Some r ->
