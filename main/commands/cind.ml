@@ -234,10 +234,11 @@ let ind =
               (fun () ->
                 let env = mk_env_from_files source_file meta_file in
                 let ind_len = e - s + 1 in
-                let json, acc_mat =
-                  random_select env name (s, e)
-                    Synthesizer.Syn.(TimeBound (float time_in_second))
+                let bound =
+                  (* Synthesizer.Syn.(TimeBound (float time_in_second)) *)
+                  Synthesizer.Syn.IterBound (0, time_in_second)
                 in
+                let json, acc_mat = random_select env name (s, e) bound in
                 let () = Yojson.Basic.to_file output_json_file json in
                 let accs = Array.init ~f:(fun _ -> 0.0) ind_len in
                 let arr_add_to a b =
