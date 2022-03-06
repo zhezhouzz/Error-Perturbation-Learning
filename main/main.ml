@@ -27,6 +27,7 @@ let command =
       ("ifc-sampling", Cifc.ifc_sampling);
       ("ifc-syn", Cifc.ifc_syn);
       ("verify", Cverify.verify);
+      ("moti-robu", Cmoti.moti_robu);
       ("moti", Cmoti.moti);
       ("moti-search", Cmoti.search);
       ("ind", Cind.ind);

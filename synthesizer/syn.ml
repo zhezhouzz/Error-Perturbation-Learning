@@ -33,6 +33,39 @@ let force_converge current =
 
 type syn_bound = TimeBound of float | IterBound of int * int
 
+let get_result_from_mcmc (env, cost) =
+  let open Env in
+  match env.cur_p with
+  | None ->
+      Zlog.log_write @@ Printf.sprintf "No result;";
+      None
+  | Some cur_p ->
+      Zlog.log_write
+      @@ Printf.sprintf "prog(cost: %f):\n%s\n" cost
+           (Language.Piecewise.layout_with_i_err env.i_err ([], cur_p.prog));
+      Some (env, cur_p.prog)
+
+let synthesize_f_moti bound env =
+  let env' = Mkenv.random_init_prog env in
+  let stop_step, (env, cost) =
+    Zlog.event_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () ->
+        match bound with
+        | IterBound (num_burn_in, num_sampling) ->
+            Mcmc.metropolis_hastings_moti ~burn_in:num_burn_in
+              ~sampling_steps:num_sampling ~proposal_distribution:Mutate.mutate
+              ~cost_function:(Cost.biased_cost (fun _ -> true))
+              ~init_distribution:env'
+        | TimeBound time_bound ->
+            Mcmc.metropolis_hastings_time_moti ~time_bound
+              ~proposal_distribution:Mutate.mutate
+              ~cost_function:(Cost.biased_cost (fun _ -> true))
+              ~init_distribution:env')
+  in
+  let _ = get_result_from_mcmc (env, cost) in
+  stop_step
+
 let synthesize_f bias samples bound env =
   let env' = Mkenv.random_init_prog env in
   let env' = Mkenv.update_init_sampling_set env' samples in
@@ -50,15 +83,7 @@ let synthesize_f bias samples bound env =
               ~proposal_distribution:Mutate.mutate
               ~cost_function:(Cost.biased_cost bias) ~init_distribution:env')
   in
-  match env.cur_p with
-  | None ->
-      Zlog.log_write @@ Printf.sprintf "No result;";
-      None
-  | Some cur_p ->
-      Zlog.log_write
-      @@ Printf.sprintf "prog(cost: %f):\n%s\n" cost
-           (Language.Piecewise.layout_with_i_err env.i_err ([], cur_p.prog));
-      Some (env, cur_p.prog)
+  get_result_from_mcmc (env, cost)
 
 type state = FIsOK of (Spec.t * V.t list list)
 

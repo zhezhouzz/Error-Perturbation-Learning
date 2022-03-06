@@ -9,12 +9,15 @@ type mutation_distribution = {
 
 type bias_method = SamplingCutOff | CostPenalty | MeasureOnly | Correct
 
+type cost_function_version = VCountErrors | VWeighted
+
 type config = {
   exec_flag : exec_flag;
   if_random : bool;
   z3_ctx : Z3.context option;
   mutation_distribution : mutation_distribution;
   bias_method : bias_method;
+  cost_function_version : cost_function_version;
   arg_solve_bound : int;
   show_samples_in_log : bool;
 }
@@ -28,6 +31,7 @@ let conf =
       mutation_distribution =
         { op_replace = 1; op_swap = 1; op_deny = 1; arg_reassign = 1 };
       bias_method = CostPenalty;
+      cost_function_version = VWeighted;
       arg_solve_bound = 35;
       show_samples_in_log = false;
     }
@@ -91,6 +95,12 @@ let load_config configfile =
     | "CostPenalty" -> CostPenalty
     | _ -> raise @@ failwith "cannot load config::bias_method"
   in
+  let cost_function_version =
+    match j |> member "cost_function_version" |> to_string with
+    | "VWeighted" -> VWeighted
+    | "VCountErrors" -> VCountErrors
+    | _ -> raise @@ failwith "cannot load config::cost_function_version"
+  in
   let arg_solve_bound =
     try j |> member "arg_solve_bound" |> to_int
     with _ -> raise @@ failwith "cannot load config::arg_solve_bound"
@@ -106,6 +116,7 @@ let load_config configfile =
       z3_ctx;
       mutation_distribution;
       bias_method;
+      cost_function_version;
       arg_solve_bound;
       show_samples_in_log;
     }

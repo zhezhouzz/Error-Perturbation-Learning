@@ -6,6 +6,33 @@ let ppf = Format.err_formatter
 open Core
 open Caux
 
+let naive_mcmc source_file meta_file num_test bound =
+  (* set naive cost function *)
+  let () =
+    Config.conf :=
+      { !Config.conf with Config.cost_function_version = Config.VCountErrors }
+  in
+  let env =
+    Zlog.event_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () ->
+        Synthesizer.Mkenv.random_init_prog
+        @@ mk_env_from_files source_file meta_file)
+  in
+  let stop_steps =
+    List.init num_test ~f:(fun _ ->
+        Zlog.event_
+          (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+          (fun () -> Synthesizer.Syn.synthesize_f_moti bound env))
+  in
+  let num_over_bound, fc =
+    List.fold_left
+      ~f:(fun (n, l) x ->
+        match x with None -> (n + 1, l) | Some x -> (n, x :: l))
+      ~init:(0, []) stop_steps
+  in
+  (num_over_bound, fc)
+
 let count env num_sampling prog =
   let open Synthesizer.Env in
   let _, none_num, data =
@@ -110,3 +137,23 @@ let search =
             Zlog.event_
               (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
               (fun () -> search_ algo start)))
+
+let moti_robu =
+  Command.basic ~summary:"moti robustness"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and num_test = anon ("number of test" %: int)
+      and num_sampling = anon ("number sampling" %: int) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            Zlog.event_
+              (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+              (fun () ->
+                let n, l =
+                  naive_mcmc source_file meta_file num_test
+                    (Synthesizer.Syn.IterBound (0, num_sampling))
+                in
+                Printf.printf "%i\n%s\n" n
+                  (Basic_dt.List.split_by_comma string_of_int l))))

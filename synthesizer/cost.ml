@@ -115,6 +115,34 @@ let bias_penalty = 2.0
 
 let empty_generation_penalty = 1.0
 
+let cost_count_error _ (sigma : V.t list -> bool)
+    (prog : V.t list -> int list * V.t list option) (phi : V.t list -> bool) _
+    prev g mem =
+  let penalty = 1.0 in
+  let prev = List.flatten prev in
+  let f i =
+    if List.exists (fun x -> Int.equal x i) prev then penalty
+    else
+      match S.Mem.get_out_idxs mem i with
+      | [] -> penalty
+      | js ->
+          let len = List.length js in
+          let js' =
+            List.filter
+              (fun j ->
+                let v = S.Mem.itov mem j in
+                let _, result = prog v in
+                match result with
+                | None -> true
+                | Some v' ->
+                    if sigma v && not (phi (v @ v')) then false else true)
+              js
+          in
+          float_of_int (List.length js') /. float_of_int len *. penalty
+  in
+  let c = match List.mean_opt f g with Some c -> c | None -> penalty in
+  c
+
 let cost_weighted_valid_iter (bias : V.t list -> bool)
     (sigma : V.t list -> bool) (prog : V.t list -> int list * V.t list option)
     (phi : V.t list -> bool) (i_err_non_trivial_info : Env.non_trivial_info)
@@ -189,14 +217,6 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
     | None -> empty_generation_penalty
   in
   let c = if !no_new then no_new_output_panalty *. c else c in
-  (* let () = *)
-  (*   Zlog.log_write @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) c *)
-  (* in *)
-  (* let () = *)
-  (*   Zlog.log_write *)
-  (*   @@ spf "g: %s" *)
-  (*        (List.split_by_comma (fun i -> V.layout_l @@ S.Mem.itov mem i) g) *)
-  (* in *)
   c
 
 let cost_duplicate_iter jump_entry =
@@ -221,8 +241,25 @@ let cal_cost (conds : S.conds) prog
     | [] -> sum
     | g :: prev ->
         let cost =
-          cost_weighted_valid_iter conds.pre conds.sigma prog conds.phi
-            i_err_non_trivial_info prev g cache.mem
+          Config.(
+            match !conf.cost_function_version with
+            | VWeighted ->
+                cost_weighted_valid_iter conds.pre conds.sigma prog conds.phi
+                  i_err_non_trivial_info prev g cache.mem
+            | VCountErrors ->
+                cost_count_error conds.pre conds.sigma prog conds.phi
+                  i_err_non_trivial_info prev g cache.mem)
+        in
+        let () =
+          Zlog.log_write
+          @@ spf "g: %s ==* %f" (List.split_by_comma string_of_int g) cost
+        in
+        let () =
+          Zlog.log_write
+          @@ spf "g: %s"
+               (List.split_by_comma
+                  (fun i -> V.layout_l @@ S.Mem.itov cache.mem i)
+                  g)
         in
         (* let () = Zlog.log_write (Printf.sprintf "cost-: %f" cost) in *)
         aux (sum +. cost) prev
