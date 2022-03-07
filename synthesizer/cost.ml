@@ -50,7 +50,7 @@ let duplicate_level prev i j =
              /. float_of_int (List.length total))
       @@ List.combine dup prev
     in
-    let () = Zlog.log_write @@ Printf.sprintf "dup_times:%f" dup_times in
+    (* let () = Zlog.log_write @@ Printf.sprintf "dup_times:%f" dup_times in *)
     Some dup_times
   else None
 

@@ -28,8 +28,8 @@ let get_best_one best_one =
   | Some (result, cost) -> (result, cost)
   | None -> raise @@ failwith "never happen in mcmc"
 
-let mcmc_jump mutate (cur, cal_cost) =
-  Zlog.event_ (Printf.sprintf "%s:%i[%s]" __FILE__ __LINE__ __FUNCTION__)
+let mcmc_jump mutate (cur, cal_cost) id =
+  Zlog.event_ (Printf.sprintf "%s:%i[%s] %i" __FILE__ __LINE__ __FUNCTION__ id)
     (fun () ->
       let next = mutate cur in
       let next_cost = cal_cost next in
@@ -56,7 +56,7 @@ let metropolis_hastings_core cond mutate cal_cost init =
     let _ = update_best_one best_one (!counter, cur, cur_cost) in
     if cond !counter then (cur, cur_cost)
     else
-      let next, next_cost = mcmc_jump mutate (cur, cal_cost) in
+      let next, next_cost = mcmc_jump mutate (cur, cal_cost) !counter in
       (* let () = layout_pf (next, next_cost) in *)
       let _ = counter := !counter + 1 in
       loop @@ mcmc_judge (cur, cur_cost) (next, next_cost)

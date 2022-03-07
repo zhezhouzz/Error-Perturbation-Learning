@@ -82,6 +82,12 @@ def eval_pie(name, qc_config, num_qc, num_qc2, bound):
     cmd = cmd_prefix + ["pie", config_file, name, qc_config,  num_qc, num_qc2, bound]
     invoc_cmd(cmd, outfile)
 
+def eval_moti(num_times, bound, outfile):
+    target_file, assertion_file = "data/motivation/pf_enum.ml", "data/motivation/assertion1.ml"
+    subprocess.run(["rm", outfile])
+    cmd = cmd_prefix + ["moti-robu", config_file, target_file, assertion_file, num_times, bound]
+    invoc_cmd(cmd, outfile)
+
 if __name__ == "__main__":
     # print(os.path.isfile("zhouzhe"))
     with open(benchmarks_config_file) as f:
@@ -104,6 +110,9 @@ if __name__ == "__main__":
                         help="show executing commands")
     args = parser.parse_args()
     action = args.action
+    if action == "moti":
+        eval_moti("100", "1000", ".result/moti.robu")
+        exit()
     if action == "pie":
         verbose=True
         subprocess.run(["mkdir", ".result"])
@@ -163,6 +172,12 @@ if __name__ == "__main__":
     elif action == "ind_plot":
         verbose=True
         run_ind(names)
+    elif action == "moti":
+        verbose=True
+        subprocess.run(["mkdir", ".result"])
+        for b in bs:
+            eval_ind(b, "list", "3", "16", "500")
+        names = [b['name']for b in bs]
     else:
         print("unknown command {}".format(action))
         exit()
