@@ -12,6 +12,7 @@ config_file = "config/config.json"
 benchmarks_config_file = "config/benchmarks.json"
 qc_config = "config/qc_zero_knowledge_conf.json"
 cmd_prefix = ["dune", "exec", "--", "main/main.exe"]
+cmd_prefix2 = ["dune", "exec", "--profile", "release", "--", "main/main.exe"]
 
 def solve_tap(p_setting):
     target_file = "/".join([p_setting['prefix'], p_setting['name'], p_setting['target']])
@@ -73,7 +74,7 @@ def eval_ind(p_setting, tname, s, e, num_bound):
     subprocess.run(["rm", outfile])
     outjsonfile = outfile + ".json"
     subprocess.run(["touch", outjsonfile])
-    cmd = cmd_prefix + ["ind", config_file, target_file, assertion_file, outjsonfile, tname, s,e, num_bound]
+    cmd = cmd_prefix2 + ["ind", config_file, target_file, assertion_file, outjsonfile, tname, s,e, num_bound]
     invoc_cmd(cmd, outfile)
 
 def eval_pie(name, qc_config, num_qc, num_qc2, bound):
