@@ -168,17 +168,17 @@ if __name__ == "__main__":
         verbose=True
         subprocess.run(["mkdir", ".result"])
         for b in bs:
-            eval_ind(b, "list", "3", "16", "60")
+            eval_ind(b, "list", "3", "16", "500")
         names = [b['name']for b in bs]
     elif action == "ind_plot":
         verbose=True
         run_ind(names)
-    elif action == "moti":
-        verbose=True
-        subprocess.run(["mkdir", ".result"])
-        for b in bs:
-            eval_ind(b, "list", "3", "16", "500")
-        names = [b['name']for b in bs]
+    # elif action == "moti":
+    #     verbose=True
+    #     subprocess.run(["mkdir", ".result"])
+    #     for b in bs:
+    #         eval_ind(b, "list", "3", "16", "500")
+    #     names = [b['name']for b in bs]
     else:
         print("unknown command {}".format(action))
         exit()
