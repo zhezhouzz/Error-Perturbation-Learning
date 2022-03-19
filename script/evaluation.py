@@ -183,7 +183,7 @@ if __name__ == "__main__":
         verbose=True
         subprocess.run(["mkdir", ".result"])
         for b in bs:
-            eval_robu_init(b, "config/qc_conf.json", "4", "1", "100")
+            eval_robu_init(b, "config/qc_conf.json", "1,2,4,8", "20", "500")
         names = [b['name']for b in bs]
     elif action == "ind_plot":
         verbose=True
