@@ -174,6 +174,21 @@ let dump_data data =
   in
   `List (List.map ~f:aux data)
 
+let dump_multi_init_data data =
+  let open Yojson.Basic.Util in
+  let aux mat =
+    `List
+      (List.map
+         ~f:(fun (n, accs) ->
+           `Assoc
+             [
+               ("n_init", `Int n);
+               ("acc_mat", `List (List.map ~f:(fun x -> `Float x) accs));
+             ])
+         mat)
+  in
+  `List (List.map ~f:aux data)
+
 let random_v3 env pool (s, e) bound =
   let num_init_op_set = s in
   let open Primitive.Operator in
@@ -216,6 +231,72 @@ let random_select env name (s, e) bound =
   let pool = random_select_helper name (s, e) in
   random_v3 env pool (s, e) bound
 
+let robu_random_inits env qc_conf num bound =
+  let open Synthesizer in
+  let open Env in
+  let cond inp =
+    match snd @@ env.client env.library_inspector inp with
+    | None -> false
+    | Some outp -> env.sigma inp && not (env.phi (inp @ outp))
+  in
+  let alphas =
+    Zquickcheck.Qc_baseline.gen_erroneous_inputs qc_conf env.Env.tps cond num
+  in
+  List.map
+    ~f:(fun alpha ->
+      let env = Mkenv.update_i_err env alpha in
+      one_pass env Primitive.Operator.(ind_op_pool @ basic_op_pool) bound)
+    alphas
+
+let parse freq = List.map ~f:int_of_string @@ String.split freq ~on:','
+
+let robu_multi_inits env qc_conf num ns bound =
+  let open Synthesizer in
+  let open Env in
+  let cond inp =
+    match snd @@ env.client env.library_inspector inp with
+    | None -> false
+    | Some outp -> env.sigma inp && not (env.phi (inp @ outp))
+  in
+  let res =
+    List.init
+      ~f:(fun _ ->
+        match List.rev ns with
+        | [] ->
+            raise
+            @@ failwith
+                 "the required numbers of initial erroenous inputs are empty"
+        | n :: _ ->
+            let alphas =
+              Zquickcheck.Qc_baseline.gen_erroneous_inputs qc_conf env.Env.tps
+                cond n
+            in
+            let alpha =
+              match alphas with
+              | [] ->
+                  raise
+                  @@ failwith
+                       "the required number of initial erroenous input is zero"
+              | h :: _ -> h
+            in
+            let env = Mkenv.update_i_err env alpha in
+            List.map
+              ~f:(fun n ->
+                let env =
+                  Mkenv.update_init_sampling_set env
+                  @@ Basic_dt.List.sublist alphas (0, n)
+                in
+                ( n,
+                  List.init inner_repeat_num ~f:(fun _ ->
+                      one_pass env
+                        Primitive.Operator.(ind_op_pool @ basic_op_pool)
+                        bound) ))
+              ns)
+      num
+  in
+  let json = dump_multi_init_data res in
+  (json, res)
+
 let ind =
   Command.basic ~summary:"inductively increasing the number of operators we use"
     Command.Let_syntax.(
@@ -226,7 +307,7 @@ let ind =
       and name = anon ("name of datatype" %: string)
       and s = anon ("number of initial operators" %: int)
       and e = anon ("number of final operators" %: int)
-      and time_in_second = anon ("total_time in second" %: int) in
+      and time_in_second = anon ("step bound" %: int) in
       fun () ->
         Config.exec_main configfile (fun () ->
             Zlog.event_
@@ -263,3 +344,61 @@ let ind =
                 Printf.printf "client: %s\nname: %s\nacc: %i -> %i\n%s\n"
                   source_file name s e
                   (List.to_string accs ~f:string_of_float))))
+
+let robu_init =
+  Command.basic ~summary:"increasing the number of initial erroneous inputs"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and qc_file = anon ("quickcheck config file" %: regular_file)
+      and output_json_file = anon ("output json file" %: regular_file)
+      and freq =
+        anon
+          ("numbers of size of initial erroenous input (split by comma)"
+         %: string)
+      and num = anon ("number of test time" %: int)
+      and step_bound = anon ("step bound" %: int) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            Zlog.event_
+              (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+              (fun () ->
+                let qc_conf = Qc_config.load_config qc_file in
+                let env = mk_env_from_files source_file meta_file in
+                let bound =
+                  (* Synthesizer.Syn.(TimeBound (float time_in_second)) *)
+                  Synthesizer.Syn.IterBound (0, step_bound)
+                in
+                let ns = parse freq in
+                let json, acc_mat = robu_multi_inits env qc_conf num ns bound in
+                let () = Yojson.Basic.to_file output_json_file json in
+                let record = Array.init ~f:(fun _ -> 0.0) (List.length ns) in
+                let () =
+                  List.iter
+                    ~f:(fun accs ->
+                      List.iteri
+                        ~f:(fun idx (_, accs) ->
+                          record.(idx) <-
+                            record.(idx)
+                            +. List.fold_left
+                                 ~f:(fun r x -> x +. r)
+                                 ~init:0.0 accs
+                               /. (float_of_int @@ List.length accs))
+                        accs)
+                    acc_mat
+                in
+                let record =
+                  Array.to_list
+                  @@ Array.map
+                       ~f:(fun x -> x /. float (List.length acc_mat))
+                       record
+                in
+                (* let print_mat mat = *)
+                (*   Array.iter mat ~f:(fun arr -> *)
+                (*       Printf.printf "%s\n" *)
+                (*       @@ List.to_string ~f:string_of_float *)
+                (*       @@ Array.to_list arr) *)
+                (* in *)
+                Printf.printf "client: %s\nacc: [%s]\n%s\n" source_file freq
+                  (List.to_string record ~f:string_of_float))))

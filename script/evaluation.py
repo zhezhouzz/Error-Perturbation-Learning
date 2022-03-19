@@ -77,6 +77,15 @@ def eval_ind(p_setting, tname, s, e, num_bound):
     cmd = cmd_prefix2 + ["ind", config_file, target_file, assertion_file, outjsonfile, tname, s,e, num_bound]
     invoc_cmd(cmd, outfile)
 
+def eval_robu_init(p_setting, qc_configfile, freq, num, num_bound):
+    target_file, assertion_file, _ = solve_tap(p_setting)
+    outfile = ".result/{}.robuinit".format(p_setting['name'])
+    subprocess.run(["rm", outfile])
+    outjsonfile = outfile + ".json"
+    subprocess.run(["touch", outjsonfile])
+    cmd = cmd_prefix2 + ["robu-init", config_file, target_file, assertion_file, qc_configfile, outjsonfile, freq, num, num_bound]
+    invoc_cmd(cmd, outfile)
+
 def eval_pie(name, qc_config, num_qc, num_qc2, bound):
     outfile = ".result/{}.pie".format(name)
     subprocess.run(["rm", outfile])
@@ -169,6 +178,12 @@ if __name__ == "__main__":
         subprocess.run(["mkdir", ".result"])
         for b in bs:
             eval_ind(b, "list", "3", "16", "500")
+        names = [b['name']for b in bs]
+    elif action == "robu-init":
+        verbose=True
+        subprocess.run(["mkdir", ".result"])
+        for b in bs:
+            eval_robu_init(b, "config/qc_conf.json", "4", "1", "100")
         names = [b['name']for b in bs]
     elif action == "ind_plot":
         verbose=True

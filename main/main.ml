@@ -32,6 +32,7 @@ let command =
       ("moti-search", Cmoti.search);
       ("ind", Cind.ind);
       ("pie", Csyn.synthesize_pie);
+      ("robu-init", Cind.robu_init);
     ]
 
 let () = Command.run command
