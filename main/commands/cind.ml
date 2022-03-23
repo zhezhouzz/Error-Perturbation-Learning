@@ -250,7 +250,7 @@ let robu_random_inits env qc_conf num bound =
 
 let parse freq = List.map ~f:int_of_string @@ String.split freq ~on:','
 
-let multi_init_repeat_num = 6
+let multi_init_repeat_num = 7
 
 let robu_multi_inits env qc_conf num ns bound =
   let open Synthesizer in
