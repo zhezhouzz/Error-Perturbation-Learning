@@ -250,6 +250,8 @@ let robu_random_inits env qc_conf num bound =
 
 let parse freq = List.map ~f:int_of_string @@ String.split freq ~on:','
 
+let multi_init_repeat_num = 6
+
 let robu_multi_inits env qc_conf num ns bound =
   let open Synthesizer in
   let open Env in
@@ -287,7 +289,7 @@ let robu_multi_inits env qc_conf num ns bound =
                   @@ Basic_dt.List.sublist alphas (0, n)
                 in
                 ( n,
-                  List.init inner_repeat_num ~f:(fun _ ->
+                  List.init multi_init_repeat_num ~f:(fun _ ->
                       one_pass env
                         Primitive.Operator.(ind_op_pool @ basic_op_pool)
                         bound) ))

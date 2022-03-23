@@ -23,9 +23,8 @@ def load_res(filename):
     data_T = transpose(data)
     for l in data_T:
         l.sort()
-    print(data_T)
     # data_T = [l[1:-1] for l in data_T]
-    print(data_T)
+    # print(data_T)
     data_mean = [statistics.mean(d) for d in data_T]
     data_min = [d[0] for d in data_T]
     data_max = [d[-1] for d in data_T]
@@ -43,12 +42,12 @@ def plot (ls):
     caps = [2, 4, 6]
     alphas = [1.0, 0.4, 0.1]
     names = ["customstk", "sortedl", "uniquel"]
-    fig = plt.figure(constrained_layout=True, figsize=(10, 4), dpi=100)
+    fig = plt.figure(constrained_layout=True, figsize=(13, 2), dpi=100)
     # subfigs = fig.subfigures(2, 2, wspace=0.07)
     for idx, (name, l) in enumerate(ls):
         y, errs = l
         x = range(3, len(y) + 3)
-        ax = plt.subplot(2, 2, idx + 1)
+        ax = plt.subplot(1, 3, idx + 1)
         for idx_e, (data_min, data_max) in enumerate(errs):
             data_max = [data_max[idx] - v for idx, v in enumerate(y)]
             data_min = [v - data_min[idx] for idx, v in enumerate(y)]
@@ -60,7 +59,8 @@ def plot (ls):
         ax.set_yticks(np.arange(0.,1.05, 0.2))
         ax.set_yticklabels(['{:.0f}%'.format(x*100) for x in plt.gca().get_yticks()])
         ax.set_xlabel("$|\Theta|$ in {}".format(names[idx]), math_fontfamily='cm', fontsize=14)
-        ax.set_ylabel("$Acc_{PF}$", math_fontfamily='cm', fontsize=16, rotation=0, labelpad=30)
+        if idx == 0:
+            ax.set_ylabel("$Acc_{PF}$", math_fontfamily='cm', fontsize=16, rotation=0, labelpad=30)
     # plt.grid(True)
     # plt.legend()
     # plt.subplots_adjust(left=0.17, bottom=0.22, right=0.97, top=0.95, wspace=0.1, hspace=0.1)
