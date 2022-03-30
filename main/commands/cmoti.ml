@@ -6,6 +6,8 @@ let ppf = Format.err_formatter
 open Core
 open Caux
 
+let naive_mcmc_path = ".result/.motipf/"
+
 let naive_mcmc source_file meta_file num_test bound =
   (* set naive cost function *)
   let () =
@@ -20,10 +22,21 @@ let naive_mcmc source_file meta_file num_test bound =
         @@ mk_env_from_files source_file meta_file)
   in
   let stop_steps =
-    List.init num_test ~f:(fun _ ->
+    List.init num_test ~f:(fun i ->
         Zlog.event_
           (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-          (fun () -> Synthesizer.Syn.synthesize_f_moti bound env))
+          (fun () ->
+            let res, step = Synthesizer.Syn.synthesize_f_moti bound env in
+            match res with
+            | None -> raise @@ failwith "no result"
+            | Some (_, prog) ->
+                let path = sprintf "%s/pf%i.prog" naive_mcmc_path i in
+                let () =
+                  Core.Out_channel.write_all path
+                    ~data:
+                      (Language.Piecewise.layout_with_i_err env.i_err ([], prog))
+                in
+                step))
   in
   let num_over_bound, fc =
     List.fold_left

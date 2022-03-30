@@ -63,8 +63,8 @@ let synthesize_f_moti bound env =
               ~cost_function:(Cost.biased_cost (fun _ -> true))
               ~init_distribution:env')
   in
-  let _ = get_result_from_mcmc (env, cost) in
-  stop_step
+  let res = get_result_from_mcmc (env, cost) in
+  (res, stop_step)
 
 let synthesize_f bias samples bound env =
   let env' = Mkenv.random_init_prog env in
