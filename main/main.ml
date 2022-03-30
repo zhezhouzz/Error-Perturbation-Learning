@@ -5,6 +5,7 @@ let command =
   Command.group ~summary:"Error Perturbation Learning"
     [
       ("test", Ctest.test);
+      ("test-unbset", Ctest.test_unbset);
       ("test-qcgen", Ctest.qcgen_test);
       ("baseline", Cbaseline.baseline);
       ("baseline-time", Ctime.baseline_time);
@@ -33,6 +34,7 @@ let command =
       ("ind", Cind.ind);
       ("pie", Csyn.synthesize_pie);
       ("robu-init", Cind.robu_init);
+      ("coverage", Ccoverage.coverage);
     ]
 
 let () = Command.run command

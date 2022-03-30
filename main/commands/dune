@@ -13,6 +13,7 @@
    cifc
    cverify
    cind
+   ccoverage
  )
  (preprocess (pps ppx_jane))
 )

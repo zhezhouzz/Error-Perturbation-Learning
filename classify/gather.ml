@@ -18,10 +18,15 @@ let values_to_vec_ { args; qv; fset; _ } values =
       Array.of_list @@ List.map (fun feature -> F.eval feature m) fset)
     values
 
+let elem_bound = 100
+
 let values_mk_qv_space ctx args_value =
-  let qv_elem_value =
-    List.map (fun i -> V.I i) @@ V.flatten_forall_l_unique_paddled args_value
+  let vs = V.flatten_forall_l_unique_paddled args_value in
+  let vs =
+    if List.length vs <= elem_bound then vs
+    else Randomgen.choose_n_from_list elem_bound vs
   in
+  let qv_elem_value = List.map (fun i -> V.I i) vs in
   let qv_values =
     (List.map (fun i -> V.I i)
     @@ List.remove_duplicates (List.map V.len args_value))
@@ -103,16 +108,20 @@ let pos_gather cctx args_values =
       @@ value_to_vec cctx qv_sapce args_value)
     args_values
 
+let indt_stop = false
+
 let neg_gather cctx args_values =
   let aux data qv_sapce fvs =
     let x = rule_out Gready cctx.fvtab fvs Label.Neg in
     match x with
     | Indistinguishable ->
-        let lines = List.combine qv_sapce fvs in
-        Zlog.log_write @@ spf "rule out fail: %s" (V.layout_l data);
-        Zlog.log_write @@ spf "%s" (Feature.layout_set cctx.fset);
-        Zlog.log_write @@ spf "neg rule out fail: %s" @@ layout_qv_vecs lines;
-        x
+        if indt_stop then (
+          let lines = List.combine qv_sapce fvs in
+          Zlog.log_write @@ spf "rule out fail: %s" (V.layout_l data);
+          Zlog.log_write @@ spf "%s" (Feature.layout_set cctx.fset);
+          Zlog.log_write @@ spf "neg rule out fail: %s" @@ layout_qv_vecs lines;
+          x)
+        else x
     | _ -> x
   in
   let state =
@@ -125,7 +134,8 @@ let neg_gather cctx args_values =
         | DoNothing -> aux args_value qv_sapce fvs
         | Updated n -> (
             match aux args_value qv_sapce fvs with
-            | Indistinguishable -> Indistinguishable
+            | Indistinguishable ->
+                if indt_stop then Indistinguishable else Updated n
             | DoNothing -> Updated n
             | Updated n' -> Updated (n + n')))
       DoNothing args_values

@@ -24,6 +24,8 @@ let mk_true tps qvnum =
     body = Specast.True;
   }
 
+let neg spec = { spec with body = Specast.Not spec.body }
+
 let apply { args; qv; body } args' =
   if List.length args != List.length args' then
     raise @@ failwith "spec apply args mismatch"

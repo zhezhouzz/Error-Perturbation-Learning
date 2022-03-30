@@ -234,5 +234,8 @@ let range_subset ~size low high st =
 let array_subset size arr st =
   range_subset ~size 0 (Array.length arr - 1) st |> Array.map (fun i -> arr.(i))
 
+let choose_n_from_list n l =
+  Array.to_list @@ QCheck.Gen.generate1 (array_subset n @@ Array.of_list l)
+
 let choose_n_from_arr arr max_pool n =
   List.map Array.to_list @@ QCheck.Gen.generate ~n (array_subset max_pool arr)

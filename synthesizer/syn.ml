@@ -126,6 +126,11 @@ let synthesize_pre_v2 env qc_conf prog =
   let _, init_set = E.sampling_num neg_filter init_set_size neg_engine in
   FIsOK (discovered_pre, init_set)
 
+let synthesize_erroneous_pre env qc_conf prog =
+  let sigma = env.Env.sigma_raw in
+  let discovered_pre = Pre.infer_erroneous_pre env qc_conf prog sigma in
+  discovered_pre
+
 let synthesize_piecewise env qc_conf max_length bound =
   let rec loop current iter =
     let () = Zlog.log_write @@ spf "iter: %i" iter in

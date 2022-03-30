@@ -33,7 +33,13 @@ let sampling_num filter num state =
     if List.length res >= num then (state, res)
     else
       let state, _, x = sampling batch_size state in
+      (* let _ = Printf.printf "len(x): %i\n" (List.length x) in *)
       let x = List.filter filter x in
+      (* let x, _ = Zlog.event_time_ "filter" (fun () -> List.filter filter x) in *)
+      (* let _ = Printf.printf "len(filter x): %i\n" (List.length x) in *)
+      (* let _ = *)
+      (*   match state with PerbState _ -> raise @@ failwith "zz" | _ -> () *)
+      (* in *)
       aux state (res @ x)
   in
   aux state []

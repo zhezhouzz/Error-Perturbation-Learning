@@ -207,3 +207,28 @@ let qcgen_test =
             let qc_conf = Qc_config.load_config qc_file in
             let tp = Primitive.Tp.of_string tp in
             test_random_gen qc_conf tp num))
+
+let test_unbset_ () =
+  let open Basic_dt.Tree in
+  let snode x = Node (x, Leaf, Leaf) in
+  let rec insert (x : int) s =
+    match s with
+    | Leaf -> snode x
+    | Node (y, a, b) ->
+        if x < y then Node (x, a, insert y b)
+        else if y < x then Node (y, a, insert x b)
+        else s
+  in
+  let t1 = Node (3, Node (2, snode 1, Leaf), Node (5, snode 4, snode 6)) in
+  let t2 = Node (5, Node (3, snode 2, snode 4), Node (6, Leaf, snode 7)) in
+  Printf.printf "t1:\n%s\n" (layout string_of_int t1);
+  Printf.printf "insert(0, t1):\n%s\n" (layout string_of_int (insert 0 t1));
+  Printf.printf "t2:\n%s\n" (layout string_of_int t2);
+  Printf.printf "insert(0, t2):\n%s\n" (layout string_of_int (insert 0 t2));
+  ()
+
+let test_unbset =
+  Command.basic ~summary:"batched test."
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file) in
+      fun () -> Config.exec_main configfile (fun () -> test_unbset_ ()))
