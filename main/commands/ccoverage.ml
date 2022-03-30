@@ -45,13 +45,7 @@ let gen_from_target_perturbation source_file meta_file target_prog_file
   let pool, num_none, data =
     Sampling.Scache.target_sampling conds [ i_err ] target_prog test_num
   in
-  let () = Printf.printf "pre: %s\n" @@ Specification.Spec.layout epre in
-  let n = List.length @@ List.filter ~f:e_0 data in
-  let () = Printf.printf "e0: %i/%i\n" n (List.length data) in
-  let n =
-    List.length
-    @@ List.filter ~f:(fun x -> not @@ Specification.Spec.eval epre x) data
-  in
+  let n = List.length @@ List.filter ~f:epre data in
   let () = Printf.printf "pre: %i/%i\n" n (List.length data) in
   ()
 

@@ -131,4 +131,4 @@ let infer_erroneous_pre env qc_conf prog sigma =
     Infer.spec_infer_once ~cctx ~pos_engine ~neg_engine ~pos_filter ~neg_filter
       ~init_body:sigma.Spec.body inference_num_sampling
   in
-  spec
+  fun x -> not @@ Spec.eval spec x
