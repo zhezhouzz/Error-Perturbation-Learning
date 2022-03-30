@@ -49,6 +49,45 @@ let gen_from_target_perturbation source_file meta_file target_prog_file
   let () = Printf.printf "pre: %i/%i\n" n (List.length data) in
   ()
 
+let multi_dimension_syn source_file meta_file qc_conf ds bound =
+  let () =
+    if ds <= 0 then raise @@ failwith "wrong argument dimension number" else ()
+  in
+  let bias _ = true in
+  let env =
+    Zlog.event_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () -> mk_env_from_files source_file meta_file)
+  in
+  let prorgs_to_piecewise = function
+    | [] -> raise @@ failwith "die"
+    | h :: t ->
+        (List.map ~f:(fun f -> (Specification.Spec.dummy_pre env.tps, f)) t, h)
+  in
+  let make_new old_pres old_prog =
+    let env = Synthesizer.Mkenv.random_init_prog env in
+    let _, prog =
+      Zlog.event_
+        (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+        (fun () ->
+          (* Synthesizer.Syn.synthesize_piecewise env max_length num_burn_in *)
+          (*   num_sampling *)
+          Synthesizer.Syn.synthesize_multi_core env bias 1 bound)
+    in
+    let new_prog = prog :: old_prog in
+    let pre =
+      Synthesizer.Syn.synthesize_pre_multi env qc_conf
+        (prorgs_to_piecewise new_prog)
+    in
+    (pre :: old_pres, new_prog)
+  in
+  let rec loop i (pres, ps) =
+    let pres, ps = make_new pres ps in
+    if i >= ds then (pres, (env.i_err, prorgs_to_piecewise ps))
+    else loop (i + 1) (pres, ps)
+  in
+  loop 1 ([], [])
+
 let coverage =
   Command.basic ~summary:"coverage"
     Command.Let_syntax.(
@@ -64,3 +103,37 @@ let coverage =
             let qc_conf = Qc_config.load_config qc_file in
             gen_from_target_perturbation source_file meta_file target_prog_file
               prog_file qc_conf test_num))
+
+let coverage_syn =
+  Command.basic ~summary:"coverage-syn"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and qc_file = anon ("qc file" %: regular_file)
+      and ds = anon ("number of sub perturbation functions" %: int)
+      and num_sampling = anon ("num sampling" %: int)
+      and output_file_name = anon ("output file name" %: string) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let qc_conf = Qc_config.load_config qc_file in
+            let bound = Synthesizer.Syn.IterBound (0, num_sampling) in
+            let pres, (i_err, prog) =
+              multi_dimension_syn source_file meta_file qc_conf ds bound
+            in
+            let fname =
+              Printf.sprintf ".result/%s_coverage_syn.prog" output_file_name
+            in
+            let prename =
+              Printf.sprintf ".result/%s_coverage_syn.pre" output_file_name
+            in
+            let () =
+              Core.Out_channel.write_all fname
+                ~data:(Language.Piecewise.layout_with_i_err i_err prog)
+            in
+            let () =
+              Core.Out_channel.write_all prename
+                ~data:
+                  (Basic_dt.List.split_by "\n" Specification.Spec.layout pres)
+            in
+            ()))

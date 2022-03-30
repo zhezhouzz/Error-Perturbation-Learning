@@ -35,6 +35,7 @@ let command =
       ("pie", Csyn.synthesize_pie);
       ("robu-init", Cind.robu_init);
       ("coverage", Ccoverage.coverage);
+      ("coverage-syn", Ccoverage.coverage_syn);
     ]
 
 let () = Command.run command

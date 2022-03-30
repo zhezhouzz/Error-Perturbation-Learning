@@ -100,6 +100,8 @@ def eval_moti(num_times, bound, outfile):
 
 if __name__ == "__main__":
     # print(os.path.isfile("zhouzhe"))
+    subprocess.run(["mkdir", ".result"])
+    subprocess.run(["mkdir", ".result/.motipf"])
     with open(benchmarks_config_file) as f:
         bconfig = json.load(f)
     bconfig = bconfig["benchmarks"]

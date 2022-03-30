@@ -59,6 +59,53 @@ let max_loop_num = 10
 module E = Sampling.Engine
 module Spec = Specification.Spec
 
+let spec_infer_once_multi_engine ~cctx ~pos_engine ~neg_engines ~pos_filter
+    ~neg_filter num_sampling =
+  let infer_counter = ref 0 in
+  let pos_counter = ref 0 in
+  let neg_counter = ref 0 in
+  let pe = pos_engine in
+  let nes = neg_engines in
+  let _, pos_values =
+    Zlog.event_ (spf "pos_values: %i(%i)" !pos_counter !infer_counter)
+      (fun () -> E.sampling_num pos_filter num_sampling pe)
+  in
+  let () =
+    if List.length pos_values == 0 then raise @@ failwith "bad pos engine"
+    else ()
+  in
+  let () =
+    Zlog.event_
+      (spf "pos_gather[%i]: %i(%i)" (List.length pos_values) !pos_counter
+         !infer_counter)
+      (fun () -> Gather.pos_gather cctx pos_values)
+  in
+  let n' = (num_sampling / List.length nes) + 1 in
+  let neg_values =
+    Zlog.event_ (spf "neg_values: %i(%i)" !neg_counter !infer_counter)
+      (fun () ->
+        List.concat
+        @@ List.map (fun ne -> snd @@ E.sampling_num neg_filter n' ne) nes)
+  in
+  let () =
+    if List.length neg_values == 0 then raise @@ failwith "neg pos engine"
+    else ()
+  in
+  let () =
+    Zlog.event_
+      (spf "neg_gather[%i]: %i(%i)" (List.length neg_values) !neg_counter
+         !infer_counter)
+      (fun () -> Gather.neg_gather cctx neg_values)
+  in
+  let spec = infer_ cctx in
+  let () =
+    Zlog.log_write
+    @@ Printf.sprintf "refined spec: %s\n"
+         (Specification.Prop.pretty_layout_prop
+         @@ Specification.Simplify.simplify_ite spec.Specification.Spec.body)
+  in
+  spec
+
 let spec_infer_once ~cctx ~pos_engine ~neg_engine ~pos_filter ~neg_filter
     ~init_body num_sampling =
   let infer_counter = ref 0 in

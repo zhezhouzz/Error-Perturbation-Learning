@@ -23,7 +23,9 @@ module Mem = struct
 
   let vtoi { datam; _ } value = VM.find value datam
 
-  let get_out_idxs mem inp_idx = Hashtbl.find mem.jump_table inp_idx
+  let get_out_idxs mem inp_idx =
+    (* Zlog.log_write @@ spf "get_out_idxs: inp_idx %i" inp_idx; *)
+    Hashtbl.find mem.jump_table inp_idx
 
   let get_outs mem inp_idx =
     List.map (itov mem) (Hashtbl.find mem.jump_table inp_idx)
@@ -34,9 +36,15 @@ module Mem = struct
 
   let all_outs_unique mem =
     List.map (itov mem)
-    @@ List.remove_duplicates @@ List.flatten
-    @@ List.init (Hashtbl.length mem.jump_table) (fun idx ->
-           get_out_idxs mem idx)
+    @@ List.remove_duplicates
+    @@ Hashtbl.fold (fun _ outs res -> outs @ res) mem.jump_table []
+
+  (* List.init (Hashtbl.length mem.jump_table) (fun idx -> *)
+  (*    let is = get_out_idxs mem idx in *)
+  (*    Zlog.log_write @@ spf "all_outs_unique: get from %i" idx; *)
+  (*    Zlog.log_write @@ spf "all_outs: %s" *)
+  (*    @@ List.split_by_comma string_of_int is; *)
+  (*    is) *)
 
   let all_valid_pairs mem =
     List.flatten
@@ -54,6 +62,7 @@ module Mem = struct
         let idx = Hashtbl.length mem.datam_rev in
         let datam' = VM.add value idx mem.datam in
         Hashtbl.add mem.datam_rev idx value;
+        Zlog.log_write @@ spf "datem_rev: add %i" idx;
         ({ mem with datam = datam' }, idx, NewAdded)
 
   let adds mem values =

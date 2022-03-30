@@ -132,3 +132,26 @@ let infer_erroneous_pre env qc_conf prog sigma =
       ~init_body:sigma.Spec.body inference_num_sampling
   in
   fun x -> not @@ Spec.eval spec x
+
+let infer_pre_multi env qc_conf prog sigma =
+  let open Env in
+  let args = sigma.Spec.args in
+  let pos_engine = E.mk_qc_engine env.tps qc_conf in
+  let fs, d = prog in
+  let progs = ([], d) :: List.map (fun (_, f) -> ([], f)) fs in
+  let neg_engines =
+    List.map (E.mk_perb_engine [ env.i_err ] (fun _ -> true)) progs
+  in
+  let cctx = Cctx.mk_cctx args sigma.Spec.qv env.preds in
+  let pos_filter inp =
+    if not @@ env.sigma inp then false
+    else
+      let _, outp = env.client env.library_inspector inp in
+      match outp with None -> false | Some outp -> env.phi (inp @ outp)
+  in
+  let neg_filter _ = true in
+  let spec =
+    Infer.spec_infer_once_multi_engine ~cctx ~pos_engine ~neg_engines
+      ~pos_filter ~neg_filter inference_num_sampling
+  in
+  spec
