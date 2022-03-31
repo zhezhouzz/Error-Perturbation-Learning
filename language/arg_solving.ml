@@ -204,7 +204,7 @@ let nodup_qeury ctx (total, vs, m, v0, v1) =
 let solve max_solution ctx cache =
   let cond =
     match max_solution with
-    | None -> fun _ -> true
+    | None -> fun _ -> false
     | Some max_solution ->
         fun cache -> List.length cache.solutions > max_solution
   in
