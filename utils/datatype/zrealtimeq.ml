@@ -1,6 +1,8 @@
-type stream_cell = Nil | Cons of int * stream
+open Sexplib.Std
 
-and stream = stream_cell Lazy.t
+type stream_cell = Nil | Cons of int * stream [@@deriving sexp]
+
+and stream = stream_cell Lazy.t [@@deriving sexp]
 
 let ( !$ ) = Lazy.force
 
@@ -42,7 +44,7 @@ let reverse s =
   in
   reverse' (lazy Nil) s
 
-type t = stream * int list * stream
+type t = stream * int list * stream [@@deriving sexp]
 
 open Zlist
 

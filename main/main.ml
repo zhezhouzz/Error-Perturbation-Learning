@@ -25,8 +25,8 @@ let command =
       ("eval-baseline", Cev.eval_baseline);
       ("eval-result", Cev.eval_result);
       ("costing", Cev.costing);
-      ("ifc-sampling", Cifc.ifc_sampling);
-      ("ifc-syn", Cifc.ifc_syn);
+      (* ("ifc-sampling", Cifc.ifc_sampling); *)
+      (* ("ifc-syn", Cifc.ifc_syn); *)
       ("verify", Cverify.verify);
       ("moti-robu", Cmoti.moti_robu);
       ("moti", Cmoti.moti);

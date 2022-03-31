@@ -9,8 +9,8 @@ type t =
   | IntTree
   | IntTreeI
   | IntTreeB
-  | IfcInstr
-  | IfcInstrList
+  (* | IfcInstr *)
+  (* | IfcInstrList *)
   | Uninterp of string
 
 type tvar = t * string
@@ -26,8 +26,8 @@ let layout = function
   | IntTree -> "int tree"
   | IntTreeI -> "int treei"
   | IntTreeB -> "int treeb"
-  | IfcInstr -> "instr"
-  | IfcInstrList -> "instr list"
+  (* | IfcInstr -> "instr" *)
+  (* | IfcInstrList -> "instr list" *)
   | Uninterp name -> name
 
 let of_string = function
@@ -41,8 +41,8 @@ let of_string = function
   | "int tree" -> IntTree
   | "int treei" -> IntTreeI
   | "int treeb" -> IntTreeB
-  | "instr" -> IfcInstr
-  | "instr list" -> IfcInstrList
+  (* | "instr" -> IfcInstr *)
+  (* | "instr list" -> IfcInstrList *)
   | "binomialhp" -> Uninterp "binomialhp"
   | "binomialt" -> Uninterp "binomialt"
   | "pairinghp" -> Uninterp "pairinghp"
@@ -93,8 +93,8 @@ let is_dt = function
   | IntTree -> true
   | IntTreeI -> true
   | IntTreeB -> true
-  | IfcInstr -> false
-  | IfcInstrList -> true
+  (* | IfcInstr -> false *)
+  (* | IfcInstrList -> true *)
   | IntBoolList -> true
   | BoolIntBoolList -> true
   | Uninterp _ -> true
@@ -108,8 +108,8 @@ let eq_tp_ = function
   | IntTree, IntTree -> true
   | IntTreeI, IntTreeI -> true
   | IntTreeB, IntTreeB -> true
-  | IfcInstr, IfcInstr -> true
-  | IfcInstrList, IfcInstrList -> true
+  (* | IfcInstr, IfcInstr -> true *)
+  (* | IfcInstrList, IfcInstrList -> true *)
   | IntBoolList, IntBoolList -> true
   | BoolIntBoolList, BoolIntBoolList -> true
   | Uninterp a, Uninterp b when String.equal a b -> true
@@ -149,8 +149,8 @@ module Naming = struct
       | IntList -> Renaming.unique "l"
       | IntTree | IntTreeI | IntTreeB -> Renaming.unique "tr"
       | Bool -> Renaming.unique "b"
-      | IfcInstr -> Renaming.unique "instr"
-      | IfcInstrList -> Renaming.unique "instrl"
+      (* | IfcInstr -> Renaming.unique "instr" *)
+      (* | IfcInstrList -> Renaming.unique "instrl" *)
       | IntBoolList -> Renaming.unique "ibl"
       | BoolIntBoolList -> Renaming.unique "bibl"
       | Uninterp x -> Renaming.unique x
@@ -211,12 +211,12 @@ module Naming = struct
     | IntTreeB ->
         ( name "itb" counter.itreebnum,
           { counter with itreebnum = counter.itreebnum + 1 } )
-    | IfcInstr ->
-        ( name "instr" counter.instrnum,
-          { counter with instrnum = counter.instrnum + 1 } )
-    | IfcInstrList ->
-        ( name "instr" counter.instrlnum,
-          { counter with instrlnum = counter.instrlnum + 1 } )
+    (* | IfcInstr -> *)
+    (*     ( name "instr" counter.instrnum, *)
+    (*       { counter with instrnum = counter.instrnum + 1 } ) *)
+    (* | IfcInstrList -> *)
+    (*     ( name "instr" counter.instrlnum, *)
+    (*       { counter with instrlnum = counter.instrlnum + 1 } ) *)
     | IntBoolList ->
         ( name "instr" counter.iblnum,
           { counter with iblnum = counter.iblnum + 1 } )

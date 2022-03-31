@@ -1,7 +1,7 @@
 module List = Zlist.List
 
 module Tree = struct
-  type 'a t = Leaf | Node of ('a * 'a t * 'a t)
+  type 'a t = Leaf | Node of ('a * 'a t * 'a t) [@@deriving sexp]
 
   let rec map f = function
     | Leaf -> Leaf

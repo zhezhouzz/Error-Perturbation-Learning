@@ -1,6 +1,7 @@
 (library
  (name datatype)
  (wrapped true)
+ (libraries core)
  (modules
    zarray
    zlabeled_tree
@@ -15,4 +16,5 @@
    zrealtimeq
    zskewhp
  )
+ (preprocess (pps ppx_optcomp ppx_compare ppx_sexp_conv))
 )

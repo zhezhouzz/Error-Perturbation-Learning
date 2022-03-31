@@ -1,4 +1,6 @@
-type t = E | T of int * t list
+open Sexplib.Std
+
+type t = E | T of int * t list [@@deriving sexp]
 
 exception Empty
 

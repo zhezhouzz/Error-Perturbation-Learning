@@ -8,7 +8,7 @@ let to_basic_tp = function
   | "bool" -> T.Bool
   | "int" -> T.Int
   | "nat" -> T.Nat
-  | "instr" -> T.IfcInstr
+  (* | "instr" -> T.IfcInstr *)
   | "binomialhp" -> T.Uninterp "binomialhp"
   | "binomialt" -> T.Uninterp "binomialt"
   | "skewhp" -> T.Uninterp "skewhp"
@@ -25,7 +25,7 @@ let to_tp (elem, l) =
   | [ T.Int ], [ "list" ] -> T.IntList
   | [ T.Int; T.Bool ], [ "list" ] -> T.IntBoolList
   | [ T.Bool; T.Int; T.Bool ], [ "list" ] -> T.BoolIntBoolList
-  | [ T.IfcInstr ], [ "list" ] -> T.IfcInstrList
+  (* | [ T.IfcInstr ], [ "list" ] -> T.IfcInstrList *)
   | [ T.Int ], [ "tree" ] -> T.IntTree
   | [ T.Int ], [ "treeb" ] -> T.IntTreeB
   | [ T.Int ], [ "treei" ] -> T.IntTreeI

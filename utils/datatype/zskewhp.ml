@@ -1,8 +1,10 @@
-type elem = int
+open Sexplib.Std
 
-type tree = Node of int * elem * elem list * tree list
+type elem = int [@@deriving sexp]
 
-type t = tree list
+type tree = Node of int * elem * elem list * tree list [@@deriving sexp]
+
+type t = tree list [@@deriving sexp]
 
 exception Empty
 

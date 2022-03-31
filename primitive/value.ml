@@ -1,6 +1,8 @@
 open Basic_dt
 open Printf
-open Ifc_instruction
+
+(* open Ifc_instruction *)
+open Sexplib.Std
 
 type t =
   | U
@@ -10,8 +12,8 @@ type t =
   | B of bool
   | TI of (int, int) LabeledTree.t
   | TB of (int, bool) LabeledTree.t
-  | IInstr of instruction
-  | IInstrL of instruction list
+  (* | IInstr of instruction *)
+  (* | IInstrL of instruction list *)
   | IBL of (int * bool) list
   | BIBL of (bool * int * bool) list
   | Binomialhp of BinomialHeap.t
@@ -23,6 +25,7 @@ type t =
   | Skewhp of Skewhp.t
   | Skewt of Skewhp.tree
   | NotADt
+[@@deriving sexp]
 
 let layout = function
   | U -> "()"
@@ -32,9 +35,9 @@ let layout = function
   | B b -> string_of_bool b
   | TI tr -> LabeledTree.layout string_of_int string_of_int tr
   | TB tr -> LabeledTree.layout string_of_bool string_of_int tr
-  | IInstr instr -> layout_instruction instr
-  | IInstrL instrl ->
-      sprintf "[%s]" @@ List.split_by ";" layout_instruction instrl
+  (* | IInstr instr -> layout_instruction instr *)
+  (* | IInstrL instrl -> *)
+  (*     sprintf "[%s]" @@ List.split_by ";" layout_instruction instrl *)
   | IBL ibl ->
       sprintf "[%s]"
       @@ List.split_by ";" (fun (i, b) -> sprintf "%i,%b" i b) ibl
@@ -61,9 +64,9 @@ let formal_layout = function
   | B b -> string_of_bool b
   | TI tr -> LabeledTree.formal_layout string_of_int string_of_int tr
   | TB tr -> LabeledTree.formal_layout string_of_bool string_of_int tr
-  | IInstr instr -> layout_instruction instr
-  | IInstrL instrl ->
-      sprintf "[%s]" @@ List.split_by ";" layout_instruction instrl
+  (* | IInstr instr -> layout_instruction instr *)
+  (* | IInstrL instrl -> *)
+  (*     sprintf "[%s]" @@ List.split_by ";" layout_instruction instrl *)
   | IBL ibl ->
       sprintf "[%s]"
       @@ List.split_by ";" (fun (i, b) -> sprintf "%i,%b" i b) ibl
@@ -91,8 +94,8 @@ let eq x y =
     | T x, T y -> Tree.eq (fun x y -> x == y) x y
     | TI x, TI y -> LabeledTree.eq (fun x y -> x == y) (fun x y -> x == y) x y
     | TB x, TB y -> LabeledTree.eq (fun x y -> x == y) (fun x y -> x == y) x y
-    | IInstr x, IInstr y -> eq_instruction x y
-    | IInstrL x, IInstrL y -> List.eq eq_instruction x y
+    (* | IInstr x, IInstr y -> eq_instruction x y *)
+    (* | IInstrL x, IInstrL y -> List.eq eq_instruction x y *)
     | IBL ibl1, IBL ibl2 ->
         List.eq (fun (i1, b1) (i2, b2) -> i1 == i2 && b1 == b2) ibl1 ibl2
     | BIBL bibl1, BIBL bibl2 ->
@@ -121,8 +124,8 @@ let compare x y =
     | T x, T y -> Tree.compare compare x y
     | TI x, TI y -> LabeledTree.compare compare x y
     | TB x, TB y -> LabeledTree.compare compare x y
-    | IInstr x, IInstr y -> compare_instruction x y
-    | IInstrL x, IInstrL y -> List.compare compare_instruction x y
+    (* | IInstr x, IInstr y -> compare_instruction x y *)
+    (* | IInstrL x, IInstrL y -> List.compare compare_instruction x y *)
     | IBL ibl1, IBL ibl2 ->
         List.compare
           (fun (i1, b1) (i2, b2) ->
@@ -154,7 +157,9 @@ let compare x y =
 
 (* TODO: shuold I flatten instructions? *)
 let flatten_forall = function
-  | U | I _ | B _ | IInstr _ | IInstrL _ | NotADt ->
+  | U | I _ | B _
+  (* | IInstr _ | IInstrL _ *)
+  | NotADt ->
       raise @@ failwith "flatten_forall: not a datatype"
   | L il -> List.flatten_forall il
   | IBL ibl -> List.flatten_forall @@ List.map fst ibl
@@ -176,7 +181,7 @@ let flatten_forall_l l =
   List.fold_left
     (fun r v ->
       match v with
-      | U | IInstr _ | IInstrL _ -> []
+      | U (* | IInstr _ | IInstrL _ *) -> []
       | I i -> i :: r
       | B _ -> r
       | L il -> List.flatten_forall il @ r
@@ -200,7 +205,7 @@ let flatten_forall_l l =
     [] l
 
 let len = function
-  | U | I _ | B _ | IInstr _ -> 1
+  | U | I _ | B _ (* | IInstr _ *) -> 1
   | NotADt -> 0
   | L il -> List.length il
   | IBL ibl -> List.length ibl
@@ -208,7 +213,7 @@ let len = function
   | T it -> TreeTailCall.deep it
   | TI iti -> LabeledTreeTailCall.deep iti
   | TB itb -> LabeledTreeTailCall.deep itb
-  | IInstrL l -> List.length l
+  (* | IInstrL l -> List.length l *)
   | Binomialhp x -> BinomialhpTailCall.deep x
   | Binomialt x -> BinomialhpTailCall.deep [ x ]
   | Pairinghp x -> PairinghpTailCall.deep x
@@ -230,8 +235,8 @@ let get_tp v =
   | T _ -> Tp.IntTree
   | TI _ -> Tp.IntTreeI
   | TB _ -> Tp.IntTreeB
-  | IInstr _ -> IfcInstr
-  | IInstrL _ -> IfcInstrList
+  (* | IInstr _ -> IfcInstr *)
+  (* | IInstrL _ -> IfcInstrList *)
   | IBL _ -> IntBoolList
   | BIBL _ -> BoolIntBoolList
   | NotADt -> raise @@ failwith "get_tp: not a value"

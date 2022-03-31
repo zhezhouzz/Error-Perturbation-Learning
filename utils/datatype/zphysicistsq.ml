@@ -1,4 +1,6 @@
-type t = int list * int * int list Lazy.t * int * int list
+open Sexplib.Std
+
+type t = int list * int * int list Lazy.t * int * int list [@@deriving sexp]
 
 let ( !$ ) = Lazy.force
 

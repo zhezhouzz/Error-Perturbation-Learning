@@ -14,12 +14,13 @@ let tp_to_sort ctx =
     | Unit -> raise @@ failwith "unit should not be encoded as z3"
     | Int -> Integer.mk_sort ctx
     | Nat -> Integer.mk_sort ctx
-    | IfcInstr -> Integer.mk_sort ctx
+    (* | IfcInstr -> Integer.mk_sort ctx *)
     | Bool -> Boolean.mk_sort ctx
     | IntList | IntTree | IntTreeI | IntTreeB | IntBoolList | BoolIntBoolList
-    | IfcInstrList ->
-        Integer.mk_sort ctx
-    | Uninterp _ -> Integer.mk_sort ctx)
+    (* | IfcInstrList -> *)
+    (*     Integer.mk_sort ctx *)
+    | Uninterp _ ->
+        Integer.mk_sort ctx)
 
 let z3func ctx funcname inptps outtp =
   FuncDecl.mk_func_decl ctx
@@ -49,10 +50,10 @@ let tpedvar_to_z3 ctx (tp, name) =
     | Unit -> raise @@ failwith "unit should not be encoded as z3"
     | Int -> Integer.mk_const_s ctx name
     | Nat -> Integer.mk_const_s ctx name
-    | IfcInstr -> Integer.mk_const_s ctx name
+    (* | IfcInstr -> Integer.mk_const_s ctx name *)
     | Bool -> Boolean.mk_const_s ctx name
-    | IntList | IntTree | IntTreeI | IntTreeB | IntBoolList | BoolIntBoolList
-    | IfcInstrList ->
+    | IntList | IntTree | IntTreeI | IntTreeB | IntBoolList
+    | BoolIntBoolList (* | IfcInstrList *) ->
         Integer.mk_const_s ctx name
     | Uninterp tname ->
         Integer.mk_const_s ctx (Printf.sprintf "%s_%s" tname name))

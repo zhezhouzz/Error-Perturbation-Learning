@@ -3,6 +3,7 @@ module Tree = Ztree.Tree
 
 module LabeledTree = struct
   type ('a, 'b) t = Leaf | Node of ('b * 'a * ('a, 'b) t * ('a, 'b) t)
+  [@@deriving sexp]
 
   let spf = Printf.sprintf
 
