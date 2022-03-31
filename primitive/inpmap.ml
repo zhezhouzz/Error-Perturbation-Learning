@@ -19,13 +19,20 @@ let mem t v =
   | None -> false
   | Some l -> Hashtbl.mem t.m l
 
-let add t v =
+let find_opt t v =
+  match list_map_opt (Bihashtab.v_to_i_opt t.v_emb) v with
+  | None -> None
+  | Some l -> Hashtbl.find_opt t.m l
+
+let add_opt t v iter_num =
   let v = List.map (Bihashtab.get_add t.v_emb) v in
   match Hashtbl.find_opt t.m v with
-  | Some _ -> false
+  | Some idx -> Some idx
   | None ->
-      Hashtbl.add t.m v 0;
-      true
+      Hashtbl.add t.m v iter_num;
+      None
+
+let num_inps t = Hashtbl.length t.m
 
 let test () =
   let v1 = Value.L [ 2; 3; 2; 23; 5 ] in
@@ -33,7 +40,7 @@ let test () =
   let v2 = Value.T Tree.(Node (2, Leaf, Leaf)) in
   let v2' = Value.T Tree.(Node (2, Leaf, Leaf)) in
   let t = init () in
-  let _ = add t [ v1; v2 ] in
+  let _ = add_opt t [ v1; v2 ] 0 in
   let _ =
     Printf.printf "exists? %b ~ %b | %b %b\n"
       (mem t [ v1; v2 ])

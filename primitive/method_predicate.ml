@@ -172,6 +172,22 @@ let pairinghp_sort_apply = function
   | [ V.Pairinghp t ] -> Pairinghp.pairinghp_sort t
   | _ -> raise @@ failwith "pairing_sort"
 
+let strict_sort_apply = function
+  | [ V.L l ] -> IntList.is_strict_sort l
+  | _ -> raise @@ failwith "strict_sort"
+
+let strict_sort =
+  let poly_name = "strict_sort" in
+  [
+    {
+      poly_name;
+      name = "list_strict_sort";
+      tps = [ T.IntList ];
+      permu = false;
+      imp = strict_sort_apply;
+    };
+  ]
+
 let empty_info =
   let poly_name = "empty" in
   [
@@ -753,7 +769,7 @@ let mp_table =
   @ (left_info @ right_info @ para_info)
   @ (left_adj_info @ right_adj_info @ para_adj_info)
   @ size_info @ size_plus1_info @ len_info @ last_info @ once_info @ rb_info
-  @ leftist_info @ binomialhp_info @ skewhp_info @ pairinghp_info
+  @ leftist_info @ binomialhp_info @ skewhp_info @ pairinghp_info @ strict_sort
 
 let imp_map =
   List.fold_left (fun m r -> StrMap.add r.name r.imp m) StrMap.empty mp_table

@@ -571,4 +571,8 @@ module IntList = struct
   let of_range (s, e) =
     let len = e - s + 1 in
     List.init len (fun i -> i + s)
+
+  let is_strict_sort (l : int list) =
+    let l' = List.sort_uniq compare l in
+    List.eq ( == ) l l'
 end

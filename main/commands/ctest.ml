@@ -179,6 +179,27 @@ let test =
                      "") (fun () ->
                     Printf.printf "test!\n";
                     Primitive.Inpmap.test ())
+            | "enum" ->
+                Zlog.event_
+                  (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__
+                     "") (fun () ->
+                    let source_file = "data/motivation/pf_enum.ml" in
+                    let meta_file = "data/motivation/assertion1.ml" in
+                    let env =
+                      Zlog.event_
+                        (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
+                           __FUNCTION__ "") (fun () ->
+                          mk_env_from_files source_file meta_file)
+                    in
+                    let open Synthesizer in
+                    let client =
+                      Enum.make_client env.sigma (Mkenv.to_c env) env.phi
+                    in
+                    let ectx =
+                      Enum.init env.p_size env.op_pool env.tps env.i_err
+                    in
+                    Printf.printf "test!\n";
+                    Enum.run (Enum.explore_state client) ectx)
             (* | "ifc" -> *)
             (*     Zlog.event_ *)
             (*       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ *)

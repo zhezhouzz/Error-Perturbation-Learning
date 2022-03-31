@@ -18,6 +18,8 @@ let i_v_t_save t filename =
 let i_v_t_load filename =
   t_of_sexp int_of_sexp Value.t_of_sexp @@ Sexplib.Sexp.load_sexp filename
 
+let length t = Hashtbl.length t.tab
+
 let mem_i t i = Hashtbl.mem t.tab i
 
 let mem_v t v = Hashtbl.mem t.tab_rev v
@@ -30,6 +32,11 @@ let add_v_ t v =
 
 let add_v t v = if mem_v t v then None else Some (add_v_ t v)
 
+let init_with_vs vs =
+  let tab = init (List.length vs) in
+  let _ = List.map (fun v -> add_v_ tab v) vs in
+  tab
+
 let get_add t v =
   match Hashtbl.find_opt t.tab_rev v with Some n -> n | None -> add_v_ t v
 
@@ -40,3 +47,5 @@ let v_to_i t v = Hashtbl.find t.tab_rev v
 let i_to_v_opt t i = Hashtbl.find_opt t.tab i
 
 let v_to_i_opt t v = Hashtbl.find_opt t.tab_rev v
+
+let to_vs t = Hashtbl.fold (fun _ v res -> v :: res) t.tab []

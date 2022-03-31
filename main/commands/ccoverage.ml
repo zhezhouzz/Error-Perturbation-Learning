@@ -137,3 +137,36 @@ let coverage_syn =
                   (Basic_dt.List.split_by "\n" Specification.Spec.layout pres)
             in
             ()))
+
+let coverage_all_save =
+  Command.basic ~summary:"coverage-all-save"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and arg_assign_bound = anon ("arg assign bound" %: int)
+      and num_sampling = anon ("num sampling" %: int)
+      and database_name = anon ("database name" %: string) in
+      fun () ->
+        let env =
+          Zlog.event_
+            (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+            (fun () -> mk_env_from_files source_file meta_file)
+        in
+        Zlog.event_
+          (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+          (fun () ->
+            let open Synthesizer in
+            let client = Enum.make_client env.sigma (Mkenv.to_c env) env.phi in
+            let ectx =
+              Enum.init ~enum_max_argassigns:arg_assign_bound
+                ~iter_bound:num_sampling env.p_size env.op_pool env.tps
+                env.i_err
+            in
+            let () = Enum.run (Enum.explore_state client) ectx in
+            let () =
+              Zlog.event_
+                (Printf.sprintf "save time %s:%i[%s]-%s" __FILE__ __LINE__
+                   __FUNCTION__ "") (fun () -> Enum.save ectx database_name)
+            in
+            ()))

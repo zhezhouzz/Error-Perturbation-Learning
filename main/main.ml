@@ -36,6 +36,7 @@ let command =
       ("robu-init", Cind.robu_init);
       ("coverage", Ccoverage.coverage);
       ("coverage-syn", Ccoverage.coverage_syn);
+      ("coverage-all-save", Ccoverage.coverage_all_save);
     ]
 
 let () = Command.run command

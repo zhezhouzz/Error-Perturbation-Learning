@@ -1,3 +1,5 @@
+open Sexplib.Std
+
 type t =
   | Unit
   | Bool
@@ -12,6 +14,7 @@ type t =
   (* | IfcInstr *)
   (* | IfcInstrList *)
   | Uninterp of string
+[@@deriving sexp]
 
 type tvar = t * string
 

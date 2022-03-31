@@ -112,6 +112,8 @@ let mk_env_v2_ sigma_raw (sigma : V.t list -> bool)
     cur_p = None;
   }
 
+let to_c env inp = snd @@ env.client env.library_inspector inp
+
 let mk_env_v2 (sigma_raw : Spec.t) (client : Language.Tinyocaml.func)
     (libraries : string list) (phi : Spec.t) (tps : T.t list) (i_err : V.t list)
     (op_pool : string list) (preds : string list) (sampling_rounds : int)

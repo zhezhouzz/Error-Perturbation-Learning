@@ -211,9 +211,9 @@ let solve max_solution ctx cache =
     (*   @@ spf "len(cache.solutions): %i" *)
     (*   @@ List.length cache.solutions *)
     (* in *)
-    if List.length cache.solutions > max_solution then (
-      Zlog.log_write "the solution maximal number is overed";
-      cache)
+    if List.length cache.solutions > max_solution then
+      (* Zlog.log_write "the solution maximal number is overed"; *)
+      cache
     else
       (* let r = *)
       (*   Zlog.event_ *)

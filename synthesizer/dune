@@ -12,5 +12,7 @@
  pre
  syn_stat
  syn
+ enum
  )
+ (preprocess (pps ppx_optcomp ppx_compare ppx_sexp_conv))
 )
