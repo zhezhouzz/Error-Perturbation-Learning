@@ -159,7 +159,10 @@ let coverage_all_save =
             let open Synthesizer in
             let client = Enum.make_client env.sigma (Mkenv.to_c env) env.phi in
             let ectx =
-              Enum.init ~enum_max_argassigns:arg_assign_bound
+              Enum.init
+                ~enum_max_argassigns:
+                  (if arg_assign_bound <= 0 then None
+                  else Some arg_assign_bound)
                 ~iter_bound:num_sampling env.p_size env.op_pool env.tps
                 env.i_err
             in

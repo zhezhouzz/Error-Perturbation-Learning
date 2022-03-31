@@ -202,6 +202,12 @@ let nodup_qeury ctx (total, vs, m, v0, v1) =
        (List.combine total vs)
 
 let solve max_solution ctx cache =
+  let cond =
+    match max_solution with
+    | None -> fun _ -> true
+    | Some max_solution ->
+        fun cache -> List.length cache.solutions > max_solution
+  in
   let counter = ref 0 in
   (* let () = Zlog.time_tick_init () in *)
   let rec loop no_dup cache =
@@ -211,7 +217,7 @@ let solve max_solution ctx cache =
     (*   @@ spf "len(cache.solutions): %i" *)
     (*   @@ List.length cache.solutions *)
     (* in *)
-    if List.length cache.solutions > max_solution then
+    if cond cache then
       (* Zlog.log_write "the solution maximal number is overed"; *)
       cache
     else
@@ -278,7 +284,7 @@ let unfold_cache (solutions, prog_with_holes) =
       with _ -> raise @@ failwith "unfold_cache")
     solutions
 
-let arg_assign ?(max_solution = 35) tps ops =
+let arg_assign ?(max_solution = Some 35) tps ops =
   let ctx =
     match Config.(!conf.z3_ctx) with
     | Some ctx -> ctx

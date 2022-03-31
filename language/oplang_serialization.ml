@@ -128,7 +128,7 @@ let enumerate (tps : Tp.t list) (theta : string list) (len : int) =
     (fun ops ->
       let ops' = List.filter_map (fun x -> x) ops in
       match
-        Arg_solving.arg_assign ~max_solution:enum_max_argassigns tps ops'
+        Arg_solving.arg_assign ~max_solution:(Some enum_max_argassigns) tps ops'
       with
       | None -> None
       | Some (_, acache) ->

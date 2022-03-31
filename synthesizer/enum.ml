@@ -13,7 +13,7 @@ type t = {
 type ectx = {
   t : t;
   m : Inpmap.t;
-  enum_max_argassigns : int;
+  enum_max_argassigns : int option;
   iter_bound : int;
   tps : Tp.t list;
   i_err : Value.t list;
@@ -36,8 +36,8 @@ let layout_t t =
 let layout_e ectx =
   spf "%s\nlen(m): %i" (layout_t ectx.t) (Inpmap.num_inps ectx.m)
 
-let init ?(enum_max_argassigns = 10) ?(iter_bound = 1000) statement_num op_pool
-    tps i_err =
+let init ?(enum_max_argassigns = None) ?(iter_bound = 1000) statement_num
+    op_pool tps i_err =
   let optab = Bihashtab.init_with_vs op_pool in
   let state = Array.init statement_num (fun _ -> 0) in
   let m = Inpmap.init () in
