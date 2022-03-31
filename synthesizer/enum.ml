@@ -99,7 +99,10 @@ let explore_state client ectx =
       ()
   | Some (_, acache) ->
       let pfs =
-        Arg_solving.unfold_cache (acache.solutions, acache.prog_with_holes)
+        Zlog.event_
+          (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+          (fun () ->
+            Arg_solving.unfold_cache (acache.solutions, acache.prog_with_holes))
       in
       let () = ectx.t.num_pfs := !(ectx.t.num_pfs) + List.length pfs in
       let _ = count_pfs ectx client pfs in

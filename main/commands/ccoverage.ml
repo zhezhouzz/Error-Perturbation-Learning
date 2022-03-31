@@ -148,28 +148,31 @@ let coverage_all_save =
       and num_sampling = anon ("num sampling" %: int)
       and database_name = anon ("database name" %: string) in
       fun () ->
-        let env =
-          Zlog.event_
-            (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-            (fun () -> mk_env_from_files source_file meta_file)
-        in
-        Zlog.event_
-          (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-          (fun () ->
-            let open Synthesizer in
-            let client = Enum.make_client env.sigma (Mkenv.to_c env) env.phi in
-            let ectx =
-              Enum.init
-                ~enum_max_argassigns:
-                  (if arg_assign_bound <= 0 then None
-                  else Some arg_assign_bound)
-                ~iter_bound:num_sampling env.p_size env.op_pool env.tps
-                env.i_err
-            in
-            let () = Enum.run (Enum.explore_state client) ectx in
-            let () =
+        Config.exec_main configfile (fun () ->
+            let env =
               Zlog.event_
-                (Printf.sprintf "save time %s:%i[%s]-%s" __FILE__ __LINE__
-                   __FUNCTION__ "") (fun () -> Enum.save ectx database_name)
+                (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+                (fun () -> mk_env_from_files source_file meta_file)
             in
-            ()))
+            Zlog.event_
+              (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+              (fun () ->
+                let open Synthesizer in
+                let client =
+                  Enum.make_client env.sigma (Mkenv.to_c env) env.phi
+                in
+                let ectx =
+                  Enum.init
+                    ~enum_max_argassigns:
+                      (if arg_assign_bound <= 0 then None
+                      else Some arg_assign_bound)
+                    ~iter_bound:num_sampling env.p_size env.op_pool env.tps
+                    env.i_err
+                in
+                let () = Enum.run (Enum.explore_state client) ectx in
+                let () =
+                  Zlog.event_
+                    (Printf.sprintf "save time %s:%i[%s]-%s" __FILE__ __LINE__
+                       __FUNCTION__ "") (fun () -> Enum.save ectx database_name)
+                in
+                ())))
