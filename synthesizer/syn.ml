@@ -68,7 +68,7 @@ let synthesize_f_moti bound env =
 
 let synthesize_f_moti_record interval bound env =
   let env' = Mkenv.random_init_prog env in
-  let rcd, (env, cost) =
+  let rcd =
     Zlog.event_
       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
       (fun () ->
@@ -80,8 +80,7 @@ let synthesize_f_moti_record interval bound env =
               ~init_distribution:env' ~interval
         | TimeBound _ -> raise @@ failwith "record cannot accept time bound")
   in
-  let res = get_result_from_mcmc (env, cost) in
-  (res, rcd)
+  rcd
 
 let synthesize_f bias samples bound env =
   let env' = Mkenv.random_init_prog env in

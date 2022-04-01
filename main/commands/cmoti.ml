@@ -176,34 +176,38 @@ let evaluate_result env ectx prog qc_conf =
     Zlog.event_ "evaluate_result::epre" (fun () ->
         Synthesizer.Syn.synthesize_erroneous_pre_moti env qc_conf prog)
   in
-  let total = Synthesizer.Enum.num_inps ectx in
   match epre with
-  | None -> (0, total)
+  | None -> 0
   | Some epre ->
       let in_pre =
         Zlog.event_ "evaluate_result::in_pre" (fun () ->
             Synthesizer.Enum.count_in_pre ectx epre)
       in
-      (in_pre, total)
+      in_pre
 
-let dump_record res filename =
+let dump_record (total, res) filename =
   let open Yojson.Basic in
   let j =
-    `List
-      (List.map
-         ~f:(fun res ->
-           `List
-             (List.map
-                ~f:(fun (i, cost, in_pre, total) ->
-                  `Assoc
-                    [
-                      ("i", `Int i);
-                      ("cost", `Float cost);
-                      ("in_pre", `Int in_pre);
-                      ("total", `Int total);
-                    ])
-                res))
-         res)
+    `Assoc
+      [
+        ("total", `Int total);
+        ( "runs",
+          `List
+            (List.map
+               ~f:(fun res ->
+                 `List
+                   (List.map
+                      ~f:(fun (i, idx, cost, in_pre) ->
+                        `Assoc
+                          [
+                            ("i", `Int i);
+                            ("idx", `Int i);
+                            ("cost", `Float cost);
+                            ("in_pre", `Int in_pre);
+                          ])
+                      res))
+               res) );
+      ]
   in
   to_file filename j
 
@@ -221,26 +225,38 @@ let naive_mcmc_record source_file meta_file qc_file data_file interval bound
       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
       (fun () -> mk_env_from_files source_file meta_file)
   in
+  let total = Synthesizer.Enum.num_inps ectx in
   let res =
     List.init num_test ~f:(fun i ->
         Zlog.event_
           (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
           (fun () ->
-            let res, rcd =
+            let rcd =
               Synthesizer.Syn.synthesize_f_moti_record interval bound env
+            in
+            let tab = Hashtbl.create ~size:50 (module Int) in
+            let () =
+              List.iter
+                ~f:(fun (_, (idx, prog, _)) ->
+                  (* let () = Zlog.log_write (Language.Oplang.layout prog) in *)
+                  if Hashtbl.mem tab idx then ()
+                  else
+                    let a = evaluate_result env ectx ([], prog) qc_conf in
+                    Hashtbl.add_exn tab ~key:idx ~data:a)
+                rcd
             in
             let res =
               List.map
-                ~f:(fun (i, (prog, cost)) ->
-                  let () = Zlog.log_write (Language.Oplang.layout prog) in
-                  let a, b = evaluate_result env ectx ([], prog) qc_conf in
-                  (i, cost, a, b))
+                ~f:(fun (i, (idx, prog, cost)) ->
+                  (* let () = Zlog.log_write (Language.Oplang.layout prog) in *)
+                  let a = Hashtbl.find_exn tab idx in
+                  (i, idx, cost, a))
                 (* @@ Basic_dt.List.sublist rcd (0, 1) *)
                 rcd
             in
             res))
   in
-  dump_record res out_file_name
+  dump_record (total, res) out_file_name
 
 let moti_coverage =
   Command.basic ~summary:"moti coverage"

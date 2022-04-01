@@ -23,18 +23,26 @@ let update_best_one best_one (counter, cur, cur_cost) =
         true)
       else false
 
+let update_best_one_record best_one (counter, cur, cur_cost) =
+  let _, _, prev_cost = !best_one in
+  if cur_cost < prev_cost then (
+    layout_pf (cur, cur_cost);
+    best_one := (counter, cur, cur_cost);
+    Zlog.log_write
+      (Printf.sprintf "\tnow the best one is found in %i step" counter);
+    ())
+  else ()
+
 let get_best_one best_one =
   match !best_one with
   | Some (result, cost) -> (result, cost)
   | None -> raise @@ failwith "never happen in mcmc"
 
 let get_prog best_one =
-  match !best_one with
-  | Some (result, cost) -> (
-      match result.Env.cur_p with
-      | None -> raise @@ failwith "never happen in mcmc"
-      | Some p -> (p.prog, cost))
+  let idx, result, cost = !best_one in
+  match result.Env.cur_p with
   | None -> raise @@ failwith "never happen in mcmc"
+  | Some p -> (idx, p.prog, cost)
 
 let mcmc_jump mutate (cur, cal_cost) _ =
   let next = mutate cur in
@@ -104,7 +112,7 @@ let metropolis_hastings_core_moti cond mutate cal_cost init =
 let metropolis_hastings_core_moti_record interval cond mutate cal_cost init =
   (*Here we only need one "f", some library will return a set of "f" or distribution of "f", we dont need it. *)
   let counter = ref 0 in
-  let best_one = ref (Some (init, cal_cost init)) in
+  let best_one = ref (0, init, cal_cost init) in
   let rcd = ref [] in
   let rec loop (cur, cur_cost) =
     let () =
@@ -114,7 +122,7 @@ let metropolis_hastings_core_moti_record interval cond mutate cal_cost init =
     in
     (* if !counter > 40 then raise @@ failwith "too many" else (); *)
     let _ = stat_add cur in
-    let _ = update_best_one best_one (!counter, cur, cur_cost) in
+    let _ = update_best_one_record best_one (!counter, cur, cur_cost) in
     (* HACK: Early stop *)
     if cond !counter then None
     else
@@ -127,7 +135,7 @@ let metropolis_hastings_core_moti_record interval cond mutate cal_cost init =
   let () = Syn_stat.init () in
   let _ = loop (init, cal_cost init) in
   let _ = rcd := !rcd @ [ (!counter, get_prog best_one) ] in
-  (!rcd, get_best_one best_one)
+  !rcd
 
 let metropolis_hastings ~(*the steps before sampling, >= 0*)
                         (burn_in : int)
