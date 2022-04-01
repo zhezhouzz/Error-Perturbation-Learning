@@ -18,14 +18,17 @@ let values_to_vec_ { args; qv; fset; _ } values =
       Array.of_list @@ List.map (fun feature -> F.eval feature m) fset)
     values
 
-let elem_bound = 100
+let elem_bound = 80
+
+let basic_vs = List.init 80 (fun x -> x - 40)
 
 let values_mk_qv_space ctx args_value =
   let vs = V.flatten_forall_l_unique_paddled args_value in
   let vs =
     if List.length vs <= elem_bound then vs
-    else Randomgen.choose_n_from_list elem_bound vs
+    else Randomgen.choose_n_from_list (elem_bound - List.length basic_vs) vs
   in
+  let vs = List.remove_duplicates @@ basic_vs @ vs in
   let qv_elem_value = List.map (fun i -> V.I i) vs in
   let qv_values =
     (List.map (fun i -> V.I i)
