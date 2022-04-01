@@ -103,6 +103,7 @@ let pos_gather cctx args_values =
   List.iter
     (fun args_value ->
       let qv_sapce = values_mk_qv_space cctx args_value in
+      (* let _ = Zlog.log_write @@ List.split_by "\n" Value.layout_l qv_sapce in *)
       add_vecs_always cctx.fvtab
       @@ List.map (fun x -> (x, Label.Pos))
       @@ value_to_vec cctx qv_sapce args_value)

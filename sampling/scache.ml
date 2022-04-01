@@ -62,7 +62,7 @@ module Mem = struct
         let idx = Hashtbl.length mem.datam_rev in
         let datam' = VM.add value idx mem.datam in
         Hashtbl.add mem.datam_rev idx value;
-        Zlog.log_write @@ spf "datem_rev: add %i" idx;
+        (* Zlog.log_write @@ spf "datem_rev: add %i" idx; *)
         ({ mem with datam = datam' }, idx, NewAdded)
 
   let adds mem values =

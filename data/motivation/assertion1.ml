@@ -7,6 +7,7 @@ let op_pool =
     "list_destruct";
     "list_head";
     "list_last";
+    "const0";
     "plus1";
     "minus1";
     "list_upper_bound";

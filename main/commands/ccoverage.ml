@@ -17,6 +17,27 @@ let e_0 inputs =
       List.equal ( = ) [ 3; 4 ] s2 && List.length s1 >= 2 && inc 1 s1
   | _ -> false
 
+let gen_from_target_data source_file meta_file data_file prog_file qc_conf =
+  let env =
+    Zlog.event_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () -> mk_env_from_files source_file meta_file)
+  in
+  let _, prog = Parse.parse_piecewise prog_file in
+  let epre =
+    Zlog.event_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () -> Synthesizer.Syn.synthesize_erroneous_pre env qc_conf prog)
+  in
+  let ectx = Synthesizer.Enum.load data_file in
+  let total = Synthesizer.Enum.num_inps ectx in
+  let in_pre = Synthesizer.Enum.count_in_pre ectx epre in
+  let () =
+    Printf.printf "pre: %i/%i = %.2f\n" in_pre total
+      (float_of_int in_pre /. float_of_int total *. 100.0)
+  in
+  ()
+
 let gen_from_target_perturbation source_file meta_file target_prog_file
     prog_file qc_conf test_num =
   let env =
@@ -87,6 +108,21 @@ let multi_dimension_syn source_file meta_file qc_conf ds bound =
     else loop (i + 1) (pres, ps)
   in
   loop 1 ([], [])
+
+let coverage_against_data =
+  Command.basic ~summary:"coverage-against-data"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and data_file = anon ("data file" %: regular_file)
+      and prog_file = anon ("prog file" %: regular_file)
+      and qc_file = anon ("qc file" %: regular_file) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let qc_conf = Qc_config.load_config qc_file in
+            gen_from_target_data source_file meta_file data_file prog_file
+              qc_conf))
 
 let coverage =
   Command.basic ~summary:"coverage"

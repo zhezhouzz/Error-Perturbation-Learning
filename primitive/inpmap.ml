@@ -34,6 +34,13 @@ let add_opt t v iter_num =
 
 let num_inps t = Hashtbl.length t.m
 
+let count f t =
+  Hashtbl.fold
+    (fun inp_idxs _ n ->
+      let inp = List.map (Bihashtab.i_to_v t.v_emb) inp_idxs in
+      if f inp then n + 1 else n)
+    t.m 0
+
 let test () =
   let v1 = Value.L [ 2; 3; 2; 23; 5 ] in
   let v1' = Value.L [ 2; 3; 2; 23; 5 ] in

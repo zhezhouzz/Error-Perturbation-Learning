@@ -37,6 +37,7 @@ let command =
       ("coverage", Ccoverage.coverage);
       ("coverage-syn", Ccoverage.coverage_syn);
       ("coverage-all-save", Ccoverage.coverage_all_save);
+      ("coverage-against-data", Ccoverage.coverage_against_data);
     ]
 
 let () = Command.run command

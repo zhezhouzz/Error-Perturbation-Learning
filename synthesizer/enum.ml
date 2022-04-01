@@ -26,6 +26,8 @@ type client = {
   phi : Value.t list -> bool;
 }
 
+let num_inps t = Inpmap.num_inps t.m
+
 let layout_t t =
   let ops = Bihashtab.to_vs t.optab in
   spf "optab(%i): %s\nstatement_num: %i\nstate: %s\nnum_pfs: %i"
@@ -91,21 +93,21 @@ let explore_state client ectx =
     List.map (Bihashtab.i_to_v ectx.t.optab) @@ Array.to_list ectx.t.state
   in
   (* let _ = Zlog.log_write @@ spf "ops: %s" (StrList.to_string ops) in *)
-  match
-    Arg_solving.arg_assign ~max_solution:ectx.enum_max_argassigns ectx.tps ops
-  with
+  let res =
+    Zlog.event_ "arg_assign" (fun () ->
+        Arg_solving.arg_assign ~max_solution:ectx.enum_max_argassigns ectx.tps
+          ops)
+  in
+  match res with
   | None ->
       (* let _ = Zlog.log_write "none" in *)
       ()
   | Some (_, acache) ->
       let pfs =
-        Zlog.event_
-          (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-          (fun () ->
-            Arg_solving.unfold_cache (acache.solutions, acache.prog_with_holes))
+        Arg_solving.unfold_cache (acache.solutions, acache.prog_with_holes)
       in
       let () = ectx.t.num_pfs := !(ectx.t.num_pfs) + List.length pfs in
-      let _ = count_pfs ectx client pfs in
+      let _ = Zlog.event_ "count_pfs" (fun () -> count_pfs ectx client pfs) in
       ()
 
 let next_state_ t =
@@ -148,6 +150,8 @@ let run f ectx =
 let save ectx filename = Sexplib.Sexp.save filename (sexp_of_ectx ectx)
 
 let load filename = ectx_of_sexp @@ Sexplib.Sexp.load_sexp filename
+
+let count_in_pre ectx pre = Inpmap.count pre ectx.m
 
 let test client =
   let op_pool = [ "cons"; "top"; "tail"; "append" ] in

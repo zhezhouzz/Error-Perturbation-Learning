@@ -119,7 +119,8 @@ let infer_erroneous_pre env qc_conf prog sigma =
   let args = sigma.Spec.args in
   let pos_engine = E.mk_qc_engine env.tps qc_conf in
   let neg_engine = E.mk_perb_engine [ env.i_err ] (fun _ -> true) prog in
-  let cctx = Cctx.mk_cctx args sigma.Spec.qv env.preds in
+  let qv = [ (T.Int, "u"); (T.Int, "v") ] in
+  let cctx = Cctx.mk_cctx args qv env.preds in
   let pos_filter inp =
     if not @@ env.sigma inp then false
     else
