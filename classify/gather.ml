@@ -122,7 +122,7 @@ let neg_gather cctx args_values =
           Zlog.log_write @@ spf "%s" (Feature.layout_set cctx.fset);
           Zlog.log_write @@ spf "neg rule out fail: %s" @@ layout_qv_vecs lines;
           x)
-        else x
+        else DoNothing
     | _ -> x
   in
   let state =
@@ -135,8 +135,7 @@ let neg_gather cctx args_values =
         | DoNothing -> aux args_value qv_sapce fvs
         | Updated n -> (
             match aux args_value qv_sapce fvs with
-            | Indistinguishable ->
-                if indt_stop then Indistinguishable else Updated n
+            | Indistinguishable -> Indistinguishable
             | DoNothing -> Updated n
             | Updated n' -> Updated (n + n')))
       DoNothing args_values
