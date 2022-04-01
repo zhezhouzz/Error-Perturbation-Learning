@@ -61,7 +61,7 @@ let count count_tab (f, i) t =
     t.m 0
 
 let count_greater count_tab i =
-  let rec aux = function [] -> false | h :: t -> i >= h && aux t in
+  let rec aux = function [] -> false | h :: t -> i >= h || aux t in
   Hashtbl.fold (fun _ v n -> if aux v then n + 1 else n) count_tab 0
 
 let count_all t range = List.map (count_greater t) range
