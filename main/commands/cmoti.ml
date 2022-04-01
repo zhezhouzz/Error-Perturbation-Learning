@@ -171,7 +171,7 @@ let moti_robu =
                 Printf.printf "%i\n%s\n" n
                   (Basic_dt.List.split_by_comma string_of_int l))))
 
-let evaluate_result env ectx prog qc_conf =
+let evaluate_result env ectx (idx, prog) qc_conf =
   let epre =
     Zlog.event_ "evaluate_result::epre" (fun () ->
         Synthesizer.Syn.synthesize_erroneous_pre_moti env qc_conf prog)
@@ -181,16 +181,22 @@ let evaluate_result env ectx prog qc_conf =
   | Some epre ->
       let in_pre =
         Zlog.event_ "evaluate_result::in_pre" (fun () ->
-            Synthesizer.Enum.count_in_pre ectx epre)
+            Synthesizer.Enum.count_in_pre ectx (epre, idx))
       in
       in_pre
 
-let dump_record (total, res) filename =
+let dump_record (total, union, res) filename =
   let open Yojson.Basic in
   let j =
     `Assoc
       [
         ("total", `Int total);
+        ( "union",
+          `List
+            (List.map
+               ~f:(fun (a, b) ->
+                 `Assoc [ ("u_i", `Int a); ("u_in_pre", `Int b) ])
+               union) );
         ( "runs",
           `List
             (List.map
@@ -226,6 +232,8 @@ let naive_mcmc_record source_file meta_file qc_file data_file interval bound
       (fun () -> mk_env_from_files source_file meta_file)
   in
   let total = Synthesizer.Enum.num_inps ectx in
+  let () = Synthesizer.Enum.count_clear ectx in
+  let range = ref None in
   let res =
     List.init num_test ~f:(fun i ->
         Zlog.event_
@@ -234,14 +242,19 @@ let naive_mcmc_record source_file meta_file qc_file data_file interval bound
             let rcd =
               Synthesizer.Syn.synthesize_f_moti_record interval bound env
             in
+            let () =
+              match !range with
+              | None -> range := Some (List.map ~f:(fun (i, _) -> i) rcd)
+              | Some _ -> ()
+            in
             let tab = Hashtbl.create ~size:50 (module Int) in
             let () =
               List.iter
-                ~f:(fun (_, (idx, prog, _)) ->
+                ~f:(fun (i, (idx, prog, _)) ->
                   (* let () = Zlog.log_write (Language.Oplang.layout prog) in *)
                   if Hashtbl.mem tab idx then ()
                   else
-                    let a = evaluate_result env ectx ([], prog) qc_conf in
+                    let a = evaluate_result env ectx (i, ([], prog)) qc_conf in
                     Hashtbl.add_exn tab ~key:idx ~data:a)
                 rcd
             in
@@ -256,7 +269,13 @@ let naive_mcmc_record source_file meta_file qc_file data_file interval bound
             in
             res))
   in
-  dump_record (total, res) out_file_name
+  let union =
+    match !range with
+    | None -> raise @@ failwith "empty result"
+    | Some range ->
+        Basic_dt.List.combine range @@ Synthesizer.Enum.count_all ectx range
+  in
+  dump_record (total, union, res) out_file_name
 
 let moti_coverage =
   Command.basic ~summary:"moti coverage"

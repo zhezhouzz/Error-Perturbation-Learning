@@ -155,7 +155,11 @@ let save ectx filename = Sexplib.Sexp.save filename (sexp_of_ectx ectx)
 
 let load filename = ectx_of_sexp @@ Sexplib.Sexp.load_sexp filename
 
+let count_clear ectx = Inpmap.count_clear ectx.m
+
 let count_in_pre ectx pre = Inpmap.count pre ectx.m
+
+let count_all ectx = Inpmap.count_all ectx.m
 
 let test client =
   let op_pool = [ "cons"; "top"; "tail"; "append" ] in

@@ -31,7 +31,7 @@ let gen_from_target_data source_file meta_file data_file prog_file qc_conf =
   in
   let ectx = Synthesizer.Enum.load data_file in
   let total = Synthesizer.Enum.num_inps ectx in
-  let in_pre = Synthesizer.Enum.count_in_pre ectx epre in
+  let in_pre = Synthesizer.Enum.count_in_pre ectx (epre, 1) in
   let () =
     Printf.printf "pre: %i/%i = %.2f\n" in_pre total
       (float_of_int in_pre /. float_of_int total *. 100.0)
