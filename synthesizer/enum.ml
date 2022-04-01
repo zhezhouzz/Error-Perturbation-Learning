@@ -94,10 +94,13 @@ let explore_state client ectx =
   in
   (* let _ = Zlog.log_write @@ spf "ops: %s" (StrList.to_string ops) in *)
   let res =
-    Zlog.event_ "arg_assign" (fun () ->
-        Arg_solving.arg_assign ~max_solution:ectx.enum_max_argassigns ectx.tps
-          ops)
+    Arg_solving.arg_assign ~max_solution:ectx.enum_max_argassigns ectx.tps ops
   in
+  (* let res = *)
+  (*   Zlog.event_ "arg_assign" (fun () -> *)
+  (*       Arg_solving.arg_assign ~max_solution:ectx.enum_max_argassigns ectx.tps *)
+  (*         ops) *)
+  (* in *)
   match res with
   | None ->
       (* let _ = Zlog.log_write "none" in *)
@@ -107,7 +110,8 @@ let explore_state client ectx =
         Arg_solving.unfold_cache (acache.solutions, acache.prog_with_holes)
       in
       let () = ectx.t.num_pfs := !(ectx.t.num_pfs) + List.length pfs in
-      let _ = Zlog.event_ "count_pfs" (fun () -> count_pfs ectx client pfs) in
+      let _ = count_pfs ectx client pfs in
+      (* let _ = Zlog.event_ "count_pfs" (fun () -> count_pfs ectx client pfs) in *)
       ()
 
 let next_state_ t =
