@@ -230,12 +230,13 @@ let naive_mcmc_record source_file meta_file qc_file data_file interval bound
               Synthesizer.Syn.synthesize_f_moti_record interval bound env
             in
             let res =
-              List.map ~f:(fun (i, (prog, cost)) ->
+              List.map
+                ~f:(fun (i, (prog, cost)) ->
                   let () = Zlog.log_write (Language.Oplang.layout prog) in
                   let a, b = evaluate_result env ectx ([], prog) qc_conf in
                   (i, cost, a, b))
-              @@ Basic_dt.List.sublist rcd (0, 1)
-              (* rcd *)
+                (* @@ Basic_dt.List.sublist rcd (0, 1) *)
+                rcd
             in
             res))
   in
