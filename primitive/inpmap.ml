@@ -1,19 +1,12 @@
 open Sexplib.Std
 open Basic_dt
 
-type t = {
-  v_emb : (int, Value.t) Bihashtab.t;
-  m : (int list, int) Hashtbl.t;
-  count_tab : (int list, int list) Hashtbl.t;
-}
+type t = { v_emb : (int, Value.t) Bihashtab.t; m : (int list, int) Hashtbl.t }
 [@@deriving sexp]
 
-let init () =
-  {
-    v_emb = Bihashtab.init 20000;
-    m = Hashtbl.create 20000;
-    count_tab = Hashtbl.create 20000;
-  }
+type count_tab = (int list, int list) Hashtbl.t [@@deriving sexp]
+
+let init () = { v_emb = Bihashtab.init 20000; m = Hashtbl.create 20000 }
 
 let list_map_opt f l =
   List.fold_left
@@ -43,26 +36,33 @@ let add_opt t v iter_num =
 
 let num_inps t = Hashtbl.length t.m
 
-let count_clear t = Hashtbl.clear t.count_tab
+let count_init t = Hashtbl.create (num_inps t)
 
-let count_add_replace t v i =
-  match Hashtbl.find_opt t.count_tab v with
-  | Some c -> Hashtbl.replace t.count_tab v (i :: c)
-  | None -> Hashtbl.add t.count_tab v [ i ]
+let count_add_replace count_tab v i =
+  match Hashtbl.find_opt count_tab v with
+  | Some c -> Hashtbl.replace count_tab v (i :: c)
+  | None -> Hashtbl.add count_tab v [ i ]
 
-let count (f, i) t =
+let count_raw f t =
+  Hashtbl.fold
+    (fun inp_idxs _ n ->
+      let inp = List.map (Bihashtab.i_to_v t.v_emb) inp_idxs in
+      if f inp then n + 1 else n)
+    t.m 0
+
+let count count_tab (f, i) t =
   Hashtbl.fold
     (fun inp_idxs _ n ->
       let inp = List.map (Bihashtab.i_to_v t.v_emb) inp_idxs in
       if f inp then (
-        count_add_replace t inp_idxs i;
+        count_add_replace count_tab inp_idxs i;
         n + 1)
       else n)
     t.m 0
 
-let count_greater t i =
+let count_greater count_tab i =
   let rec aux = function [] -> false | h :: t -> i >= h && aux t in
-  Hashtbl.fold (fun _ v n -> if aux v then n + 1 else n) t.count_tab 0
+  Hashtbl.fold (fun _ v n -> if aux v then n + 1 else n) count_tab 0
 
 let count_all t range = List.map (count_greater t) range
 

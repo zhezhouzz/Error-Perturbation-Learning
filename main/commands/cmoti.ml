@@ -171,7 +171,7 @@ let moti_robu =
                 Printf.printf "%i\n%s\n" n
                   (Basic_dt.List.split_by_comma string_of_int l))))
 
-let evaluate_result env ectx (idx, prog) qc_conf =
+let evaluate_result ct env ectx (idx, prog) qc_conf =
   let epre =
     Zlog.event_ "evaluate_result::epre" (fun () ->
         Synthesizer.Syn.synthesize_erroneous_pre_moti env qc_conf prog)
@@ -181,7 +181,7 @@ let evaluate_result env ectx (idx, prog) qc_conf =
   | Some epre ->
       let in_pre =
         Zlog.event_ "evaluate_result::in_pre" (fun () ->
-            Synthesizer.Enum.count_in_pre ectx (epre, idx))
+            Synthesizer.Enum.count_in_pre ct ectx (epre, idx))
       in
       in_pre
 
@@ -232,7 +232,7 @@ let naive_mcmc_record source_file meta_file qc_file data_file interval bound
       (fun () -> mk_env_from_files source_file meta_file)
   in
   let total = Synthesizer.Enum.num_inps ectx in
-  let () = Synthesizer.Enum.count_clear ectx in
+  let ct = Synthesizer.Enum.count_init ectx in
   let range = ref None in
   let res =
     List.init num_test ~f:(fun i ->
@@ -254,7 +254,9 @@ let naive_mcmc_record source_file meta_file qc_file data_file interval bound
                   (* let () = Zlog.log_write (Language.Oplang.layout prog) in *)
                   if Hashtbl.mem tab idx then ()
                   else
-                    let a = evaluate_result env ectx (i, ([], prog)) qc_conf in
+                    let a =
+                      evaluate_result ct env ectx (i, ([], prog)) qc_conf
+                    in
                     Hashtbl.add_exn tab ~key:idx ~data:a)
                 rcd
             in
@@ -273,7 +275,10 @@ let naive_mcmc_record source_file meta_file qc_file data_file interval bound
     match !range with
     | None -> raise @@ failwith "empty result"
     | Some range ->
-        Basic_dt.List.combine range @@ Synthesizer.Enum.count_all ectx range
+        Basic_dt.List.combine range @@ Synthesizer.Enum.count_all ct range
+  in
+  let () =
+    Sexplib.Sexp.save ".result/moti.ct" (Primitive.Inpmap.sexp_of_count_tab ct)
   in
   dump_record (total, union, res) out_file_name
 
