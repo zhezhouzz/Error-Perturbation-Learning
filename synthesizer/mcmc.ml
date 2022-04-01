@@ -30,10 +30,10 @@ let get_best_one best_one =
 
 let get_prog best_one =
   match !best_one with
-  | Some (result, _) -> (
+  | Some (result, cost) -> (
       match result.Env.cur_p with
       | None -> raise @@ failwith "never happen in mcmc"
-      | Some p -> p.prog)
+      | Some p -> (p.prog, cost))
   | None -> raise @@ failwith "never happen in mcmc"
 
 let mcmc_jump mutate (cur, cal_cost) id =

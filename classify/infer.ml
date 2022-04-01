@@ -8,12 +8,12 @@ let infer_ ctx =
   (* let () = Zlog.log_write @@ spf "fvctx:\n%s\n" @@ Cctx.layout_fvctx ctx in *)
   let dt, _ = Dtree.classify ctx in
   let body = Specification.Simplify.simplify_ite @@ Dtree.to_prop dt in
-  let _ =
-    Zlog.log_write
-    @@ Printf.sprintf "spec: %s\n"
-         (Specification.Prop.pretty_layout_prop
-         @@ Specification.Simplify.simplify_ite body)
-  in
+  (* let _ = *)
+  (*   Zlog.log_write *)
+  (*   @@ Printf.sprintf "spec: %s\n" *)
+  (*        (Specification.Prop.pretty_layout_prop *)
+  (*        @@ Specification.Simplify.simplify_ite body) *)
+  (* in *)
   (* let body = Specification.Simplify.simplify_ite @@ Dtree.to_prop dt in *)
   (* let _ = raise @@ failwith "end" in *)
   Specification.Spec.{ args = ctx.Cctx.args; qv = ctx.Cctx.qv; body }

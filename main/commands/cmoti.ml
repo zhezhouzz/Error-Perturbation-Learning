@@ -172,10 +172,19 @@ let moti_robu =
                   (Basic_dt.List.split_by_comma string_of_int l))))
 
 let evaluate_result env ectx prog qc_conf =
-  let epre = Synthesizer.Syn.synthesize_erroneous_pre_moti env qc_conf prog in
-  let in_pre = Synthesizer.Enum.count_in_pre ectx epre in
+  let epre =
+    Zlog.event_ "evaluate_result::epre" (fun () ->
+        Synthesizer.Syn.synthesize_erroneous_pre_moti env qc_conf prog)
+  in
   let total = Synthesizer.Enum.num_inps ectx in
-  (in_pre, total)
+  match epre with
+  | None -> (0, total)
+  | Some epre ->
+      let in_pre =
+        Zlog.event_ "evaluate_result::in_pre" (fun () ->
+            Synthesizer.Enum.count_in_pre ectx epre)
+      in
+      (in_pre, total)
 
 let dump_record res filename =
   let open Yojson.Basic in
@@ -185,10 +194,11 @@ let dump_record res filename =
          ~f:(fun res ->
            `List
              (List.map
-                ~f:(fun (i, in_pre, total) ->
+                ~f:(fun (i, cost, in_pre, total) ->
                   `Assoc
                     [
                       ("i", `Int i);
+                      ("cost", `Float cost);
                       ("in_pre", `Int in_pre);
                       ("total", `Int total);
                     ])
@@ -221,9 +231,9 @@ let naive_mcmc_record source_file meta_file qc_file data_file interval bound
             in
             let res =
               List.map
-                ~f:(fun (i, prog) ->
+                ~f:(fun (i, (prog, cost)) ->
                   let a, b = evaluate_result env ectx ([], prog) qc_conf in
-                  (i, a, b))
+                  (i, cost, a, b))
                 rcd
             in
             res))

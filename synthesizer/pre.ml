@@ -157,10 +157,10 @@ let infer_erroneous_pre_moti env qc_conf prog sigma =
     E.sampling_num pos_filter inference_num_sampling pos_engine
   in
   match E.sampling_pt_opt neg_filter inference_num_sampling neg_engine with
-  | None -> fun _ -> false
+  | None -> None
   | Some neg_values ->
       let spec = Infer.pn_spec_infer cctx pos_values neg_values in
-      fun x -> not @@ Spec.eval spec x
+      Some (fun x -> not @@ Spec.eval spec x)
 
 let infer_pre_multi env qc_conf prog sigma =
   let open Env in
