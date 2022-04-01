@@ -60,7 +60,7 @@ let instantization = function
 
 (* TODO: make feature set *)
 let mk_set args qv mps =
-  let dtargs, elemargs = List.partition (fun (tp, _) -> T.is_dt tp) args in
+  let dtargs, _ = List.partition (fun (tp, _) -> T.is_dt tp) args in
   let mk_feature mp =
     match mp with
     | "mem" | "hd" | "last" ->

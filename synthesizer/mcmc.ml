@@ -36,12 +36,16 @@ let get_prog best_one =
       | Some p -> (p.prog, cost))
   | None -> raise @@ failwith "never happen in mcmc"
 
-let mcmc_jump mutate (cur, cal_cost) id =
-  Zlog.event_ (Printf.sprintf "%s:%i[%s] %i" __FILE__ __LINE__ __FUNCTION__ id)
-    (fun () ->
-      let next = mutate cur in
-      let next_cost = cal_cost next in
-      (next, next_cost))
+let mcmc_jump mutate (cur, cal_cost) _ =
+  let next = mutate cur in
+  let next_cost = cal_cost next in
+  (next, next_cost)
+
+(* Zlog.event_ (Printf.sprintf "%s:%i[%s] %i" __FILE__ __LINE__ __FUNCTION__ id) *)
+(*   (fun () -> *)
+(*     let next = mutate cur in *)
+(*     let next_cost = cal_cost next in *)
+(*     (next, next_cost)) *)
 
 let mcmc_judge (cur, cur_cost) (next, next_cost) =
   if next_cost < cur_cost then (next, next_cost)

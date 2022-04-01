@@ -95,11 +95,11 @@ let mutate_ op_pool cache =
       in
       match r with
       | Some r ->
-          Zlog.log_write
-            (Printf.sprintf "mutation: %s"
-               (match mutation with
-               | None -> raise @@ failwith "die in mutate_"
-               | Some mutation -> layout_mutation mutation));
+          (* Zlog.log_write *)
+          (*   (Printf.sprintf "mutation: %s" *)
+          (*      (match mutation with *)
+          (*      | None -> raise @@ failwith "die in mutate_" *)
+          (*      | Some mutation -> layout_mutation mutation)); *)
           r
       | None -> loop ()
   in
@@ -107,13 +107,19 @@ let mutate_ op_pool cache =
 
 let mutate (env : Env.t) =
   let open Env in
-  Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-    (fun () ->
-      match env.cur_p with
-      | None -> raise @@ failwith "the env has not prog initialized"
-      | Some cur_p ->
-          let prog, acache = mutate_ env.op_pool cur_p.acache in
-          { env with cur_p = Some { prog; acache } })
+  match env.cur_p with
+  | None -> raise @@ failwith "the env has not prog initialized"
+  | Some cur_p ->
+      let prog, acache = mutate_ env.op_pool cur_p.acache in
+      { env with cur_p = Some { prog; acache } }
+
+(* Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "") *)
+(*   (fun () -> *)
+(*     match env.cur_p with *)
+(*     | None -> raise @@ failwith "the env has not prog initialized" *)
+(*     | Some cur_p -> *)
+(*         let prog, acache = mutate_ env.op_pool cur_p.acache in *)
+(*         { env with cur_p = Some { prog; acache } }) *)
 
 let test () =
   let tps, ops = Oplang.test_tps_ops in
