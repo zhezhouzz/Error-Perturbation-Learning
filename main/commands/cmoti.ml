@@ -170,3 +170,87 @@ let moti_robu =
                 in
                 Printf.printf "%i\n%s\n" n
                   (Basic_dt.List.split_by_comma string_of_int l))))
+
+let evaluate_result env ectx prog qc_conf =
+  let epre = Synthesizer.Syn.synthesize_erroneous_pre_moti env qc_conf prog in
+  let in_pre = Synthesizer.Enum.count_in_pre ectx epre in
+  let total = Synthesizer.Enum.num_inps ectx in
+  (in_pre, total)
+
+let dump_record res filename =
+  let open Yojson.Basic in
+  let j =
+    `List
+      (List.map
+         ~f:(fun res ->
+           `List
+             (List.map
+                ~f:(fun (i, in_pre, total) ->
+                  `Assoc
+                    [
+                      ("i", `Int i);
+                      ("in_pre", `Int in_pre);
+                      ("total", `Int total);
+                    ])
+                res))
+         res)
+  in
+  to_file filename j
+
+let naive_mcmc_record source_file meta_file qc_file data_file interval bound
+    num_test out_file_name =
+  (* set naive cost function *)
+  let ectx = Synthesizer.Enum.load data_file in
+  let qc_conf = Qc_config.load_config qc_file in
+  let () =
+    Config.conf :=
+      { !Config.conf with Config.cost_function_version = Config.VCountErrors }
+  in
+  let env =
+    Zlog.event_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () -> mk_env_from_files source_file meta_file)
+  in
+  let res =
+    List.init num_test ~f:(fun i ->
+        Zlog.event_
+          (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+          (fun () ->
+            let res, rcd =
+              Synthesizer.Syn.synthesize_f_moti_record interval bound env
+            in
+            let res =
+              List.map
+                ~f:(fun (i, prog) ->
+                  let a, b = evaluate_result env ectx ([], prog) qc_conf in
+                  (i, a, b))
+                rcd
+            in
+            res))
+  in
+  dump_record res out_file_name
+
+let moti_coverage =
+  Command.basic ~summary:"moti coverage"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and qc_file = anon ("qc file" %: regular_file)
+      and data_file = anon ("data file" %: regular_file)
+      and interval = anon ("interval" %: int)
+      and num_sampling = anon ("number sampling" %: int)
+      and num_test = anon ("number of test" %: int)
+      and output_file = anon ("output file" %: string) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            Zlog.event_
+              (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+              (fun () ->
+                let () =
+                  naive_mcmc_record source_file meta_file qc_file data_file
+                    interval
+                    (Synthesizer.Syn.IterBound (0, num_sampling))
+                    num_test output_file
+                in
+                ())))

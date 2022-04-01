@@ -28,6 +28,14 @@ let get_best_one best_one =
   | Some (result, cost) -> (result, cost)
   | None -> raise @@ failwith "never happen in mcmc"
 
+let get_prog best_one =
+  match !best_one with
+  | Some (result, _) -> (
+      match result.Env.cur_p with
+      | None -> raise @@ failwith "never happen in mcmc"
+      | Some p -> p.prog)
+  | None -> raise @@ failwith "never happen in mcmc"
+
 let mcmc_jump mutate (cur, cal_cost) id =
   Zlog.event_ (Printf.sprintf "%s:%i[%s] %i" __FILE__ __LINE__ __FUNCTION__ id)
     (fun () ->
@@ -88,6 +96,34 @@ let metropolis_hastings_core_moti cond mutate cal_cost init =
   let () = Syn_stat.init () in
   let stop_step = loop (init, cal_cost init) in
   (stop_step, get_best_one best_one)
+
+let metropolis_hastings_core_moti_record interval cond mutate cal_cost init =
+  (*Here we only need one "f", some library will return a set of "f" or distribution of "f", we dont need it. *)
+  let counter = ref 0 in
+  let best_one = ref (Some (init, cal_cost init)) in
+  let rcd = ref [] in
+  let rec loop (cur, cur_cost) =
+    let () =
+      if !counter mod interval == 0 then
+        rcd := !rcd @ [ (!counter, get_prog best_one) ]
+      else ()
+    in
+    (* if !counter > 40 then raise @@ failwith "too many" else (); *)
+    let _ = stat_add cur in
+    let _ = update_best_one best_one (!counter, cur, cur_cost) in
+    (* HACK: Early stop *)
+    if cond !counter then None
+    else
+      let _ = Zlog.log_write @@ Printf.sprintf "MCMC [%i]" !counter in
+      let next, next_cost = mcmc_jump mutate (cur, cal_cost) !counter in
+      (* let () = layout_pf (next, next_cost) in *)
+      let _ = counter := !counter + 1 in
+      loop @@ mcmc_judge (cur, cur_cost) (next, next_cost)
+  in
+  let () = Syn_stat.init () in
+  let _ = loop (init, cal_cost init) in
+  let _ = rcd := !rcd @ [ (!counter, get_prog best_one) ] in
+  (!rcd, get_best_one best_one)
 
 let metropolis_hastings ~(*the steps before sampling, >= 0*)
                         (burn_in : int)
@@ -172,3 +208,12 @@ let metropolis_hastings_time_moti ~time_bound:(bound : float) (* in second *)
     t > bound
   in
   metropolis_hastings_core_moti cond mutate cal_cost init
+
+let metropolis_hastings_moti_record ~(burn_in : int)
+    ~sampling_steps:(sampling : int) ~proposal_distribution:(mutate : 'a -> 'a)
+    ~cost_function:(cal_cost : 'a -> float) ~init_distribution:(init : 'a)
+    ~(interval : int) =
+  (*Here we only need one "f", some library will return a set of "f" or distribution of "f", we dont need it. *)
+  let bound = burn_in + sampling in
+  let cond counter = counter >= bound in
+  metropolis_hastings_core_moti_record interval cond mutate cal_cost init

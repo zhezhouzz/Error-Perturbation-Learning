@@ -31,6 +31,7 @@ let command =
       ("moti-robu", Cmoti.moti_robu);
       ("moti", Cmoti.moti);
       ("moti-search", Cmoti.search);
+      ("moti-coverage", Cmoti.moti_coverage);
       ("ind", Cind.ind);
       ("pie", Csyn.synthesize_pie);
       ("robu-init", Cind.robu_init);

@@ -66,6 +66,23 @@ let synthesize_f_moti bound env =
   let res = get_result_from_mcmc (env, cost) in
   (res, stop_step)
 
+let synthesize_f_moti_record interval bound env =
+  let env' = Mkenv.random_init_prog env in
+  let rcd, (env, cost) =
+    Zlog.event_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () ->
+        match bound with
+        | IterBound (num_burn_in, num_sampling) ->
+            Mcmc.metropolis_hastings_moti_record ~burn_in:num_burn_in
+              ~sampling_steps:num_sampling ~proposal_distribution:Mutate.mutate
+              ~cost_function:(Cost.biased_cost (fun _ -> true))
+              ~init_distribution:env' ~interval
+        | TimeBound _ -> raise @@ failwith "record cannot accept time bound")
+  in
+  let res = get_result_from_mcmc (env, cost) in
+  (res, rcd)
+
 let synthesize_f bias samples bound env =
   let env' = Mkenv.random_init_prog env in
   let env' = Mkenv.update_init_sampling_set env' samples in
@@ -134,6 +151,11 @@ let synthesize_pre_multi env qc_conf prog =
 let synthesize_erroneous_pre env qc_conf prog =
   let sigma = env.Env.sigma_raw in
   let discovered_pre = Pre.infer_erroneous_pre env qc_conf prog sigma in
+  discovered_pre
+
+let synthesize_erroneous_pre_moti env qc_conf prog =
+  let sigma = env.Env.sigma_raw in
+  let discovered_pre = Pre.infer_erroneous_pre_moti env qc_conf prog sigma in
   discovered_pre
 
 let synthesize_piecewise env qc_conf max_length bound =

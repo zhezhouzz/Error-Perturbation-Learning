@@ -107,7 +107,7 @@ let spec_infer_once_multi_engine ~cctx ~pos_engine ~neg_engines ~pos_filter
   spec
 
 let spec_infer_once ~cctx ~pos_engine ~neg_engine ~pos_filter ~neg_filter
-    ~init_body num_sampling =
+    num_sampling =
   let infer_counter = ref 0 in
   let pos_counter = ref 0 in
   let neg_counter = ref 0 in

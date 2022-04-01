@@ -43,3 +43,11 @@ let sampling_num filter num state =
       aux state (res @ x)
   in
   aux state []
+
+let sampling_pt_opt filter num state =
+  let batch_size =
+    match state with PerbState _ -> num | QCState _ -> raise @@ failwith "die"
+  in
+  let _, _, x = sampling batch_size state in
+  let x = List.filter filter x in
+  if List.length x < batch_size then None else Some x
