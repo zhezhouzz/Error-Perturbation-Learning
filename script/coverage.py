@@ -30,7 +30,7 @@ def average_ll(ll, total):
             need_init = False
         for (i, v) in enumerate(l):
             res[i] = res[i] + v
-    return [100*float(r)/len(ll)/total for r in res]
+    return [float(r)/len(ll)/total for r in res]
 
 def load_res(filename):
     data = {}
@@ -45,12 +45,18 @@ def plot (total, union, runs):
     # for one in runs:
     #     print(one)
     #     exit()
+    # figure(figsize=(6, 2.2), dpi=100)
+    fig, ax = plt.subplots(1, 1, figsize=(6,2.2))
     runs = [[x['in_pre'] for x in one] for one in runs]
     y = average_ll(runs, total)
     x = [u['u_i'] for u in union]
-    plt.plot(x, y, color='black', linewidth=1.0, linestyle='dashed',  markersize=2, marker = 'o')
-    y = [100*(u['u_in_pre'])/total for u in union]
-    plt.plot(x, y, color='black', linewidth=1.0, linestyle='dashed',  markersize=2, marker = 'o')
+    ax.plot(x, y, color='black', linewidth=1.0, linestyle='dashed',  markersize=2, marker = 'o')
+    y = [(u['u_in_pre'])/total for u in union]
+    ax.set_xticks(np.arange(min(x), max(x)+1, 10))
+    ax.set_xlabel("MCMC steps", fontsize=14)
+    ax.set_yticks(np.arange(0.,1.05, 0.2))
+    ax.set_yticklabels(['{:.0f}%'.format(100*x) for x in plt.gca().get_yticks()])
+    ax.plot(x, y, color='black', linewidth=1.0, linestyle='dashed',  markersize=2, marker = 'o')
     plt.show()
 
 if __name__ == '__main__':

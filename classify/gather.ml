@@ -26,7 +26,7 @@ let values_mk_qv_space ctx args_value =
   let vs = V.flatten_forall_l_unique_paddled args_value in
   (* let _ = Zlog.log_write @@ spf "len(raw_vs): %i" (List.length vs) in *)
   let vs =
-    if List.length vs <= elem_bound then vs
+    if List.length vs <= elem_bound || List.length ctx.qv <= 1 then vs
     else Randomgen.choose_n_from_list (elem_bound - List.length basic_vs) vs
   in
   let vs = List.remove_duplicates @@ basic_vs @ vs in

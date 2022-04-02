@@ -176,6 +176,22 @@ let strict_sort_apply = function
   | [ V.L l ] -> IntList.is_strict_sort l
   | _ -> raise @@ failwith "strict_sort"
 
+let uniq_apply = function
+  | [ V.L l ] -> IntList.is_uniqe l
+  | _ -> raise @@ failwith "uniq"
+
+let strict_sort =
+  let poly_name = "uniq" in
+  [
+    {
+      poly_name;
+      name = "list_uniq";
+      tps = [ T.IntList ];
+      permu = false;
+      imp = uniq_apply;
+    };
+  ]
+
 let strict_sort =
   let poly_name = "strict_sort" in
   [
@@ -763,6 +779,12 @@ let pairinghp_info =
       imp = pairinghp_sort_apply;
     };
   ]
+
+(* let pre_post_info = *)
+(*   [{poly_name = "mem_eqaul_frx"; *)
+(*     name = "bankersq_mem_eqaul_frx"; *)
+(*     tps = [ T.IntList; T.IntList; T.Int;  ]; *)
+(*        }] *)
 
 let mp_table =
   empty_info @ mem_info @ hd_info @ lt_info @ eq_info @ ord_info
