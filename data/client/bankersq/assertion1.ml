@@ -24,7 +24,7 @@ let i_err = (2, [ 1; 2 ], 1, [ 3 ], 4)
 
 let sampling_rounds = 6
 
-let p_size = 3
+let p_size = 4
 
 let pre (lenf : int) (f : Bankersq.t) (lenr : int) (r : Bankersq.t) (x : int) =
   lenr < lenf && size f lenf && size r lenr

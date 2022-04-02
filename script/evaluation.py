@@ -123,7 +123,7 @@ if __name__ == "__main__":
                         help="the pf file")
     parser.add_argument("outfile", nargs='?', type=str, default=".out",
                         help="the output file")
-    parser.add_argument("-v", "--verbose", action="store_true",
+    parser.add_argument("-v", "--verbose", action="store_true", default=True,
                         help="show executing commands")
     args = parser.parse_args()
     action = args.action
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     elif action == "coverage_all":
         for b in bs:
             data_file = ".result/{}.data".format(b['name'])
-            coverage_all(b, "1", sizebound, data_file, outfile)
+            coverage_all(b, "20", sizebound, data_file, outfile)
     else:
         print("unknown command {}".format(action))
         exit()

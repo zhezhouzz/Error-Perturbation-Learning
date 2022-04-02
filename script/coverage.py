@@ -22,15 +22,15 @@ def perc_range(l, perc):
     return l[start], l[end]
 
 def average_ll(ll, total):
-    res = []
-    need_init = True
-    for l in ll:
-        if need_init:
-            res = [0] * len(l)
-            need_init = False
-        for (i, v) in enumerate(l):
-            res[i] = res[i] + v
-    return [float(r)/len(ll)/total for r in res]
+    ll = np.array(ll)
+    ll = np.transpose(ll)
+    ll = ll/total
+    ll = [np.sort(l) for l in ll]
+    length = len(ll[0])
+    lower = [l[int(length*0.25)] for l in ll]
+    upper = [l[int(length*0.75)] for l in ll]
+    mean = [np.mean(l) for l in ll]
+    return mean, lower, upper
 
 def load_res(filename):
     data = {}
@@ -46,17 +46,23 @@ def plot (total, union, runs):
     #     print(one)
     #     exit()
     # figure(figsize=(6, 2.2), dpi=100)
-    fig, ax = plt.subplots(1, 1, figsize=(6,2.2))
+    fig, ax = plt.subplots(1, 1, figsize=(9,2.2), constrained_layout=True, dpi=100)
+    plt.axhline(y = 1.0, color = 'grey', linestyle = 'dotted')
     runs = [[x['in_pre'] for x in one] for one in runs]
-    y = average_ll(runs, total)
-    x = [u['u_i'] for u in union]
+    y, lower, upper = average_ll(runs, total)
+    y = np.array(y[:-1])
+    lower = np.array(lower[:-1])
+    upper = np.array(upper[:-1])
+    x = [u['u_i'] for u in union][:-1]
     ax.plot(x, y, color='black', linewidth=1.0, linestyle='dashed',  markersize=2, marker = 'o')
-    y = [(u['u_in_pre'])/total for u in union]
+    ax.errorbar(x, y, np.array([y - lower, upper - y]),
+                         fmt='none', solid_capstyle='projecting', capsize=2, color='black', alpha=.7)
+    y = [(u['u_in_pre'])/total for u in union][:-1]
+    ax.plot(x, y, color='black', linewidth=1.0, linestyle='solid',  markersize=2, marker = 'o')
     ax.set_xticks(np.arange(min(x), max(x)+1, 10))
-    ax.set_xlabel("MCMC steps", fontsize=14)
     ax.set_yticks(np.arange(0.,1.05, 0.2))
     ax.set_yticklabels(['{:.0f}%'.format(100*x) for x in plt.gca().get_yticks()])
-    ax.plot(x, y, color='black', linewidth=1.0, linestyle='dashed',  markersize=2, marker = 'o')
+    plt.xlabel("MCMC steps", fontsize=14)
     plt.show()
 
 if __name__ == '__main__':
