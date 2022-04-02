@@ -177,10 +177,10 @@ let strict_sort_apply = function
   | _ -> raise @@ failwith "strict_sort"
 
 let uniq_apply = function
-  | [ V.L l ] -> IntList.is_uniqe l
+  | [ V.L l ] -> IntList.is_unique l
   | _ -> raise @@ failwith "uniq"
 
-let strict_sort =
+let uniq_info =
   let poly_name = "uniq" in
   [
     {
@@ -192,7 +192,7 @@ let strict_sort =
     };
   ]
 
-let strict_sort =
+let strict_sort_info =
   let poly_name = "strict_sort" in
   [
     {
@@ -791,7 +791,8 @@ let mp_table =
   @ (left_info @ right_info @ para_info)
   @ (left_adj_info @ right_adj_info @ para_adj_info)
   @ size_info @ size_plus1_info @ len_info @ last_info @ once_info @ rb_info
-  @ leftist_info @ binomialhp_info @ skewhp_info @ pairinghp_info @ strict_sort
+  @ leftist_info @ binomialhp_info @ skewhp_info @ pairinghp_info
+  @ strict_sort_info @ uniq_info
 
 let imp_map =
   List.fold_left (fun m r -> StrMap.add r.name r.imp m) StrMap.empty mp_table

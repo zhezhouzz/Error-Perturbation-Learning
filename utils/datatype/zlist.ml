@@ -575,4 +575,8 @@ module IntList = struct
   let is_strict_sort (l : int list) =
     let l' = List.sort_uniq compare l in
     List.eq ( == ) l l'
+
+  let is_unique (l : int list) =
+    let l' = List.sort_uniq compare l in
+    List.length l == List.length l'
 end
