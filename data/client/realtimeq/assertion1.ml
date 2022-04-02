@@ -25,13 +25,11 @@ let p_size = 4
 
 let pre (q1 : Realtimeq.t) (q2 : Realtimeq.t) (q3 : Realtimeq.t) (u : int)
     (v : int) =
-  implies (ord q1 u v) (u < v)
-  && implies (ord q2 u v) (v < u)
-  && implies (ord q3 u v) (u < v)
+  strict_sort q1 && strict_sort_rev q2 && strict_sort q3
   && implies (last q1 u && last q2 v) (u < v)
   && implies (hd q2 u && hd q3 v) (u < v)
   && size_plus1 q1 q2
 
 let post (q1 : Realtimeq.t) (q2 : Realtimeq.t) (q3 : Realtimeq.t)
-    (nu : Realtimeq.t) (u : int) (v : int) =
-  implies (ord nu u v) (u < v)
+    (nu : Realtimeq.t) =
+  strict_sort_rev nu

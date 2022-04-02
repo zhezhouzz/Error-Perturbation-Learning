@@ -24,20 +24,15 @@ let sampling_rounds = 5
 let p_size = 4
 
 let pre (w : Physicistsq.t) (lenf : nat) (f : Physicistsq.t) (lenr : nat)
-    (r : Physicistsq.t) (u : int) (v : int) =
-  implies (ord w u v) (u < v)
-  && implies (ord f u v) (u < v)
-  && implies (ord r u v) (v < u)
-  && implies (last f v && hd r u) (v < u)
-  && size f lenf && size r lenr
+    (r : Physicistsq.t) =
+  strict_sort w && strict_sort f && strict_sort_rev r
+  && physicistsq_last_head f r && size f lenf && size r lenr
 
 let post (w : Physicistsq.t) (lenf : nat) (f : Physicistsq.t) (lenr : nat)
     (r : Physicistsq.t) (w' : Physicistsq.t) (lenf' : nat) (f' : Physicistsq.t)
-    (lenr' : nat) (r' : Physicistsq.t) (u : int) (v : int) =
-  implies (ord w' u v) (u < v)
-  && implies (ord f' u v) (u < v)
-  && implies (ord r' u v) (v < u)
-  && implies (last f' v && hd r' u) (v < u)
+    (lenr' : nat) (r' : Physicistsq.t) (u : int) =
+  strict_sort w' && strict_sort f' && strict_sort_rev r'
+  && physicistsq_last_head f' r'
   && size f' lenf' && size r' lenr'
   && (not (lenf' < lenr'))
   && implies (mem w' u) (mem f' u)

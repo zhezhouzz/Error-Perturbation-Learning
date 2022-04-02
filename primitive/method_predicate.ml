@@ -176,6 +176,10 @@ let strict_sort_apply = function
   | [ V.L l ] -> IntList.is_strict_sort l
   | _ -> raise @@ failwith "strict_sort"
 
+let strict_sort_rev_apply = function
+  | [ V.L l ] -> IntList.is_strict_sort (List.rev l)
+  | _ -> raise @@ failwith "strict_sort"
+
 let uniq_apply = function
   | [ V.L l ] -> IntList.is_unique l
   | _ -> raise @@ failwith "uniq"
@@ -201,6 +205,18 @@ let strict_sort_info =
       tps = [ T.IntList ];
       permu = false;
       imp = strict_sort_apply;
+    };
+  ]
+
+let strict_sort_rev_info =
+  let poly_name = "strict_sort_rev" in
+  [
+    {
+      poly_name;
+      name = "list_strict_sort_rev";
+      tps = [ T.IntList ];
+      permu = false;
+      imp = strict_sort_rev_apply;
     };
   ]
 
@@ -780,11 +796,23 @@ let pairinghp_info =
     };
   ]
 
-(* let pre_post_info = *)
-(*   [{poly_name = "mem_eqaul_frx"; *)
-(*     name = "bankersq_mem_eqaul_frx"; *)
-(*     tps = [ T.IntList; T.IntList; T.Int;  ]; *)
-(*        }] *)
+let pre_post_info =
+  [
+    {
+      poly_name = "physicistsq_last_head";
+      name = "physicistsq_last_head";
+      tps = [ T.IntList; T.IntList ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.L l1; V.L l2 ] ->
+              List.length l1 == 0
+              || List.length l2 == 0
+              || List.last l1 < List.hd l2
+          | _ -> raise @@ failwith "physicistsq_last_head");
+    };
+  ]
 
 let mp_table =
   empty_info @ mem_info @ hd_info @ lt_info @ eq_info @ ord_info
@@ -792,7 +820,7 @@ let mp_table =
   @ (left_adj_info @ right_adj_info @ para_adj_info)
   @ size_info @ size_plus1_info @ len_info @ last_info @ once_info @ rb_info
   @ leftist_info @ binomialhp_info @ skewhp_info @ pairinghp_info
-  @ strict_sort_info @ uniq_info
+  @ strict_sort_info @ strict_sort_rev_info @ uniq_info @ pre_post_info
 
 let imp_map =
   List.fold_left (fun m r -> StrMap.add r.name r.imp m) StrMap.empty mp_table
