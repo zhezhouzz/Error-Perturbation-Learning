@@ -51,6 +51,7 @@ let sampling_pt_opt filter num state =
   let _, _, x = sampling batch_size state in
   (* let _ = List.iter (fun v -> Zlog.log_write @@ Value.layout_l v) x in *)
   let x = List.filter filter x in
+  let x = Value_aux.remove_duplicates_l x in
   (* let _ = *)
   (*   Zlog.log_write *)
   (*   @@ Printf.sprintf "sampling_pt_opt: %i(%i)" (List.length x) batch_size *)

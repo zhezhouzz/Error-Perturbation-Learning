@@ -116,8 +116,10 @@ let metropolis_hastings_core_moti_record interval cond mutate cal_cost init =
   let rcd = ref [] in
   let rec loop (cur, cur_cost) =
     let () =
-      if !counter mod interval == 0 then
-        rcd := !rcd @ [ (!counter, get_prog best_one) ]
+      if
+        !counter mod interval == 0
+        || (!counter < interval && !counter mod 2 == 0)
+      then rcd := !rcd @ [ (!counter, get_prog best_one) ]
       else ()
     in
     (* if !counter > 40 then raise @@ failwith "too many" else (); *)

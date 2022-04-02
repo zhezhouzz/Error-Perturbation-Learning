@@ -38,19 +38,22 @@ def load_res(filename):
         j = json.load(f)
         total=j['total']
         runs = j['runs']
-    return (total, runs)
+        union = j['union']
+    return (total, union, runs)
 
-def plot (total, runs):
+def plot (total, union, runs):
     # for one in runs:
     #     print(one)
     #     exit()
     runs = [[x['in_pre'] for x in one] for one in runs]
     y = average_ll(runs, total)
-    x = range(len(y))
+    x = [u['u_i'] for u in union]
+    plt.plot(x, y, color='black', linewidth=1.0, linestyle='dashed',  markersize=2, marker = 'o')
+    y = [100*(u['u_in_pre'])/total for u in union]
     plt.plot(x, y, color='black', linewidth=1.0, linestyle='dashed',  markersize=2, marker = 'o')
     plt.show()
 
 if __name__ == '__main__':
     name = sys.argv[1]
-    total, runs = load_res(name)
-    plot(total, runs)
+    total, union, runs = load_res(name)
+    plot(total, union, runs)
