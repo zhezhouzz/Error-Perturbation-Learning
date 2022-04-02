@@ -98,6 +98,11 @@ def eval_moti(num_times, bound, outfile):
     cmd = cmd_prefix + ["moti-robu", config_file, target_file, assertion_file, num_times, bound]
     invoc_cmd(cmd, outfile)
 
+def coverage_all(p_setting, argbound, sizebound, data_file, output_file):
+    target_file, assertion_file, _ = solve_tap(p_setting)
+    cmd = cmd_prefix + ["coverage-all-save", config_file, target_file, assertion_file, argbound, sizebound, data_file]
+    invoc_cmd(cmd, output_file)
+
 if __name__ == "__main__":
     # print(os.path.isfile("zhouzhe"))
     subprocess.run(["mkdir", ".result"])
@@ -190,12 +195,10 @@ if __name__ == "__main__":
     elif action == "ind_plot":
         verbose=True
         run_ind(names)
-    # elif action == "moti":
-    #     verbose=True
-    #     subprocess.run(["mkdir", ".result"])
-    #     for b in bs:
-    #         eval_ind(b, "list", "3", "16", "500")
-    #     names = [b['name']for b in bs]
+    elif action == "coverage_all":
+        for b in bs:
+            data_file = ".result/{}.data".format(b['name'])
+            coverage_all(b, "1", sizebound, data_file, outfile)
     else:
         print("unknown command {}".format(action))
         exit()

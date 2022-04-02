@@ -150,8 +150,10 @@ let neg_gather cctx args_values =
       Zlog.log_write "Indistinguishable!";
       raise @@ failwith "Indistinguishable!"
   | DoNothing ->
-      Zlog.log_write "DoNothing!";
-      raise @@ failwith "DoNothing!"
+      if indt_stop then (
+        Zlog.log_write "DoNothing!";
+        raise @@ failwith "DoNothing!")
+      else ()
   | Updated n ->
       Zlog.log_write (spf "Updated %i!" n);
       ()

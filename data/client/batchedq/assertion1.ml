@@ -26,8 +26,8 @@ let sampling_rounds = 6
 
 let p_size = 4
 
-let pre (f : Batchedq.t) (r : Batchedq.t) (u : int) (v : int) =
-  (not (ord f u v)) && implies (empty f) (empty r)
+let pre (f : Batchedq.t) (r : Batchedq.t) =
+  uniq f && implies (empty f) (empty r)
 
 let post (f : Batchedq.t) (r : Batchedq.t) (f' : Batchedq.t) (r' : Batchedq.t)
     (u : int) =
@@ -38,4 +38,5 @@ let post (f : Batchedq.t) (r : Batchedq.t) (f' : Batchedq.t) (r' : Batchedq.t)
   (*      (iff *)
   (*         (ord f' u v || ord r' v u || (mem f' u && mem r' v)) *)
   (*         (ord f u v || ord r v u || (mem f u && mem r v))) *)
+  && uniq f'
   && implies (empty f') (empty r')
