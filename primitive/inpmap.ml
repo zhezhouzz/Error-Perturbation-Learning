@@ -4,7 +4,7 @@ open Basic_dt
 type t = { v_emb : (int, Value.t) Bihashtab.t; m : (int list, int) Hashtbl.t }
 [@@deriving sexp]
 
-type count_tab = (int list, (int * int) list) Hashtbl.t [@@deriving sexp]
+type count_tab = int * (int list, (int * int) list) Hashtbl.t [@@deriving sexp]
 
 let layout t =
   spf "v_emb size: %i; m size: %i" (Bihashtab.length t.v_emb)
@@ -85,83 +85,67 @@ let count_tab_add_pre t ct (i, num_step, pre) =
 
 let count_tab_analysis count_tab num_runs num_union idxs =
   (* let _ = *)
-  (*   Printf.printf "num_runs: %i; num_union: %i\nidxs:%s\n" num_runs num_union *)
-  (*     (IntList.to_string idxs) *)
+  (*   Printf.printf "num_runs: %i; num_union: %i; idxs: %s\n" num_runs num_union *)
+  (*   @@ IntList.to_string idxs *)
   (* in *)
-  let total =
-    Array.init num_runs (fun _ ->
-        Array.init num_union (fun _ -> Hashtbl.create 100))
+  let total = Hashtbl.create (num_runs * num_union * List.length idxs) in
+  let _ =
+    List.init num_runs (fun a ->
+        List.init num_union (fun b ->
+            List.map (fun c -> Hashtbl.add total (a, b, c) 0) idxs))
   in
-  let () =
-    Array.iter
-      (fun arr ->
-        Array.iter
-          (fun tab -> List.iter (fun x -> Hashtbl.add tab x 0) idxs)
-          arr)
-      total
-  in
-  let replace_map total x f =
-    match Hashtbl.find_opt total x with
-    | None -> raise @@ failwith "never happen"
-    | Some y -> Hashtbl.replace total x (f y)
-  in
-  let union mat (idx, num_step) =
-    let which_n = idx / num_union in
-    if which_n >= num_runs then ()
+  (* let _ = Printf.printf "? %i\n" @@ Hashtbl.find total (0, 0, 60) in *)
+  let union rcd (idx, num_step) =
+    let run_idx = idx / num_union in
+    if run_idx >= num_runs then ()
     else
-      let idx_in_union = idx mod num_union in
-      (* let _ = Printf.printf "update %i.%i.%i\n" which_n idx_in_union num_step in *)
-      Hashtbl.replace mat.(which_n).(idx_in_union) num_step ()
+      let union_idx = idx mod num_union in
+      match Hashtbl.find_opt rcd (run_idx, num_step) with
+      | None -> Hashtbl.add rcd (run_idx, num_step) union_idx
+      | Some n -> Hashtbl.replace rcd (run_idx, num_step) (min union_idx n)
   in
-  let update mat =
-    Array.iteri
-      (fun i arr ->
-        Array.iteri
-          (fun j tab ->
-            Hashtbl.iter
-              (fun num_steps _ ->
-                replace_map total.(i).(j) num_steps (fun x -> x + 1))
-              tab)
-          arr)
-      mat
+  let update_from_union total rcd =
+    Hashtbl.iter
+      (fun (run_idx, num_step) min_union ->
+        let rec aux union_idx =
+          if union_idx >= num_union then ()
+          else
+            let () =
+              match Hashtbl.find_opt total (run_idx, union_idx, num_step) with
+              | None ->
+                  raise @@ failwith
+                  @@ spf "die: %i %i %i" run_idx union_idx num_step
+              | Some n ->
+                  Hashtbl.replace total (run_idx, union_idx, num_step) (n + 1)
+            in
+            aux (union_idx + 1)
+        in
+        aux min_union)
+      rcd
   in
   let () =
     Hashtbl.iter
       (fun _ v ->
-        let mat =
-          Array.init num_runs (fun _ ->
-              Array.init num_union (fun _ -> Hashtbl.create 100))
-        in
-        List.iter (fun (idx, num_step) -> union mat (idx, num_step)) v;
-        update mat)
+        let rcd = Hashtbl.create 1000 in
+        List.iter (fun (idx, num_step) -> union rcd (idx, num_step)) v;
+        update_from_union total rcd)
       count_tab
   in
   total
 
-let count_result_to_json mat =
+let count_result_to_json (total, tab) =
   let l =
-    Array.fold_lefti
-      (fun res i arr ->
-        Array.fold_lefti
-          (fun res j tab -> (i, j, List.of_seq @@ Hashtbl.to_seq tab) :: res)
-          res arr)
-      [] mat
+    List.map (fun ((run_idx, union_idx, num_step), n) ->
+        `Assoc
+          [
+            ("run_idx", `Int run_idx);
+            ("num_unoin", `Int (union_idx + 1));
+            ("num_step", `Int num_step);
+            ("in_pre", `Int n);
+          ])
+    @@ List.of_seq @@ Hashtbl.to_seq tab
   in
-  `List
-    (List.map
-       (fun (i, j, x) ->
-         `Assoc
-           [
-             ("run_idx", `Int i);
-             ("num_unoin", `Int (j + 1));
-             ( "stat",
-               `List
-                 (List.map
-                    (fun (n, c) ->
-                      `Assoc [ ("num_step", `Int n); ("count", `Int c) ])
-                    x) );
-           ])
-       l)
+  `Assoc [ ("total", `Int total); ("data", `List l) ]
 
 let get_inps t num =
   if num > num_inps t then raise @@ failwith "bad num ectx"

@@ -145,11 +145,11 @@ if __name__ == "__main__":
         exit()
     if action == "moti-coverage":
         cmd = cmd_prefix + ["moti-coverage", config_file, moti_target_file, moti_assertion_file,
-                            moti_pos_file, moti_neg_file, "10", "100", "4", moti_ct_file]
+                            moti_pos_file, moti_neg_file, "10", "100", "2", moti_ct_file]
         invoc_cmd(cmd, None)
         exit()
     if action == "moti-coverage-analysis":
-        cmd = cmd_prefix + ["moti-coverage-analysis", config_file, moti_neg_file, moti_ct_file, "10", "100", "1", "4", moti_a_file]
+        cmd = cmd_prefix + ["moti-coverage-analysis", config_file, moti_ct_file, "10", "100", "1", "2", moti_a_file]
         invoc_cmd(cmd, None)
         exit()
     if action == "moti":
