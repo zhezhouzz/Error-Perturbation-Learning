@@ -59,4 +59,4 @@ let sampling_pt_opt filter num state =
   (*   Zlog.log_write *)
   (*   @@ Printf.sprintf "sampling_pt_opt: %i(%i)" (List.length x) batch_size *)
   (* in *)
-  if List.length x < 10 then None else Some x
+  if List.length x < 1 then None else Some x

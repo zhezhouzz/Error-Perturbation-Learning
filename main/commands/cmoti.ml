@@ -287,7 +287,9 @@ let naive_mcmc_record source_file meta_file pos_data_file data_file interval
   in
   ()
 
-let moti_analysis ct_file num_runs num_union interval bound out_file_name =
+let moti_analysis neg_file ct_file num_runs num_union interval bound
+    out_file_name =
+  let ectx = Synthesizer.Enum.load neg_file in
   let rec mk_idx l i =
     if i > bound then l
     else if
@@ -301,7 +303,11 @@ let moti_analysis ct_file num_runs num_union interval bound out_file_name =
   in
   let res = Primitive.Inpmap.count_tab_analysis ct num_runs num_union idxs in
   Yojson.Basic.to_file out_file_name
-  @@ Primitive.Inpmap.count_result_to_json res
+  @@ `Assoc
+       [
+         ("total", `Int (Synthesizer.Enum.num_inps ectx));
+         ("m", Primitive.Inpmap.count_result_to_json res);
+       ]
 
 let moti_coverage =
   Command.basic ~summary:"moti coverage"
@@ -332,6 +338,7 @@ let moti_coverage_analysis =
   Command.basic ~summary:"moti coverage analysis"
     Command.Let_syntax.(
       let%map_open configfile = anon ("configfile" %: regular_file)
+      and neg_data_file = anon ("neg data file" %: regular_file)
       and ct_file = anon ("count table file" %: regular_file)
       and interval = anon ("interval" %: int)
       and num_sampling = anon ("number sampling" %: int)
@@ -344,7 +351,7 @@ let moti_coverage_analysis =
               (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
               (fun () ->
                 let () =
-                  moti_analysis ct_file num_test num_union interval num_sampling
-                    output_file
+                  moti_analysis neg_data_file ct_file num_test num_union
+                    interval num_sampling output_file
                 in
                 ())))

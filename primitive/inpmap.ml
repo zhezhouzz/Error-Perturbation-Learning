@@ -84,54 +84,59 @@ let count_tab_add_pre t ct (i, num_step, pre) =
     t.m
 
 let count_tab_analysis count_tab num_runs num_union idxs =
-  if num_runs mod num_union != 0 then raise @@ failwith "wrong number of union"
-  else
-    let n = num_runs / num_union in
-    let total =
-      Array.init n (fun _ -> Array.init num_union (fun _ -> Hashtbl.create 100))
-    in
-    let () =
-      Array.iter
-        (fun arr ->
-          Array.iter
-            (fun tab -> List.iter (fun x -> Hashtbl.add tab x 0) idxs)
-            arr)
-        total
-    in
-    let replace_map total x f =
-      match Hashtbl.find_opt total x with
-      | None -> Hashtbl.add total x (f 0)
-      | Some y -> Hashtbl.replace total x (f y)
-    in
-    let union mat (idx, num_step) =
-      let which_n = idx / num_union in
+  (* let _ = *)
+  (*   Printf.printf "num_runs: %i; num_union: %i\nidxs:%s\n" num_runs num_union *)
+  (*     (IntList.to_string idxs) *)
+  (* in *)
+  let total =
+    Array.init num_runs (fun _ ->
+        Array.init num_union (fun _ -> Hashtbl.create 100))
+  in
+  let () =
+    Array.iter
+      (fun arr ->
+        Array.iter
+          (fun tab -> List.iter (fun x -> Hashtbl.add tab x 0) idxs)
+          arr)
+      total
+  in
+  let replace_map total x f =
+    match Hashtbl.find_opt total x with
+    | None -> raise @@ failwith "never happen"
+    | Some y -> Hashtbl.replace total x (f y)
+  in
+  let union mat (idx, num_step) =
+    let which_n = idx / num_union in
+    if which_n >= num_runs then ()
+    else
       let idx_in_union = idx mod num_union in
-      Hashtbl.add mat.(which_n).(idx_in_union) num_step ()
-    in
-    let update mat =
-      Array.iteri
-        (fun i arr ->
-          Array.iteri
-            (fun j tab ->
-              Hashtbl.iter
-                (fun num_steps _ ->
-                  replace_map total.(i).(j) num_steps (fun x -> x + 1))
-                tab)
-            arr)
-        mat
-    in
-    let () =
-      Hashtbl.iter
-        (fun _ v ->
-          let mat =
-            Array.init n (fun _ ->
-                Array.init num_union (fun _ -> Hashtbl.create 100))
-          in
-          List.iter (fun (idx, num_step) -> union mat (idx, num_step)) v;
-          update mat)
-        count_tab
-    in
-    total
+      (* let _ = Printf.printf "update %i.%i.%i\n" which_n idx_in_union num_step in *)
+      Hashtbl.replace mat.(which_n).(idx_in_union) num_step ()
+  in
+  let update mat =
+    Array.iteri
+      (fun i arr ->
+        Array.iteri
+          (fun j tab ->
+            Hashtbl.iter
+              (fun num_steps _ ->
+                replace_map total.(i).(j) num_steps (fun x -> x + 1))
+              tab)
+          arr)
+      mat
+  in
+  let () =
+    Hashtbl.iter
+      (fun _ v ->
+        let mat =
+          Array.init num_runs (fun _ ->
+              Array.init num_union (fun _ -> Hashtbl.create 100))
+        in
+        List.iter (fun (idx, num_step) -> union mat (idx, num_step)) v;
+        update mat)
+      count_tab
+  in
+  total
 
 let count_result_to_json mat =
   let l =
