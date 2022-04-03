@@ -42,13 +42,8 @@ let sampling_rounds = 6
 
 let p_size = 4
 
-let pre (h1 : Leftisthp.t) (h2 : Leftisthp.t) (u : int) (v : int) =
-  leftist h1 && leftist h2
-  && implies (right h1 v u) (v < u)
-  && implies (left h1 v u) (u < v)
-  && implies (right h2 v u) (v < u)
-  && implies (left h2 v u) (u < v)
+let pre (h1 : Leftisthp.t) (h2 : Leftisthp.t) =
+  leftist h1 && leftist h2 && strict_sort h1 && strict_sort h2
 
-let post (h1 : Leftisthp.t) (h2 : Leftisthp.t) (nu : Leftisthp.t) (u : int)
-    (v : int) =
-  leftist nu && implies (right nu v u) (v < u) && implies (left nu v u) (u < v)
+let post (h1 : Leftisthp.t) (h2 : Leftisthp.t) (nu : Leftisthp.t) =
+  leftist nu && strict_sort nu

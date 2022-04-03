@@ -253,4 +253,36 @@ module Tree = struct
       | Node (x, l, r) -> x == i || aux l || aux r
     in
     aux t
+
+  let is_strict_sort t =
+    let rec aux (lower, upper) = function
+      | Leaf -> true
+      | Node (x, l, r) ->
+          let b =
+            match (lower, upper) with
+            | None, None -> true
+            | Some lower, None -> x > lower
+            | None, Some upper -> x < upper
+            | Some lower, Some upper -> x > lower && x < upper
+          in
+          b && aux (lower, Some x) l && aux (Some x, upper) r
+    in
+    aux (None, None) t
+
+  let is_prefix t1 t2 =
+    let rec aux = function
+      | Leaf, _ -> true
+      | Node (_, _, _), Leaf -> false
+      | Node (x1, l1, r1), Node (x2, l2, r2) ->
+          x1 == x2 && aux (l1, l2) && aux (r1, r2)
+    in
+    aux (t1, t2)
+
+  let is_children_diff t =
+    let rec aux = function
+      | Leaf | Node (_, Leaf, _) | Node (_, _, Leaf) -> true
+      | Node (_, Node (x1, l1, r1), Node (x2, l2, r2)) ->
+          x1 != x2 && aux l1 && aux r1 && aux l2 && aux r2
+    in
+    aux t
 end

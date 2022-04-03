@@ -149,7 +149,7 @@ let synthesize_pre_multi env qc_conf prog =
 
 let synthesize_erroneous_pre env qc_conf prog =
   let sigma = env.Env.sigma_raw in
-  let discovered_pre = Pre.infer_erroneous_pre env qc_conf prog sigma in
+  let discovered_pre = Pre.infer_erroneous_pre_v2 env qc_conf prog sigma in
   discovered_pre
 
 let synthesize_erroneous_pre_moti env qc_conf prog =

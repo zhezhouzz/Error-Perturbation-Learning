@@ -174,6 +174,9 @@ let pairinghp_sort_apply = function
 
 let strict_sort_apply = function
   | [ V.L l ] -> IntList.is_strict_sort l
+  | [ V.T t ] -> Tree.is_strict_sort t
+  | [ V.TB t ] -> LabeledTree.is_strict_sort t
+  | [ V.TI t ] -> LabeledTree.is_strict_sort t
   | _ -> raise @@ failwith "strict_sort"
 
 let strict_sort_rev_apply = function
@@ -182,30 +185,27 @@ let strict_sort_rev_apply = function
 
 let uniq_apply = function
   | [ V.L l ] -> IntList.is_unique l
+  | [ V.T t ] -> IntList.is_unique @@ Tree.flatten t
   | _ -> raise @@ failwith "uniq"
 
 let uniq_info =
   let poly_name = "uniq" in
+  let permu = false in
+  let imp = uniq_apply in
   [
-    {
-      poly_name;
-      name = "list_uniq";
-      tps = [ T.IntList ];
-      permu = false;
-      imp = uniq_apply;
-    };
+    { poly_name; name = "list_uniq"; tps = [ T.IntList ]; permu; imp };
+    { poly_name; name = "tree_uniq"; tps = [ T.IntTree ]; permu; imp };
   ]
 
 let strict_sort_info =
   let poly_name = "strict_sort" in
+  let imp = strict_sort_apply in
+  let permu = false in
   [
-    {
-      poly_name;
-      name = "list_strict_sort";
-      tps = [ T.IntList ];
-      permu = false;
-      imp = strict_sort_apply;
-    };
+    { poly_name; name = "list_strict_sort"; tps = [ T.IntList ]; permu; imp };
+    { poly_name; name = "tree_strict_sort"; tps = [ T.IntTree ]; permu; imp };
+    { poly_name; name = "treei_strict_sort"; tps = [ T.IntTreeI ]; permu; imp };
+    { poly_name; name = "treeb_strict_sort"; tps = [ T.IntTreeB ]; permu; imp };
   ]
 
 let strict_sort_rev_info =
@@ -811,6 +811,136 @@ let pre_post_info =
               || List.length l2 == 0
               || List.last l1 < List.hd l2
           | _ -> raise @@ failwith "physicistsq_last_head");
+    };
+    {
+      poly_name = "is_rb_alt";
+      name = "is_rb_alt";
+      tps = [ T.IntTreeB ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.TB t ] -> LabeledTree.is_rb_alt t
+          | _ -> raise @@ failwith "is_rb_alt");
+    };
+    {
+      poly_name = "less_hd_hd";
+      name = "less_hd_hd";
+      tps = [ T.IntList; T.IntList ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.L l1; V.L l2 ] ->
+              List.length l1 == 0
+              || List.length l2 == 0
+              || List.hd l1 < List.hd l2
+          | _ -> raise @@ failwith "less_hd_hd");
+    };
+    {
+      poly_name = "less_last_last";
+      name = "less_last_last";
+      tps = [ T.IntList; T.IntList ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.L l1; V.L l2 ] ->
+              List.length l1 == 0
+              || List.length l2 == 0
+              || List.last l1 < List.last l2
+          | _ -> raise @@ failwith "less_last_last");
+    };
+    {
+      poly_name = "less_mem";
+      name = "list_less_mem";
+      tps = [ T.IntList; T.IntList ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.L l1; V.L l2 ] -> (
+              match (IntList.max_opt l1, IntList.min_opt l2) with
+              | Some a, Some b -> a < b
+              | _, _ -> true)
+          | _ -> raise @@ failwith "less_mem");
+    };
+    {
+      poly_name = "less_len";
+      name = "list_less_len";
+      tps = [ T.IntList; T.IntList ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.L l1; V.L l2 ] -> List.length l1 < List.length l2
+          | _ -> raise @@ failwith "less_len");
+    };
+    {
+      poly_name = "eq_len";
+      name = "list_eq_len";
+      tps = [ T.IntList; T.IntList ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.L l1; V.L l2 ] -> List.length l1 == List.length l2
+          | _ -> raise @@ failwith "eq_len");
+    };
+    {
+      poly_name = "less_len";
+      name = "tree_less_len";
+      tps = [ T.IntTree; T.IntTree ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.T t1; V.T t2 ] -> Tree.deep t1 < Tree.deep t2
+          | _ -> raise @@ failwith "less_len");
+    };
+    {
+      poly_name = "less_len";
+      name = "list_tree_less_len";
+      tps = [ T.IntList; T.IntTree ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.L l1; V.T t2 ] -> List.length l1 < Tree.deep t2
+          | _ -> raise @@ failwith "less_len");
+    };
+    {
+      poly_name = "eq_len";
+      name = "tree_eq_len";
+      tps = [ T.IntTree; T.IntTree ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.T t1; V.T t2 ] -> Tree.deep t1 == Tree.deep t2
+          | _ -> raise @@ failwith "eq_len");
+    };
+    {
+      poly_name = "children_diff";
+      name = "tree_children_diff";
+      tps = [ T.IntTree ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.T t ] -> Tree.is_children_diff t
+          | _ -> raise @@ failwith "children_diff");
+    };
+    {
+      poly_name = "prefix";
+      name = "tree_prefix";
+      tps = [ T.IntTree; T.IntTree ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.T t1; V.T t2 ] -> Tree.is_prefix t1 t2
+          | _ -> raise @@ failwith "prefix");
     };
   ]
 

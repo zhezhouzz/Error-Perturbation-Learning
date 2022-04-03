@@ -49,29 +49,12 @@ let sampling_rounds = 6
 
 let p_size = 4
 
-let pre (label : bool) (x : int) (tree1 : Rbset.t) (tree2 : Rbset.t) (u : int)
-    (v : int) =
-  implies
-    ((left_adj tree1 u v || right_adj tree1 u v)
-    && label_is_true tree1 u && label_is_true tree1 v)
-    (hd tree1 u)
-  && implies
-       ((left_adj tree2 u v || right_adj tree2 u v)
-       && label_is_true tree2 u && label_is_true tree2 v)
-       (hd tree2 u)
-  && rb_balance2 tree1 tree2
-  && implies (right tree1 v u) (v < u)
-  && implies (left tree1 v u) (u < v)
-  && implies (right tree2 v u) (v < u)
-  && implies (left tree2 v u) (u < v)
+let pre (label : bool) (x : int) (tree1 : Rbset.t) (tree2 : Rbset.t) (u : int) =
+  is_rb_alt tree1 && is_rb_alt tree2 && rb_balance2 tree1 tree2
+  && strict_sort tree1 && strict_sort tree2
   && implies (mem tree1 u) (u < x)
   && implies (mem tree2 u) (x < u)
 
 let post (label : bool) (x : int) (tree1 : Rbset.t) (tree2 : Rbset.t)
-    (nu : Rbset.t) (u : int) (v : int) =
-  (not
-     ((left_adj nu u v || right_adj nu u v)
-     && label_is_true nu u && label_is_true nu v))
-  && rb_balance nu
-  && implies (right nu v u) (v < u)
-  && implies (left nu v u) (u < v)
+    (nu : Rbset.t) =
+  is_rb_alt nu && rb_balance nu && strict_sort nu

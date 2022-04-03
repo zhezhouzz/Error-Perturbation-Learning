@@ -44,16 +44,13 @@ let sampling_rounds = 6
 
 let p_size = 4
 
-let pre (default : int) (i : Trie.tp) (a : int) (m : Trie.t) (u : int) (v : int)
-    =
-  (not (mem m a))
-  && implies (para_adj m u v) (not (u == v))
-  && implies (len m u && len i v) (v < u)
+let pre (default : int) (i : Trie.tp) (a : int) (m : Trie.t) =
+  (not (mem m a)) && children_diff m && less_len i m
 
 let post (default : int) (i : Trie.tp) (a : int) (m : Trie.t) (nu : Trie.t)
-    (u : int) (v : int) =
-  implies (len nu u && len m v) (u == v)
+    (u : int) =
+  eq_len nu m
   && implies (mem nu u) (mem m u || u == default || u == a)
   (* && implies (left m u v) (left nu u v) *)
-  && implies (para_adj m u v) (not (u == v))
-  && implies (para m u v) (para nu u v)
+  && children_diff nu
+  && prefix m nu

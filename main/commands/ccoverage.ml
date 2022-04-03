@@ -174,6 +174,40 @@ let coverage_syn =
             in
             ()))
 
+let coverage_save_pos =
+  Command.basic ~summary:"coverage-save-pos"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and qc_file = anon ("qc file" %: regular_file)
+      and num_sampling = anon ("num sampling" %: int)
+      and database_name = anon ("database name" %: string) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let qc_conf = Qc_config.load_config qc_file in
+            let env =
+              Zlog.event_
+                (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+                (fun () -> mk_env_from_files source_file meta_file)
+            in
+            let pos_values =
+              Synthesizer.Pre.enum_pos env qc_conf num_sampling
+            in
+            let inpm = Primitive.Inpmap.init () in
+            let () =
+              List.iter
+                ~f:(fun inp ->
+                  let x = Primitive.Inpmap.add_opt inpm inp 0 in
+                  ())
+                pos_values
+            in
+            let () = Zlog.log_write @@ Primitive.Inpmap.layout inpm in
+            let () =
+              Sexplib.Sexp.save database_name @@ Primitive.Inpmap.sexp_of_t inpm
+            in
+            ()))
+
 let coverage_all_save =
   Command.basic ~summary:"coverage-all-save"
     Command.Let_syntax.(

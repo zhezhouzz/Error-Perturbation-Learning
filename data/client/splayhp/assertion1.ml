@@ -36,19 +36,11 @@ let sampling_rounds = 6
 
 let p_size = 4
 
-let pre (x : int) (tree1 : Splayhp.t) (u : int) (v : int) =
-  implies
-    (mem tree1 u && mem tree1 v)
-    (implies (right tree1 v u) (v < u) && implies (left tree1 v u) (u < v))
+let pre (x : int) (tree1 : Splayhp.t) = strict_sort tree1
 
 let post (x : int) (tree1 : Splayhp.t) (tree2 : Splayhp.t) (tree3 : Splayhp.t)
-    (u : int) (v : int) =
-  implies
-    (mem tree2 u && mem tree2 v)
-    (implies (right tree2 v u) (v < u) && implies (left tree2 v u) (u < v))
-  && implies
-       (mem tree3 u && mem tree3 v)
-       (implies (right tree3 v u) (v < u) && implies (left tree3 v u) (u < v))
+    (u : int) =
+  strict_sort tree2 && strict_sort tree3
   && iff (mem tree1 u) (mem tree2 u || mem tree3 u)
   && implies (mem tree2 u) (u < x || u == x)
   && implies (mem tree3 u) (x < u)

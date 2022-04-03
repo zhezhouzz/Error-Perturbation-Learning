@@ -6,6 +6,10 @@ type t = { v_emb : (int, Value.t) Bihashtab.t; m : (int list, int) Hashtbl.t }
 
 type count_tab = (int list, int list) Hashtbl.t [@@deriving sexp]
 
+let layout t =
+  spf "v_emb size: %i; m size: %i" (Bihashtab.length t.v_emb)
+    (Hashtbl.length t.m)
+
 let init () = { v_emb = Bihashtab.init 20000; m = Hashtbl.create 20000 }
 
 let list_map_opt f l =

@@ -302,4 +302,31 @@ module LabeledTree = struct
           else Node (label, x, aux (d + 1) l, aux (d + 1) r)
     in
     aux 0 tr
+
+  let is_strict_sort t =
+    let rec aux (lower, upper) = function
+      | Leaf -> true
+      | Node (_, x, l, r) ->
+          let b =
+            match (lower, upper) with
+            | None, None -> true
+            | Some lower, None -> x > lower
+            | None, Some upper -> x < upper
+            | Some lower, Some upper -> x > lower && x < upper
+          in
+          b && aux (lower, Some x) l && aux (Some x, upper) r
+    in
+    aux (None, None) t
+
+  let is_rb_alt t =
+    let rec aux label = function
+      | Leaf -> true
+      | Node (label', _, l, r) -> (
+          match (label, label') with
+          | true, true -> false
+          | _, _ -> aux label' l && aux label' r)
+    in
+    match t with
+    | Leaf -> true
+    | Node (_, _, l, r) -> aux false l && aux false r
 end

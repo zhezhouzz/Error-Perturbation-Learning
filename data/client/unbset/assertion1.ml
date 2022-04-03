@@ -29,12 +29,6 @@ let sampling_rounds = 6
 
 let p_size = 4
 
-let pre (x : int) (s : Unbset.t) (u : int) (v : int) =
-  implies
-    (mem s u && mem s v)
-    (implies (right s v u) (v < u) && implies (left s v u) (u < v))
+let pre (x : int) (s : Unbset.t) = strict_sort s
 
-let post (x : int) (s : Unbset.t) (nu : Unbset.t) (u : int) (v : int) =
-  implies
-    (mem nu u && mem nu v)
-    (implies (right nu v u) (v < u) && implies (left nu v u) (u < v))
+let post (x : int) (s : Unbset.t) (nu : Unbset.t) = strict_sort nu

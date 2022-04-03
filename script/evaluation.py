@@ -103,6 +103,11 @@ def coverage_all(p_setting, argbound, sizebound, data_file, output_file):
     cmd = cmd_prefix + ["coverage-all-save", config_file, target_file, assertion_file, argbound, sizebound, data_file]
     invoc_cmd(cmd, output_file)
 
+def coverage_pos(p_setting, sizebound, data_file, output_file):
+    target_file, assertion_file, _ = solve_tap(p_setting)
+    cmd = cmd_prefix + ["coverage-save-pos", config_file, target_file, assertion_file, "config/qc_conf.json", sizebound, data_file]
+    invoc_cmd(cmd, output_file)
+
 if __name__ == "__main__":
     # print(os.path.isfile("zhouzhe"))
     subprocess.run(["mkdir", ".result"])
@@ -195,6 +200,10 @@ if __name__ == "__main__":
     elif action == "ind_plot":
         verbose=True
         run_ind(names)
+    elif action == "coverage_pos":
+        for b in bs:
+            data_file = ".result/{}.pos".format(b['name'])
+            coverage_pos(b, sizebound, data_file, outfile)
     elif action == "coverage_all":
         for b in bs:
             data_file = ".result/{}.data".format(b['name'])

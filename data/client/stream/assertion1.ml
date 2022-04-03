@@ -27,6 +27,6 @@ let sampling_rounds = 15
 let p_size = 4
 
 let pre (acc : Stream.t) (s : Stream.t) (u : int) (v : int) =
-  strict_sort acc && strict_sort_rev s && implies (mem acc u && mem s v) (v < u)
+  strict_sort acc && strict_sort_rev s && less_mem s acc
 
 let post (acc : Stream.t) (s : Stream.t) (nu : Stream.t) = strict_sort nu
