@@ -333,10 +333,10 @@ let moti_coverage_analysis =
     Command.Let_syntax.(
       let%map_open configfile = anon ("configfile" %: regular_file)
       and ct_file = anon ("count table file" %: regular_file)
-      and num_union = anon ("num union" %: int)
       and interval = anon ("interval" %: int)
       and num_sampling = anon ("number sampling" %: int)
       and num_test = anon ("number of test" %: int)
+      and num_union = anon ("num union" %: int)
       and output_file = anon ("output file" %: string) in
       fun () ->
         Config.exec_main configfile (fun () ->
