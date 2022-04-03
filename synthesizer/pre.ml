@@ -209,6 +209,24 @@ let infer_erroneous_pre_moti env qc_conf prog sigma =
       let spec = Infer.pn_spec_infer cctx pos_values neg_values in
       Some (fun x -> not @@ Spec.eval spec x)
 
+let infer_erroneous_pre_moti_pos env pos_values prog sigma =
+  let open Env in
+  let args = sigma.Spec.args in
+  let neg_engine = E.mk_perb_engine [ env.i_err ] (fun _ -> true) prog in
+  let qv = [ (T.Int, "u"); (T.Int, "v") ] in
+  let cctx = Cctx.mk_cctx args qv env.preds in
+  let neg_filter inp =
+    if not @@ env.sigma inp then false
+    else
+      let _, outp = env.client env.library_inspector inp in
+      match outp with None -> false | Some outp -> not @@ env.phi (inp @ outp)
+  in
+  match E.sampling_pt_opt neg_filter inference_num_sampling neg_engine with
+  | None -> None
+  | Some neg_values ->
+      let spec = Infer.pn_spec_infer cctx pos_values neg_values in
+      Some (fun x -> not @@ Spec.eval spec x)
+
 let infer_pre_multi env qc_conf prog sigma =
   let open Env in
   let args = sigma.Spec.args in

@@ -157,6 +157,11 @@ let synthesize_erroneous_pre_moti env qc_conf prog =
   let discovered_pre = Pre.infer_erroneous_pre_moti env qc_conf prog sigma in
   discovered_pre
 
+let synthesize_erroneous_pre_moti_pos env pos prog =
+  let sigma = env.Env.sigma_raw in
+  let discovered_pre = Pre.infer_erroneous_pre_moti_pos env pos prog sigma in
+  discovered_pre
+
 let synthesize_piecewise env qc_conf max_length bound =
   let rec loop current iter =
     let () = Zlog.log_write @@ spf "iter: %i" iter in

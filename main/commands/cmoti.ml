@@ -185,6 +185,12 @@ let evaluate_result ct env ectx (idx, prog) qc_conf =
       in
       in_pre
 
+let evaluate_result_v2 env inp_m ct (run_idx, num_step, epre) =
+  match epre with
+  | None -> ()
+  | Some epre ->
+      Primitive.Inpmap.count_tab_add_pre inp_m ct (run_idx, num_step, epre)
+
 let dump_record (total, union, res) filename =
   let open Yojson.Basic in
   let j =
@@ -217,11 +223,14 @@ let dump_record (total, union, res) filename =
   in
   to_file filename j
 
-let naive_mcmc_record source_file meta_file qc_file data_file interval bound
-    num_test out_file_name =
+let naive_mcmc_record source_file meta_file pos_data_file data_file interval
+    bound num_test ct_file_name =
   (* set naive cost function *)
   let ectx = Synthesizer.Enum.load data_file in
-  let qc_conf = Qc_config.load_config qc_file in
+  let inpm =
+    Primitive.Inpmap.t_of_sexp @@ Sexplib.Sexp.load_sexp pos_data_file
+  in
+  let pos_data = Primitive.Inpmap.get_inps inpm 1000 in
   let () =
     Config.conf :=
       { !Config.conf with Config.cost_function_version = Config.VCountErrors }
@@ -232,10 +241,10 @@ let naive_mcmc_record source_file meta_file qc_file data_file interval bound
       (fun () -> mk_env_from_files source_file meta_file)
   in
   let total = Synthesizer.Enum.num_inps ectx in
-  let ct = Synthesizer.Enum.count_init ectx in
+  let ct = Primitive.Inpmap.mk_count_tab ectx.m in
   let range = ref None in
   let res =
-    List.init num_test ~f:(fun i ->
+    List.init num_test ~f:(fun run_idx ->
         Zlog.event_
           (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
           (fun () ->
@@ -247,40 +256,52 @@ let naive_mcmc_record source_file meta_file qc_file data_file interval bound
               | None -> range := Some (List.map ~f:(fun (i, _) -> i) rcd)
               | Some _ -> ()
             in
-            let tab = Hashtbl.create ~size:50 (module Int) in
+            let pre_tab = Hashtbl.create ~size:50 (module Int) in
             let () =
               List.iter
-                ~f:(fun (i, (idx, prog, _)) ->
-                  (* let () = Zlog.log_write (Language.Oplang.layout prog) in *)
-                  if Hashtbl.mem tab idx then ()
+                ~f:(fun (i, (actual_idx, prog, _)) ->
+                  if Hashtbl.mem pre_tab actual_idx then ()
                   else
-                    let a =
-                      evaluate_result ct env ectx (i, ([], prog)) qc_conf
+                    let epre =
+                      Zlog.event_ "evaluate_result::epre" (fun () ->
+                          Synthesizer.Syn.synthesize_erroneous_pre_moti_pos env
+                            pos_data ([], prog))
                     in
-                    Hashtbl.add_exn tab ~key:idx ~data:a)
+                    let x = Hashtbl.add pre_tab ~key:actual_idx ~data:epre in
+                    ())
                 rcd
             in
-            let res =
-              List.map
-                ~f:(fun (i, (idx, prog, cost)) ->
-                  (* let () = Zlog.log_write (Language.Oplang.layout prog) in *)
-                  let a = Hashtbl.find_exn tab idx in
-                  (i, idx, cost, a))
-                (* @@ Basic_dt.List.sublist rcd (0, 1) *)
+            let () =
+              List.iter
+                ~f:(fun (num_step, (actual_idx, _, _)) ->
+                  match Hashtbl.find pre_tab actual_idx with
+                  | None -> raise @@ failwith "never happen"
+                  | Some epre ->
+                      evaluate_result_v2 env ectx.m ct (run_idx, num_step, epre))
                 rcd
             in
-            res))
-  in
-  let union =
-    match !range with
-    | None -> raise @@ failwith "empty result"
-    | Some range ->
-        Basic_dt.List.combine range @@ Synthesizer.Enum.count_all ct range
+            ct))
   in
   let () =
-    Sexplib.Sexp.save ".result/moti.ct" (Primitive.Inpmap.sexp_of_count_tab ct)
+    Sexplib.Sexp.save ct_file_name (Primitive.Inpmap.sexp_of_count_tab ct)
   in
-  dump_record (total, union, res) out_file_name
+  ()
+
+let moti_analysis ct_file num_runs num_union interval bound out_file_name =
+  let rec mk_idx l i =
+    if i > bound then l
+    else if
+      Int.equal (i mod interval) 0 || (i < interval && Int.equal (i mod 2) 0)
+    then mk_idx (l @ [ i ]) (i + 1)
+    else mk_idx l (i + 1)
+  in
+  let idxs = mk_idx [] 0 in
+  let ct =
+    Primitive.Inpmap.count_tab_of_sexp @@ Sexplib.Sexp.load_sexp ct_file
+  in
+  let res = Primitive.Inpmap.count_tab_analysis ct num_runs num_union idxs in
+  Yojson.Basic.to_file out_file_name
+  @@ Primitive.Inpmap.count_result_to_json res
 
 let moti_coverage =
   Command.basic ~summary:"moti coverage"
@@ -288,8 +309,31 @@ let moti_coverage =
       let%map_open configfile = anon ("configfile" %: regular_file)
       and source_file = anon ("source file" %: regular_file)
       and meta_file = anon ("meta file" %: regular_file)
-      and qc_file = anon ("qc file" %: regular_file)
-      and data_file = anon ("data file" %: regular_file)
+      and pos_data_file = anon ("pos data file" %: regular_file)
+      and neg_data_file = anon ("neg data file" %: regular_file)
+      and interval = anon ("interval" %: int)
+      and num_sampling = anon ("number sampling" %: int)
+      and num_test = anon ("number of test" %: int)
+      and ct_file_name = anon ("output ct file name" %: string) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            Zlog.event_
+              (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+              (fun () ->
+                let () =
+                  naive_mcmc_record source_file meta_file pos_data_file
+                    neg_data_file interval
+                    (Synthesizer.Syn.IterBound (0, num_sampling))
+                    num_test ct_file_name
+                in
+                ())))
+
+let moti_coverage_analysis =
+  Command.basic ~summary:"moti coverage analysis"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and ct_file = anon ("count table file" %: regular_file)
+      and num_union = anon ("num union" %: int)
       and interval = anon ("interval" %: int)
       and num_sampling = anon ("number sampling" %: int)
       and num_test = anon ("number of test" %: int)
@@ -300,9 +344,7 @@ let moti_coverage =
               (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
               (fun () ->
                 let () =
-                  naive_mcmc_record source_file meta_file qc_file data_file
-                    interval
-                    (Synthesizer.Syn.IterBound (0, num_sampling))
-                    num_test output_file
+                  moti_analysis ct_file num_test num_union interval num_sampling
+                    output_file
                 in
                 ())))

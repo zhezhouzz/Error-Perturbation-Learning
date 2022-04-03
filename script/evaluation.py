@@ -132,6 +132,26 @@ if __name__ == "__main__":
                         help="show executing commands")
     args = parser.parse_args()
     action = args.action
+    moti_target_file = "data/motivation/pf_enum.ml"
+    moti_assertion_file = "data/motivation/assertion1.ml"
+    moti_pos_file = ".result/moti.pos"
+    moti_neg_file = ".result/moti.data"
+    moti_ct_file = ".result/moti.ct"
+    moti_a_file = ".result/moti.ana"
+    if action == "moti-coverage-pos":
+        cmd = cmd_prefix + ["moti-coverage-pos", config_file, moti_target_file, moti_assertion_file,
+                            "config/qc_conf.json", "3000", moti_pos_file]
+        invoc_cmd(cmd, None)
+        exit()
+    if action == "moti-coverage":
+        cmd = cmd_prefix + ["moti-coverage", config_file, moti_target_file, moti_assertion_file,
+                            moti_pos_file, moti_neg_file, "10", "100", "8", moti_ct_file]
+        invoc_cmd(cmd, None)
+        exit()
+    if action == "moti-coverage-analysis":
+        cmd = cmd_prefix + ["moti-coverage-analysis", config_file, moti_ct_file, "10", "100", "8", "2", moti_a_file]
+        invoc_cmd(cmd, None)
+        exit()
     if action == "moti":
         eval_moti("100", "1000", ".result/moti.robu")
         exit()

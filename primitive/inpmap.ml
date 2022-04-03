@@ -4,7 +4,7 @@ open Basic_dt
 type t = { v_emb : (int, Value.t) Bihashtab.t; m : (int list, int) Hashtbl.t }
 [@@deriving sexp]
 
-type count_tab = (int list, int list) Hashtbl.t [@@deriving sexp]
+type count_tab = (int list, (int * int) list) Hashtbl.t [@@deriving sexp]
 
 let layout t =
   spf "v_emb size: %i; m size: %i" (Bihashtab.length t.v_emb)
@@ -69,6 +69,108 @@ let count_greater count_tab i =
   Hashtbl.fold (fun _ v n -> if aux v then n + 1 else n) count_tab 0
 
 let count_all t range = List.map (count_greater t) range
+
+let mk_count_tab t = Hashtbl.create (num_inps t)
+
+let count_tab_add_pre t ct (i, num_step, pre) =
+  Hashtbl.iter
+    (fun inp_idxs _ ->
+      let inp = List.map (Bihashtab.i_to_v t.v_emb) inp_idxs in
+      if pre inp then
+        match Hashtbl.find_opt ct inp_idxs with
+        | None -> Hashtbl.add ct inp_idxs [ (i, num_step) ]
+        | Some l -> Hashtbl.replace ct inp_idxs ((i, num_step) :: l)
+      else ())
+    t.m
+
+let count_tab_analysis count_tab num_runs num_union idxs =
+  if num_runs mod num_union != 0 then raise @@ failwith "wrong number of union"
+  else
+    let n = num_runs / num_union in
+    let total =
+      Array.init n (fun _ -> Array.init num_union (fun _ -> Hashtbl.create 100))
+    in
+    let () =
+      Array.iter
+        (fun arr ->
+          Array.iter
+            (fun tab -> List.iter (fun x -> Hashtbl.add tab x 0) idxs)
+            arr)
+        total
+    in
+    let replace_map total x f =
+      match Hashtbl.find_opt total x with
+      | None -> Hashtbl.add total x (f 0)
+      | Some y -> Hashtbl.replace total x (f y)
+    in
+    let union mat (idx, num_step) =
+      let which_n = idx / num_union in
+      let idx_in_union = idx mod num_union in
+      Hashtbl.add mat.(which_n).(idx_in_union) num_step ()
+    in
+    let update mat =
+      Array.iteri
+        (fun i arr ->
+          Array.iteri
+            (fun j tab ->
+              Hashtbl.iter
+                (fun num_steps _ ->
+                  replace_map total.(i).(j) num_steps (fun x -> x + 1))
+                tab)
+            arr)
+        mat
+    in
+    let () =
+      Hashtbl.iter
+        (fun _ v ->
+          let mat =
+            Array.init n (fun _ ->
+                Array.init num_union (fun _ -> Hashtbl.create 100))
+          in
+          List.iter (fun (idx, num_step) -> union mat (idx, num_step)) v;
+          update mat)
+        count_tab
+    in
+    total
+
+let count_result_to_json mat =
+  let l =
+    Array.fold_lefti
+      (fun res i arr ->
+        Array.fold_lefti
+          (fun res j tab -> (i, j, List.of_seq @@ Hashtbl.to_seq tab) :: res)
+          res arr)
+      [] mat
+  in
+  `List
+    (List.map
+       (fun (i, j, x) ->
+         `Assoc
+           [
+             ("run_idx", `Int i);
+             ("num_unoin", `Int (j + 1));
+             ( "stat",
+               `List
+                 (List.map
+                    (fun (n, c) ->
+                      `Assoc [ ("num_step", `Int n); ("count", `Int c) ])
+                    x) );
+           ])
+       l)
+
+let get_inps t num =
+  if num > num_inps t then raise @@ failwith "bad num ectx"
+  else
+    let l = ref (0, []) in
+    let () =
+      Hashtbl.iter
+        (fun k _ ->
+          let n = fst !l in
+          if n > num then () else l := (n, k :: snd !l))
+        t.m
+    in
+    let l = snd @@ !l in
+    List.map (List.map (Bihashtab.i_to_v t.v_emb)) l
 
 let test () =
   let v1 = Value.L [ 2; 3; 2; 23; 5 ] in
