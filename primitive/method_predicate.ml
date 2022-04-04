@@ -942,6 +942,36 @@ let pre_post_info =
           | [ V.T t1; V.T t2 ] -> Tree.is_prefix t1 t2
           | _ -> raise @@ failwith "prefix");
     };
+    {
+      poly_name = "left_mem";
+      name = "tree_left_mem";
+      tps = [ T.IntTree; T.Int ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.T t; V.I x ] -> (
+              Tree.(
+                match t with
+                | Leaf -> false
+                | Node (_, l, _) -> mem_apply [ V.T l; V.I x ]))
+          | _ -> raise @@ failwith "left_mem");
+    };
+    {
+      poly_name = "right_mem";
+      name = "tree_right_mem";
+      tps = [ T.IntTree; T.Int ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.T t; V.I x ] -> (
+              Tree.(
+                match t with
+                | Leaf -> false
+                | Node (_, _, r) -> mem_apply [ V.T r; V.I x ]))
+          | _ -> raise @@ failwith "right_mem");
+    };
   ]
 
 let mp_table =

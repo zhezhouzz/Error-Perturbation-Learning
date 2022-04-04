@@ -1,4 +1,4 @@
-let preds = [| "hd"; "mem"; "last"; "<" |]
+let preds = [| "hd"; "mem"; "last"; "left_mem"; "right_mem"; "<" |]
 
 let op_pool =
   [|
