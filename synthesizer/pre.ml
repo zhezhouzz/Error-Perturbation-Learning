@@ -188,6 +188,7 @@ let infer_erroneous_pre_v3 env pos prog sigma =
              inference_num_sampling
       in
       let spec = Infer.pn_spec_infer cctx pos_values neg_values in
+      let () = Zlog.log_write @@ Spec.layout spec in
       fun x -> not @@ Spec.eval spec x
 
 let infer_erroneous_pre_v2 env qc_conf prog sigma =
@@ -253,6 +254,7 @@ let infer_erroneous_pre_moti env qc_conf prog sigma =
   | None -> None
   | Some neg_values ->
       let spec = Infer.pn_spec_infer cctx pos_values neg_values in
+      let () = Zlog.log_write @@ Spec.layout spec in
       Some (fun x -> not @@ Spec.eval spec x)
 
 let infer_erroneous_pre_moti_pos env pos_values prog sigma =
