@@ -6,21 +6,52 @@ type state =
       init_set : Value.t list list;
       measure : Value.t list -> bool;
       prog : Language.Piecewise.t;
+      if_coverage : bool;
     }
 
 let mk_qc_engine tps qc_conf = QCState { tps; qc_conf }
 
-let mk_perb_engine init_set measure prog = PerbState { init_set; measure; prog }
+let mk_perb_engine ?(if_coverage = false) init_set measure prog =
+  PerbState { init_set; measure; prog; if_coverage }
 
 type s = Value.t list
 
 let sampling num = function
-  | PerbState { init_set; measure; prog } ->
-      let fs = (List.map snd @@ fst prog) @ [ snd prog ] in
-      let init_set, num_none, data =
-        Scache.eval_sampling init_set fs measure num
-      in
-      (PerbState { init_set; measure; prog }, num_none, data)
+  | PerbState { if_coverage; init_set; measure; prog } ->
+      (* let fs = (List.map snd @@ fst prog) @ [ snd prog ] in *)
+      let fs = [ snd prog ] in
+      if if_coverage then
+        let rec loop res (s, f) =
+          if List.length res >= num then res
+          else
+            match Language.Oplang_interp.interp f s with
+            | None -> res
+            | Some x -> loop (x :: res) (x, f)
+        in
+        let ns, data =
+          List.split
+          @@ List.map
+               (fun f ->
+                 let d = loop init_set (List.nth init_set 0, f) in
+                 let num_none =
+                   num - List.length (Value_aux.remove_duplicates_l d)
+                 in
+                 let _ =
+                   Zlog.log_write
+                   @@ Printf.sprintf "num_none: %i(%i)" num_none num
+                 in
+                 (num_none, d))
+               fs
+        in
+        let num_none = List.fold_left (fun res x -> res + x) 0 ns in
+        ( PerbState { if_coverage; init_set; measure; prog },
+          num_none,
+          List.flatten data )
+      else
+        let init_set, num_none, data =
+          Scache.eval_sampling init_set fs measure num
+        in
+        (PerbState { if_coverage; init_set; measure; prog }, num_none, data)
   | QCState { tps; qc_conf } ->
       let num_none, data = Zquickcheck.Qc_baseline.baseline qc_conf tps num in
       (QCState { tps; qc_conf }, num_none, data)

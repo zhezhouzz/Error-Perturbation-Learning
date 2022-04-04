@@ -17,17 +17,18 @@ let e_0 inputs =
       List.equal ( = ) [ 3; 4 ] s2 && List.length s1 >= 2 && inc 1 s1
   | _ -> false
 
-let gen_from_target_data source_file meta_file data_file prog_file qc_conf =
+let gen_from_target_data source_file meta_file data_file prog_file pos_file =
   let env =
     Zlog.event_
       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
       (fun () -> mk_env_from_files source_file meta_file)
   in
   let _, prog = Parse.parse_piecewise prog_file in
+  let pos = Primitive.Inpmap.t_of_sexp @@ Sexplib.Sexp.load_sexp pos_file in
   let epre =
     Zlog.event_
       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-      (fun () -> Synthesizer.Syn.synthesize_erroneous_pre env qc_conf prog)
+      (fun () -> Synthesizer.Syn.synthesize_erroneous_pre_v3 env pos prog)
   in
   let ectx = Synthesizer.Enum.load data_file in
   let total = Synthesizer.Enum.num_inps ectx in
@@ -117,12 +118,11 @@ let coverage_against_data =
       and meta_file = anon ("meta file" %: regular_file)
       and data_file = anon ("data file" %: regular_file)
       and prog_file = anon ("prog file" %: regular_file)
-      and qc_file = anon ("qc file" %: regular_file) in
+      and pos_file = anon ("pos file" %: regular_file) in
       fun () ->
         Config.exec_main configfile (fun () ->
-            let qc_conf = Qc_config.load_config qc_file in
             gen_from_target_data source_file meta_file data_file prog_file
-              qc_conf))
+              pos_file))
 
 let coverage =
   Command.basic ~summary:"coverage"
@@ -193,6 +193,40 @@ let coverage_save_pos =
             in
             let pos_values =
               Synthesizer.Pre.enum_pos env qc_conf num_sampling
+            in
+            let inpm = Primitive.Inpmap.init () in
+            let () =
+              List.iter
+                ~f:(fun inp ->
+                  let x = Primitive.Inpmap.add_opt inpm inp 0 in
+                  ())
+                pos_values
+            in
+            let () = Zlog.log_write @@ Primitive.Inpmap.layout inpm in
+            let () =
+              Sexplib.Sexp.save database_name @@ Primitive.Inpmap.sexp_of_t inpm
+            in
+            ()))
+
+let coverage_save_pos_b =
+  Command.basic ~summary:"coverage-save-pos-b"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and qc_file = anon ("qc file" %: regular_file)
+      and num_sampling = anon ("num sampling" %: int)
+      and database_name = anon ("database name" %: string) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let qc_conf = Qc_config.load_config qc_file in
+            let env =
+              Zlog.event_
+                (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+                (fun () -> mk_env_from_files source_file meta_file)
+            in
+            let pos_values =
+              Synthesizer.Pre.enum_pos_b env qc_conf num_sampling
             in
             let inpm = Primitive.Inpmap.init () in
             let () =
