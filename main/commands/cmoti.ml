@@ -312,7 +312,9 @@ let count_result_to_json (total, num_runs, num_unions, idxs, tab) =
 let moti_analysis ct_file num_runs num_union interval bound out_file_name =
   let rec mk_idx l i =
     if i > bound then l
-    else if Int.equal (i mod interval) 0 then mk_idx (l @ [ i ]) (i + 1)
+    else if
+      Int.equal (i mod interval) 0 || (i < interval && Int.equal (i mod 2) 0)
+    then mk_idx (l @ [ i ]) (i + 1)
     else mk_idx l (i + 1)
   in
   let idxs = mk_idx [] 0 in

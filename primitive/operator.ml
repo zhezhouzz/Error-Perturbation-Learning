@@ -39,6 +39,7 @@ let list_ops =
     "cons";
     "append";
     "top";
+    "bottom";
     "tail";
     "list_len";
     "list_head";

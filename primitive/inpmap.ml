@@ -95,14 +95,28 @@ let count_tab_analysis count_tab num_runs num_union idxs =
             List.map (fun c -> Hashtbl.add total (a, b, c) 0) idxs))
   in
   (* let _ = Printf.printf "? %i\n" @@ Hashtbl.find total (0, 0, 60) in *)
+  let union_ rcd (run_idx, num_step) union_idx =
+    match Hashtbl.find_opt rcd (run_idx, num_step) with
+    | None -> Hashtbl.add rcd (run_idx, num_step) union_idx
+    | Some n -> Hashtbl.replace rcd (run_idx, num_step) (min union_idx n)
+  in
   let union rcd (idx, num_step) =
     let run_idx = idx / num_union in
     if run_idx >= num_runs then ()
     else
       let union_idx = idx mod num_union in
-      match Hashtbl.find_opt rcd (run_idx, num_step) with
-      | None -> Hashtbl.add rcd (run_idx, num_step) union_idx
-      | Some n -> Hashtbl.replace rcd (run_idx, num_step) (min union_idx n)
+      List.iter
+        (fun i ->
+          if i >= num_step then union_ rcd (run_idx, i) union_idx else ())
+        idxs
+    (* union_ rcd (run_idx, num_step) union_idx *)
+  in
+  let update_ total (run_idx, union_idx, num_step) =
+    match Hashtbl.find_opt total (run_idx, union_idx, num_step) with
+    | None -> ()
+    (* raise @@ failwith *)
+    (* @@ spf "die: %i %i %i" run_idx union_idx num_step *)
+    | Some n -> Hashtbl.replace total (run_idx, union_idx, num_step) (n + 1)
   in
   let update_from_union total rcd =
     Hashtbl.iter
@@ -110,15 +124,7 @@ let count_tab_analysis count_tab num_runs num_union idxs =
         let rec aux union_idx =
           if union_idx >= num_union then ()
           else
-            let () =
-              match Hashtbl.find_opt total (run_idx, union_idx, num_step) with
-              | None ->
-                  ()
-                  (* raise @@ failwith *)
-                  (* @@ spf "die: %i %i %i" run_idx union_idx num_step *)
-              | Some n ->
-                  Hashtbl.replace total (run_idx, union_idx, num_step) (n + 1)
-            in
+            let () = update_ total (run_idx, union_idx, num_step) in
             aux (union_idx + 1)
         in
         aux min_union)
