@@ -39,6 +39,7 @@ let command =
       ("coverage", Ccoverage.coverage);
       ("coverage-syn", Ccoverage.coverage_syn);
       ("coverage-all-save", Ccoverage.coverage_all_save);
+      ("coverage-save-pos-b", Ccoverage.coverage_save_pos_b);
       ("coverage-save-pos", Ccoverage.coverage_save_pos);
       ("coverage-against-data", Ccoverage.coverage_against_data);
     ]

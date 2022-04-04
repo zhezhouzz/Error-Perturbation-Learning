@@ -18,8 +18,8 @@ type s = Value.t list
 
 let sampling num = function
   | PerbState { if_coverage; init_set; measure; prog } ->
-      (* let fs = (List.map snd @@ fst prog) @ [ snd prog ] in *)
-      let fs = [ snd prog ] in
+      let fs = (List.map snd @@ fst prog) @ [ snd prog ] in
+      (* let fs = [ snd prog ] in *)
       if if_coverage then
         let rec loop res (s, f) =
           if List.length res >= num then res
@@ -35,10 +35,6 @@ let sampling num = function
                  let d = loop init_set (List.nth init_set 0, f) in
                  let num_none =
                    num - List.length (Value_aux.remove_duplicates_l d)
-                 in
-                 let _ =
-                   Zlog.log_write
-                   @@ Printf.sprintf "num_none: %i(%i)" num_none num
                  in
                  (num_none, d))
                fs
