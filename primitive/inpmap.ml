@@ -113,8 +113,9 @@ let count_tab_analysis count_tab num_runs num_union idxs =
             let () =
               match Hashtbl.find_opt total (run_idx, union_idx, num_step) with
               | None ->
-                  raise @@ failwith
-                  @@ spf "die: %i %i %i" run_idx union_idx num_step
+                  ()
+                  (* raise @@ failwith *)
+                  (* @@ spf "die: %i %i %i" run_idx union_idx num_step *)
               | Some n ->
                   Hashtbl.replace total (run_idx, union_idx, num_step) (n + 1)
             in

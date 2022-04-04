@@ -108,6 +108,11 @@ def coverage_pos(p_setting, sizebound, data_file, output_file):
     cmd = cmd_prefix + ["coverage-save-pos", config_file, target_file, assertion_file, "config/qc_conf.json", sizebound, data_file]
     invoc_cmd(cmd, output_file)
 
+def coverage_eval(p_setting, neg_file, pf_file, pos_file, output_file):
+    target_file, assertion_file, _ = solve_tap(p_setting)
+    cmd = cmd_prefix + ["coverage-against-data", config_file, target_file, assertion_file, neg_file, pf_file, pos_file]
+    invoc_cmd(cmd, output_file)
+
 if __name__ == "__main__":
     # print(os.path.isfile("zhouzhe"))
     subprocess.run(["mkdir", ".result"])
@@ -232,6 +237,12 @@ if __name__ == "__main__":
         for b in bs:
             data_file = ".result/{}.data".format(b['name'])
             coverage_all(b, "20", sizebound, data_file, outfile)
+    elif action == "coverage_eval":
+        for b in bs:
+            pf_file = ".result/{}.prog".format(b['name'])
+            pos_file = ".result/{}.pos".format(b['name'])
+            neg_file = ".result/{}.data".format(b['name'])
+            coverage_eval(b, neg_file, pf_file, pos_file, outfile)
     else:
         print("unknown command {}".format(action))
         exit()
