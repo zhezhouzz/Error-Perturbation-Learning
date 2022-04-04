@@ -17,6 +17,19 @@ let e_0 inputs =
       List.equal ( = ) [ 3; 4 ] s2 && List.length s1 >= 2 && inc 1 s1
   | _ -> false
 
+let c_eval env ectx total pos prog =
+  let epre =
+    Zlog.event_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () -> Synthesizer.Syn.synthesize_erroneous_pre_v3 env pos prog)
+  in
+  let in_pre = Synthesizer.Enum.count_in_pre_raw ectx epre in
+  let () =
+    Printf.printf "pre: %i/%i = %.2f\n" in_pre total
+      (float_of_int in_pre /. float_of_int total *. 100.0)
+  in
+  ()
+
 let gen_from_target_data source_file meta_file data_file prog_file pos_file =
   let env =
     Zlog.event_
@@ -25,19 +38,17 @@ let gen_from_target_data source_file meta_file data_file prog_file pos_file =
   in
   let _, prog = Parse.parse_piecewise prog_file in
   let pos = Primitive.Inpmap.t_of_sexp @@ Sexplib.Sexp.load_sexp pos_file in
-  let epre =
-    Zlog.event_
-      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-      (fun () -> Synthesizer.Syn.synthesize_erroneous_pre_v3 env pos prog)
-  in
   let ectx = Synthesizer.Enum.load data_file in
   let total = Synthesizer.Enum.num_inps ectx in
-  let in_pre = Synthesizer.Enum.count_in_pre_raw ectx epre in
+  let fs = List.map ~f:snd (fst prog) @ [ snd prog ] in
   let () =
-    Printf.printf "pre: %i/%i = %.2f\n" in_pre total
-      (float_of_int in_pre /. float_of_int total *. 100.0)
+    List.iteri
+      ~f:(fun idx f ->
+        Printf.printf "idx: %i\n" idx;
+        c_eval env ectx total pos ([], f))
+      fs
   in
-  ()
+  c_eval env ectx total pos prog
 
 let gen_from_target_perturbation source_file meta_file target_prog_file
     prog_file qc_conf test_num =

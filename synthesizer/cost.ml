@@ -266,7 +266,7 @@ let cal_cost (conds : S.conds) prog
   in
   aux 0.0 cache.gs /. float_of_int (List.length cache.gs)
 
-let biased_cost bias (env : Env.t) =
+let biased_cost ?(if_free = false) bias (env : Env.t) =
   let open Env in
   Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
     (fun () ->
@@ -284,7 +284,9 @@ let biased_cost bias (env : Env.t) =
           (*        (Language.Oplang.layout cur_p.prog)) *)
           (* in *)
           let conds =
-            S.mk_conds env.measure_cond env.sigma
+            S.mk_conds
+              (if if_free then fun _ -> true else env.measure_cond)
+              env.sigma
               (fun v -> snd @@ env.client env.library_inspector v)
               env.phi bias
           in

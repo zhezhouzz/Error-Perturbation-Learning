@@ -1078,7 +1078,7 @@ let mp_table =
   @ size_info @ size_plus1_info @ len_info @ last_info @ once_info @ rb_info
   @ leftist_info @ binomialhp_info @ skewhp_info @ pairinghp_info
   @ strict_sort_info @ strict_sort_rev_info @ uniq_info @ pre_post_info
-  @ sizen_info 1 @ sizen_info 2 @ sizen_info 3
+  @ sizen_info 1 @ sizen_info 2 @ sizen_info 3 @ sizen_info 4 @ sizen_info 5
 
 let imp_map =
   List.fold_left (fun m r -> StrMap.add r.name r.imp m) StrMap.empty mp_table

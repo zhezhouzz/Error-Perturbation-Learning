@@ -3,6 +3,8 @@ let preds =
     "hd";
     "mem";
     "last";
+    "left";
+    "right";
     "left_mem";
     "right_mem";
     "<";

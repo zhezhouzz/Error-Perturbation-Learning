@@ -89,7 +89,7 @@ let pre_infer_from_env env init_set qvnum =
 module E = Sampling.Engine
 module Spec = Specification.Spec
 
-let inference_num_sampling = 1000
+let inference_num_sampling = 200
 
 let infer_verified_pre env qc_conf prog sigma =
   let open Env in
@@ -172,7 +172,7 @@ let infer_erroneous_pre_v3 env pos prog sigma =
   in
   let qv = [ (T.Int, "u"); (T.Int, "v") ] in
   let cctx = Cctx.mk_cctx args qv env.preds in
-  let pos_values = Primitive.Inpmap.get_inps pos 100 in
+  let pos_values = Primitive.Inpmap.get_inps pos inference_num_sampling in
   let neg_filter inp =
     if not @@ env.sigma inp then false
     else

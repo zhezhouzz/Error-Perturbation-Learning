@@ -15,24 +15,33 @@ let skewhp_max_deep = 12
 
 let size_measure = fastexpt 2
 
-let measure = function
-  | U | B _ | NotADt -> 0
-  | I _ (* | IInstr _ *) -> 1
+let weight = function
+  | U | B _ | I _ | NotADt -> 0
+  | L _ | IBL _ | BIBL _ | Physicistsq _ | Realtimeq _ -> 1
+  | T _ | TB _ -> 2
+  | Binomialhp _ | Binomialt _ | Pairinghp _ | Pairingl _ | Skewhp _ | Skewt _
+    ->
+      3
+  | TI _ -> 5
+
+let measure_ = function
+  | U | B _ | I _ | NotADt -> 0
   | L il -> List.length il
   | IBL il -> List.length il
   | BIBL il -> List.length il
-  (* | IInstrL il -> List.length il *)
-  | T it -> 2 * TreeTailCall.deep it
-  | TI iti -> 5 * LabeledTreeTailCall.deep iti
-  | TB itb -> 2 * LabeledTreeTailCall.deep itb
-  | Binomialhp x -> 3 * BinomialhpTailCall.deep x
-  | Binomialt x -> 3 * BinomialhpTailCall.deep [ x ]
-  | Pairinghp x -> 3 * PairinghpTailCall.deep x
-  | Pairingl x -> 3 * List.length x
+  | T it -> TreeTailCall.deep it
+  | TI iti -> LabeledTreeTailCall.deep iti
+  | TB itb -> LabeledTreeTailCall.deep itb
+  | Binomialhp x -> BinomialhpTailCall.deep x
+  | Binomialt x -> BinomialhpTailCall.deep [ x ]
+  | Pairinghp x -> PairinghpTailCall.deep x
+  | Pairingl x -> List.length x
   | Physicistsq x -> Physicistsq.length x
   | Realtimeq x -> Realtimeq.length x
-  | Skewhp x -> 3 * SkewhpTailCall.deep x
-  | Skewt x -> 3 * SkewhpTailCall.deep [ x ]
+  | Skewhp x -> SkewhpTailCall.deep x
+  | Skewt x -> SkewhpTailCall.deep [ x ]
+
+let measure t = weight t * measure_ t
 
 let bound_min = 20
 
@@ -53,3 +62,12 @@ let mk_measure_cond input =
     @@ spf "mk_measure_cond(%i, %i, %i) -> %i" bound_min s bound_max bound
   in
   fun v -> measure_size v <= bound
+
+let mk_measure_cond_v2 input n =
+  let s = measure_size input in
+  let ws = List.map weight input in
+  let w_sum = IntList.sum ws in
+  let w = min 1 (w_sum / List.length ws) in
+  let bound = s + (w * n) in
+  let () = Zlog.log_write @@ spf "mk_measure_cond(%i ~ %i) -> %i" s n bound in
+  fun v -> measure_size v < bound

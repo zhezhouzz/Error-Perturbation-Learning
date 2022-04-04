@@ -112,12 +112,12 @@ let synthesize_f_free _ samples bound env =
         | IterBound (num_burn_in, num_sampling) ->
             Mcmc.metropolis_hastings ~burn_in:num_burn_in
               ~sampling_steps:num_sampling ~proposal_distribution:Mutate.mutate
-              ~cost_function:(Cost.biased_cost (fun _ -> true))
+              ~cost_function:(Cost.biased_cost ~if_free:true (fun _ -> true))
               ~init_distribution:env'
         | TimeBound time_bound ->
             Mcmc.metropolis_hastings_time ~time_bound
               ~proposal_distribution:Mutate.mutate
-              ~cost_function:(Cost.biased_cost (fun _ -> true))
+              ~cost_function:(Cost.biased_cost ~if_free:true (fun _ -> true))
               ~init_distribution:env')
   in
   get_result_from_mcmc (env, cost)
@@ -324,14 +324,17 @@ let synthesize_multif env bias times bound =
       raise @@ failwith "synthesize_multi_times fails"
     else if len (fs, default) >= times then (fs, default)
     else
-      match synthesize_f bias [ env.Env.i_err ] bound env with
-      | None ->
-          (* loop (fs, default) *)
-          raise @@ failwith "synthesize_multi_times fails"
-      | Some (_, new_f) -> (
-          match default with
-          | None -> loop (fs, Some new_f)
-          | Some _ -> loop (new_f :: fs, default))
+      let get_f if_free env bias =
+        match
+          (if if_free then synthesize_f_free else synthesize_f)
+            bias [ env.Env.i_err ] bound env
+        with
+        | None -> raise @@ failwith "synthesize_multi_times fails"
+        | Some (_, new_f) -> new_f
+      in
+      match default with
+      | None -> loop (fs, Some (get_f false env bias))
+      | Some _ -> loop (get_f true env bias :: fs, default)
   in
   let fs, default = loop ([], None) in
   match default with

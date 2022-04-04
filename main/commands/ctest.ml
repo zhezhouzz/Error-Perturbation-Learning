@@ -280,3 +280,49 @@ let show_pos_neg =
               Printf.printf "neg:\n %s\n" (Synthesizer.Enum.layout_e ectx)
             in
             ()))
+
+let syn_simple_eval_ source_file meta_file prog_file =
+  let env =
+    Zlog.event_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () ->
+        Synthesizer.Mkenv.random_init_prog
+        @@ mk_env_from_files source_file meta_file)
+  in
+  let i_err, prog = Parse.parse_piecewise prog_file in
+  let fs = List.map snd (fst prog) @ [ snd prog ] in
+  let n = env.sampling_rounds in
+  let open Primitive in
+  let rec loop f (i, x) =
+    if i > n then ()
+    else
+      let () =
+        Printf.printf "%i: measure(%i) %s\n" i (Measure.measure_size x)
+          (Value.layout_l x)
+      in
+      match Language.Oplang_interp.interp f x with
+      | None ->
+          Printf.printf "end at %i\n" i;
+          ()
+      | Some x' -> loop f (i + 1, x')
+  in
+  let () =
+    List.iteri
+      (fun i f ->
+        Printf.printf "check f%i\n" i;
+        loop f (0, env.i_err))
+      fs
+  in
+  ()
+
+let syn_simple_eval =
+  Command.basic ~summary:"syn_simple_eval"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and prog_file = anon ("prog file" %: regular_file) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let () = syn_simple_eval_ source_file meta_file prog_file in
+            ()))
