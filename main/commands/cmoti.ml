@@ -288,6 +288,27 @@ let naive_mcmc_record source_file meta_file pos_data_file data_file interval
   in
   ()
 
+let count_result_to_json (total, num_runs, num_unions, idxs, tab) =
+  let l =
+    List.map ~f:(fun ((run_idx, union_idx, num_step), n) ->
+        `Assoc
+          [
+            ("run_idx", `Int run_idx);
+            ("num_unoin", `Int (union_idx + 1));
+            ("num_step", `Int num_step);
+            ("in_pre", `Int n);
+          ])
+    @@ Primitive.Inpmap.res_to_list tab
+  in
+  `Assoc
+    [
+      ("total", `Int total);
+      ("num_runs", `Int num_runs);
+      ("num_unions", `Int num_unions);
+      ("idxs", `List (List.map ~f:(fun x -> `Int x) idxs));
+      ("data", `List l);
+    ]
+
 let moti_analysis ct_file num_runs num_union interval bound out_file_name =
   let rec mk_idx l i =
     if i > bound then l
@@ -302,7 +323,7 @@ let moti_analysis ct_file num_runs num_union interval bound out_file_name =
   in
   let res = Primitive.Inpmap.count_tab_analysis ct num_runs num_union idxs in
   Yojson.Basic.to_file out_file_name
-  @@ Primitive.Inpmap.count_result_to_json (total, res)
+  @@ count_result_to_json (total, num_runs, num_union, idxs, res)
 
 let moti_coverage =
   Command.basic ~summary:"moti coverage"

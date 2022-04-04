@@ -37,9 +37,30 @@ def load_res(filename):
     with open(filename) as f:
         j = json.load(f)
         total=j['total']
-        runs = j['runs']
-        union = j['union']
-    return (total, union, runs)
+        num_runs=j['num_runs']
+        num_unions=j['num_unions']
+        steps=j['idxs']
+        data=j['data']
+    m = []
+    for u_num in range(0, num_unions):
+        m.append([0] * len(steps))
+    for d in data:
+        union_idx = d['num_unoin'] - 1
+        step_idx = steps.index(d['num_step'])
+        m[union_idx][step_idx] = m[union_idx][step_idx] + d['in_pre']
+    m = [[x/total/num_runs for x in d] for d in m]
+    return steps, m
+
+def plot_v2 (x, m):
+    fig, ax = plt.subplots(1, 1, figsize=(9,2.2), constrained_layout=True, dpi=100)
+    plt.axhline(y = 1.0, color = 'grey', linestyle = 'dotted')
+    for y in m:
+        ax.plot(x, y, color='black', linewidth=1.0, linestyle='dashed',  markersize=2, marker = 'o')
+    ax.set_xticks(np.arange(min(x), max(x)+1, 10))
+    ax.set_yticks(np.arange(0.,1.05, 0.2))
+    ax.set_yticklabels(['{:.0f}%'.format(100*x) for x in plt.gca().get_yticks()])
+    plt.xlabel("MCMC steps", fontsize=14)
+    plt.show()
 
 def plot (total, union, runs):
     # for one in runs:
@@ -67,5 +88,5 @@ def plot (total, union, runs):
 
 if __name__ == '__main__':
     name = sys.argv[1]
-    total, union, runs = load_res(name)
-    plot(total, union, runs)
+    x, m = load_res(name)
+    plot_v2(x, m)

@@ -133,19 +133,7 @@ let count_tab_analysis count_tab num_runs num_union idxs =
   in
   total
 
-let count_result_to_json (total, tab) =
-  let l =
-    List.map (fun ((run_idx, union_idx, num_step), n) ->
-        `Assoc
-          [
-            ("run_idx", `Int run_idx);
-            ("num_unoin", `Int (union_idx + 1));
-            ("num_step", `Int num_step);
-            ("in_pre", `Int n);
-          ])
-    @@ List.of_seq @@ Hashtbl.to_seq tab
-  in
-  `Assoc [ ("total", `Int total); ("data", `List l) ]
+let res_to_list x = List.of_seq @@ Hashtbl.to_seq x
 
 let get_inps t num =
   if num > num_inps t then raise @@ failwith "bad num ectx"

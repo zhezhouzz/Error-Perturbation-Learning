@@ -101,6 +101,27 @@ let synthesize_f bias samples bound env =
   in
   get_result_from_mcmc (env, cost)
 
+let synthesize_f_free _ samples bound env =
+  let env' = Mkenv.random_init_prog env in
+  let env' = Mkenv.update_init_sampling_set env' samples in
+  let env, cost =
+    Zlog.event_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () ->
+        match bound with
+        | IterBound (num_burn_in, num_sampling) ->
+            Mcmc.metropolis_hastings ~burn_in:num_burn_in
+              ~sampling_steps:num_sampling ~proposal_distribution:Mutate.mutate
+              ~cost_function:(Cost.biased_cost (fun _ -> true))
+              ~init_distribution:env'
+        | TimeBound time_bound ->
+            Mcmc.metropolis_hastings_time ~time_bound
+              ~proposal_distribution:Mutate.mutate
+              ~cost_function:(Cost.biased_cost (fun _ -> true))
+              ~init_distribution:env')
+  in
+  get_result_from_mcmc (env, cost)
+
 type state = FIsOK of (Spec.t * V.t list list)
 
 (* let synthesize_pre env init_set = *)
@@ -287,6 +308,26 @@ let synthesize_multi_core env bias max_length bound =
   | [] -> raise @@ failwith "no perturbation function"
   | h :: t -> (List.map (fun f -> (Spec.dummy_pre env.tps, f)) t, h)
 
+let synthesize_multif env bias times bound =
+  let counter = ref 0 in
+  let rec loop (fs, default) =
+    let () = counter := !counter + 1 in
+    if !counter > (2 * times) + 1 then
+      raise @@ failwith "synthesize_multi_times fails"
+    else if List.length fs + 1 >= times then (fs, default)
+    else
+      match synthesize_f bias [ env.Env.i_err ] bound env with
+      | None -> loop (fs, default)
+      | Some (_, new_f) -> (
+          match default with
+          | None -> loop (fs, Some new_f)
+          | Some _ -> loop (new_f :: fs, default))
+  in
+  let fs, default = loop ([], None) in
+  match default with
+  | None -> raise @@ failwith "die"
+  | Some default -> (List.map (fun x -> (Spec.dummy_pre env.tps, x)) fs, default)
+
 let synthesize_multi env max_length num_burn_in num_sampling =
   synthesize_multi_core env
     (fun _ -> true)
@@ -298,3 +339,6 @@ let synthesize_multi_time env max_length time_bound =
 
 let synthesize_multi_time_bias env bias time_bound =
   synthesize_multi_core env bias 1 (TimeBound time_bound)
+
+let synthesize_multif_time env max_length time_bound =
+  synthesize_multif env (fun _ -> true) max_length (TimeBound time_bound)
