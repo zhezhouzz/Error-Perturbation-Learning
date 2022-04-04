@@ -21,7 +21,26 @@ let empty_apply = function
   | [ V.T t ] -> ( Tree.(match t with Leaf -> true | _ -> false))
   | [ V.TI t ] -> ( LabeledTree.(match t with Leaf -> true | _ -> false))
   | [ V.TB t ] -> ( LabeledTree.(match t with Leaf -> true | _ -> false))
-  | _ -> raise @@ failwith "member_apply"
+  | [ V.Binomialhp t ] -> List.length t == 0
+  | [ V.Binomialt t ] -> BinomialHeap.is_single_tree t
+  | [ V.Pairinghp t ] -> Pairinghp.is_empty t
+  | [ V.Pairingl t ] -> List.length t == 0
+  | [ V.Skewhp t ] -> List.length t == 0
+  | [ V.Skewt t ] -> Skewhp.is_single_tree t
+  | _ -> raise @@ failwith "empty_apply"
+
+let sizen_apply n = function
+  | [ V.L l ] -> List.length l == n
+  | [ V.T t ] -> Tree.deep t == n
+  | [ V.TI t ] -> LabeledTree.deep t == n
+  | [ V.TB t ] -> LabeledTree.deep t == n
+  | [ V.Binomialhp t ] -> List.length t == n
+  | [ V.Binomialt t ] -> BinomialHeap.deep_tree t == n
+  | [ V.Pairinghp t ] -> Pairinghp.deep t == n
+  | [ V.Pairingl t ] -> List.length t == n
+  | [ V.Skewhp t ] -> List.length t == n
+  | [ V.Skewt t ] -> Skewhp.deep_tree t == n
+  | _ -> raise @@ failwith "sizen_apply"
 
 let hd_apply = function
   | [ V.L l; V.I e ] -> ( match l with [] -> false | h :: _ -> h == e)
@@ -35,6 +54,9 @@ let hd_apply = function
       match t with
       | LabeledTree.Leaf -> false
       | LabeledTree.Node (_, root, _, _) -> root == e)
+  | [ V.Binomialhp t; V.I e ] -> BinomialHeap.hd e t
+  | [ V.Pairinghp t; V.I e ] -> Pairinghp.hd e t
+  | [ V.Skewhp t; V.I e ] -> Skewhp.hd e t
   | _ -> raise @@ failwith "head_apply"
 
 let last_apply = function
@@ -45,6 +67,9 @@ let last_apply = function
   | [ V.T t; V.I e ] -> Tree.last t e
   | [ V.TI t; V.I e ] -> LabeledTree.last t e
   | [ V.TB t; V.I e ] -> LabeledTree.last t e
+  | [ V.Binomialhp t; V.I e ] -> BinomialHeap.last e t
+  | [ V.Pairinghp t; V.I e ] -> Pairinghp.last e t
+  | [ V.Skewhp t; V.I e ] -> Skewhp.last e t
   | _ -> raise @@ failwith "last_apply"
 
 let mem_apply = function
@@ -52,9 +77,9 @@ let mem_apply = function
   | [ V.T t; V.I e ] -> Tree.exists (fun x -> x == e) t
   | [ V.TI t; V.I e ] -> LabeledTree.exists (fun x -> x == e) t
   | [ V.TB t; V.I e ] -> LabeledTree.exists (fun x -> x == e) t
-  | [ V.Binomialhp t; V.I e ] -> BinomialHeap.mem t e
-  | [ V.Skewhp t; V.I e ] -> Skewhp.mem t e
-  | [ V.Pairinghp t; V.I e ] -> Pairinghp.mem t e
+  | [ V.Binomialhp t; V.I e ] -> BinomialHeap.mem e t
+  | [ V.Skewhp t; V.I e ] -> Skewhp.mem e t
+  | [ V.Pairinghp t; V.I e ] -> Pairinghp.mem e t
   | _ -> raise @@ failwith "member_apply"
 
 let size_apply = function
@@ -222,156 +247,228 @@ let strict_sort_rev_info =
 
 let empty_info =
   let poly_name = "empty" in
+  let imp = empty_apply in
+  let permu = false in
   [
+    { poly_name; name = "list_empty"; tps = [ T.IntList ]; permu; imp };
+    { poly_name; name = "tree_empty"; tps = [ T.IntTree ]; permu; imp };
+    { poly_name; name = "treei_empty"; tps = [ T.IntTreeI ]; permu; imp };
+    { poly_name; name = "treeb_empty"; tps = [ T.IntTreeB ]; permu; imp };
     {
       poly_name;
-      name = "list_empty";
-      tps = [ T.IntList ];
-      permu = false;
-      imp = empty_apply;
+      name = "binomialhp_empty";
+      tps = [ T.Uninterp "binomialhp" ];
+      permu;
+      imp;
     };
     {
       poly_name;
-      name = "tree_empty";
-      tps = [ T.IntTree ];
-      permu = false;
-      imp = empty_apply;
+      name = "pairinghp_empty";
+      tps = [ T.Uninterp "pairinghp" ];
+      permu;
+      imp;
     };
     {
       poly_name;
-      name = "treei_empty";
-      tps = [ T.IntTreeI ];
-      permu = false;
-      imp = empty_apply;
+      name = "skewhp_empty";
+      tps = [ T.Uninterp "skewhp" ];
+      permu;
+      imp;
+    };
+  ]
+
+let sizen_info n =
+  let poly_name = spf "size%i" n in
+  let imp = sizen_apply n in
+  let permu = false in
+  [
+    { poly_name; name = spf "list_size%i" n; tps = [ T.IntList ]; permu; imp };
+    { poly_name; name = spf "tree_size%i" n; tps = [ T.IntTree ]; permu; imp };
+    { poly_name; name = spf "treei_size%i" n; tps = [ T.IntTreeI ]; permu; imp };
+    { poly_name; name = spf "treeb_size%i" n; tps = [ T.IntTreeB ]; permu; imp };
+    {
+      poly_name;
+      name = spf "binomialhp_size%i" n;
+      tps = [ T.Uninterp "binomialhp" ];
+      permu;
+      imp;
     };
     {
       poly_name;
-      name = "treeb_empty";
-      tps = [ T.IntTreeB ];
-      permu = false;
-      imp = empty_apply;
+      name = spf "pairinghp_size%i" n;
+      tps = [ T.Uninterp "pairinghp" ];
+      permu;
+      imp;
+    };
+    {
+      poly_name;
+      name = spf "skewhp_size%i" n;
+      tps = [ T.Uninterp "skewhp" ];
+      permu;
+      imp;
     };
   ]
 
 let mem_info =
   let poly_name = "mem" in
+  let permu = false in
+  let imp = mem_apply in
   [
-    {
-      poly_name;
-      name = "list_mem";
-      tps = [ T.IntList; T.Int ];
-      permu = false;
-      imp = mem_apply;
-    };
-    {
-      poly_name;
-      name = "tree_mem";
-      tps = [ T.IntTree; T.Int ];
-      permu = false;
-      imp = mem_apply;
-    };
-    {
-      poly_name;
-      name = "treei_mem";
-      tps = [ T.IntTreeI; T.Int ];
-      permu = false;
-      imp = mem_apply;
-    };
-    {
-      poly_name;
-      name = "treeb_mem";
-      tps = [ T.IntTreeB; T.Int ];
-      permu = false;
-      imp = mem_apply;
-    };
+    { poly_name; name = "list_mem"; tps = [ T.IntList; T.Int ]; permu; imp };
+    { poly_name; name = "tree_mem"; tps = [ T.IntTree; T.Int ]; permu; imp };
+    { poly_name; name = "treei_mem"; tps = [ T.IntTreeI; T.Int ]; permu; imp };
+    { poly_name; name = "treeb_mem"; tps = [ T.IntTreeB; T.Int ]; permu; imp };
     {
       poly_name;
       name = "binomialhp_mem";
       tps = [ T.Uninterp "binomialhp"; T.Int ];
-      permu = false;
-      imp = mem_apply;
+      permu;
+      imp;
     };
     {
       poly_name;
       name = "skewhp_mem";
       tps = [ T.Uninterp "skewhp"; T.Int ];
-      permu = false;
-      imp = mem_apply;
+      permu;
+      imp;
     };
     {
       poly_name;
       name = "pairinghp_mem";
       tps = [ T.Uninterp "pairinghp"; T.Int ];
-      permu = false;
-      imp = mem_apply;
+      permu;
+      imp;
     };
   ]
 
 let hd_info =
   let poly_name = "hd" in
+  let permu = false in
+  let imp = hd_apply in
   [
+    { poly_name; name = "list_hd"; tps = [ T.IntList; T.Int ]; permu; imp };
+    { poly_name; name = "tree_hd"; tps = [ T.IntTree; T.Int ]; permu; imp };
+    { poly_name; name = "treei_hd"; tps = [ T.IntTreeI; T.Int ]; permu; imp };
+    { poly_name; name = "treeb_hd"; tps = [ T.IntTreeB; T.Int ]; permu; imp };
     {
       poly_name;
-      name = "list_hd";
-      tps = [ T.IntList; T.Int ];
-      permu = false;
-      imp = hd_apply;
+      name = "binomialhp_hd";
+      tps = [ T.Uninterp "binomialhp"; T.Int ];
+      permu;
+      imp;
     };
     {
       poly_name;
-      name = "tree_hd";
-      tps = [ T.IntTree; T.Int ];
-      permu = false;
-      imp = hd_apply;
+      name = "skewhp_hd";
+      tps = [ T.Uninterp "skewhp"; T.Int ];
+      permu;
+      imp;
     };
     {
       poly_name;
-      name = "treei_hd";
-      tps = [ T.IntTreeI; T.Int ];
-      permu = false;
-      imp = hd_apply;
-    };
-    {
-      poly_name;
-      name = "treeb_hd";
-      tps = [ T.IntTreeB; T.Int ];
-      permu = false;
-      imp = hd_apply;
+      name = "pairinghp_hd";
+      tps = [ T.Uninterp "pairinghp"; T.Int ];
+      permu;
+      imp;
     };
   ]
 
+(* let hd_info = *)
+(*   let poly_name = "hd" in *)
+(*   [ *)
+(*     { *)
+(*       poly_name; *)
+(*       name = "list_hd"; *)
+(*       tps = [ T.IntList; T.Int ]; *)
+(*       permu = false; *)
+(*       imp = hd_apply; *)
+(*     }; *)
+(*     { *)
+(*       poly_name; *)
+(*       name = "tree_hd"; *)
+(*       tps = [ T.IntTree; T.Int ]; *)
+(*       permu = false; *)
+(*       imp = hd_apply; *)
+(*     }; *)
+(*     { *)
+(*       poly_name; *)
+(*       name = "treei_hd"; *)
+(*       tps = [ T.IntTreeI; T.Int ]; *)
+(*       permu = false; *)
+(*       imp = hd_apply; *)
+(*     }; *)
+(*     { *)
+(*       poly_name; *)
+(*       name = "treeb_hd"; *)
+(*       tps = [ T.IntTreeB; T.Int ]; *)
+(*       permu = false; *)
+(*       imp = hd_apply; *)
+(*     }; *)
+(*   ] *)
 let last_info =
   let poly_name = "last" in
+  let permu = false in
+  let imp = last_apply in
   [
+    { poly_name; name = "list_last"; tps = [ T.IntList; T.Int ]; permu; imp };
+    { poly_name; name = "tree_last"; tps = [ T.IntTree; T.Int ]; permu; imp };
+    { poly_name; name = "treei_last"; tps = [ T.IntTreeI; T.Int ]; permu; imp };
+    { poly_name; name = "treeb_last"; tps = [ T.IntTreeB; T.Int ]; permu; imp };
     {
       poly_name;
-      name = "list_last";
-      tps = [ T.IntList; T.Int ];
-      permu = false;
-      imp = last_apply;
+      name = "binomialhp_last";
+      tps = [ T.Uninterp "binomialhp"; T.Int ];
+      permu;
+      imp;
     };
     {
       poly_name;
-      name = "tree_last";
-      tps = [ T.IntTree; T.Int ];
-      permu = false;
-      imp = last_apply;
+      name = "skewhp_last";
+      tps = [ T.Uninterp "skewhp"; T.Int ];
+      permu;
+      imp;
     };
     {
       poly_name;
-      name = "treei_last";
-      tps = [ T.IntTreeI; T.Int ];
-      permu = false;
-      imp = last_apply;
-    };
-    {
-      poly_name;
-      name = "treeb_last";
-      tps = [ T.IntTreeB; T.Int ];
-      permu = false;
-      imp = last_apply;
+      name = "pairinghp_last";
+      tps = [ T.Uninterp "pairinghp"; T.Int ];
+      permu;
+      imp;
     };
   ]
+
+(* let last_info = *)
+(*   let poly_name = "last" in *)
+(*   [ *)
+(*     { *)
+(*       poly_name; *)
+(*       name = "list_last"; *)
+(*       tps = [ T.IntList; T.Int ]; *)
+(*       permu = false; *)
+(*       imp = last_apply; *)
+(*     }; *)
+(*     { *)
+(*       poly_name; *)
+(*       name = "tree_last"; *)
+(*       tps = [ T.IntTree; T.Int ]; *)
+(*       permu = false; *)
+(*       imp = last_apply; *)
+(*     }; *)
+(*     { *)
+(*       poly_name; *)
+(*       name = "treei_last"; *)
+(*       tps = [ T.IntTreeI; T.Int ]; *)
+(*       permu = false; *)
+(*       imp = last_apply; *)
+(*     }; *)
+(*     { *)
+(*       poly_name; *)
+(*       name = "treeb_last"; *)
+(*       tps = [ T.IntTreeB; T.Int ]; *)
+(*       permu = false; *)
+(*       imp = last_apply; *)
+(*     }; *)
+(*   ] *)
 
 (* TODO: limit size only works for nat *)
 let size_info =
@@ -981,6 +1078,7 @@ let mp_table =
   @ size_info @ size_plus1_info @ len_info @ last_info @ once_info @ rb_info
   @ leftist_info @ binomialhp_info @ skewhp_info @ pairinghp_info
   @ strict_sort_info @ strict_sort_rev_info @ uniq_info @ pre_post_info
+  @ sizen_info 1 @ sizen_info 2 @ sizen_info 3
 
 let imp_map =
   List.fold_left (fun m r -> StrMap.add r.name r.imp m) StrMap.empty mp_table

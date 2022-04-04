@@ -15,6 +15,17 @@ let rec deep = function
       | None -> 1
       | Some x -> 1 + x)
 
+let rec mem x = function
+  | E -> false
+  | T (x', ts) -> Int.equal x x' || List.exists (mem x) ts
+
+let hd x = function E -> false | T (x', _) -> Int.equal x x'
+
+let rec last x = function
+  | E -> false
+  | T (x', []) -> Int.equal x x'
+  | T (_, ts) -> List.exists (last x) ts
+
 let rec flatten t =
   match t with E -> [] | T (x, l) -> x :: (List.concat @@ List.map flatten l)
 
@@ -65,7 +76,7 @@ let compare t1 t2 =
 
 let eq t1 t2 = compare t1 t2 == 0
 
-let is_empty h = h = E
+let is_empty = function E -> true | _ -> false
 
 let merge h1 h2 =
   match (h1, h2) with
@@ -120,7 +131,7 @@ let min_opt t =
     (fun opt x' -> match opt with None -> Some x' | Some x -> Some (min x x'))
     None t
 
-let mem t x = fold_left (fun opt x' -> opt || x == x') false t
+(* let mem t x = fold_left (fun opt x' -> opt || x == x') false t *)
 
 let single x = T (x, [])
 

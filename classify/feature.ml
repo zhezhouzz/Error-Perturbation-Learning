@@ -63,6 +63,8 @@ let mk_set args qv mps =
   let dtargs, _ = List.partition (fun (tp, _) -> T.is_dt tp) args in
   let mk_feature mp =
     match mp with
+    | "empty" | "size1" | "size2" | "size3" ->
+        List.map (fun dt -> Pr (mp, [ dt ])) dtargs
     | "mem" | "hd" | "last" | "left_mem" | "right_mem" ->
         List.map (fun (dt, elem) -> Pr (mp, [ dt; elem ]))
         @@ List.cross dtargs qv

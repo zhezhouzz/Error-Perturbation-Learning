@@ -10,7 +10,23 @@ exception Empty
 
 open Zlist
 
+let is_single_tree = function Node (_, _, _, t) -> List.length t == 0
+
 let deep = List.length
+
+let deep_tree = function Node (_, _, _, l) -> 1 + deep l
+
+let rec mem x = function
+  | [] -> false
+  | Node (_, x', xs', t) :: t' ->
+      Int.equal x x' || List.exists (Int.equal x) xs' || mem x t || mem x t'
+
+let hd x = function [] -> false | Node (_, x', _, _) :: _ -> Int.equal x x'
+
+let rec last x = function
+  | [] -> false
+  | [ Node (_, _, xs', []) ] -> List.exists (Int.equal x) xs'
+  | Node (_, _, _, _) :: t' -> last x t'
 
 let rec max_deep l =
   let aux = function Node (_, _, _, l) -> 1 + max_deep l in
@@ -224,7 +240,7 @@ let fold_left f default input =
   in
   aux default input
 
-let mem t x = fold_left (fun b x' -> b || x == x') false t
+(* let mem t x = fold_left (fun b x' -> b || x == x') false t *)
 
 let max_opt t =
   fold_left

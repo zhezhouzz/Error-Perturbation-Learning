@@ -12,6 +12,21 @@ open Zlist
 
 let deep = List.length
 
+let is_single_tree = function Node (_, _, l) -> List.length l == 0
+
+let deep_tree = function Node (_, _, l) -> 1 + deep l
+
+let rec mem x = function
+  | [] -> false
+  | Node (_, x', t) :: t' -> Int.equal x x' || mem x t || mem x t'
+
+let hd x = function [] -> false | Node (_, x', _) :: _ -> Int.equal x x'
+
+let rec last x = function
+  | [] -> false
+  | [ Node (_, x', []) ] -> Int.equal x x'
+  | Node (_, _, _) :: t' -> last x t'
+
 let rec max_deep l =
   let aux = function Node (_, _, l) -> 1 + max_deep l in
   match IntList.max_opt @@ List.map aux l with None -> 0 | Some x -> x
@@ -207,7 +222,7 @@ let fold_left f default input =
   in
   aux default input
 
-let mem t x = fold_left (fun b (_, x') -> b || x == x') false t
+(* let mem t x = fold_left (fun b (_, x') -> b || x == x') false t *)
 
 let max_opt t =
   fold_left
