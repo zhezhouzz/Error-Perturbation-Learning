@@ -259,3 +259,24 @@ let test_unbset =
     Command.Let_syntax.(
       let%map_open configfile = anon ("configfile" %: regular_file) in
       fun () -> Config.exec_main configfile (fun () -> test_unbset_ ()))
+
+let show_pos_neg =
+  Command.basic ~summary:"show pos neg."
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and name = anon ("name" %: string) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let pos_file = ".result/" ^ name ^ ".pos" in
+            let neg_file = ".result/" ^ name ^ ".data" in
+            let pos =
+              Primitive.Inpmap.t_of_sexp @@ Sexplib.Sexp.load_sexp pos_file
+            in
+            let ectx = Synthesizer.Enum.load neg_file in
+            let () =
+              Printf.printf "pos:\n %s\n" (Primitive.Inpmap.layout pos)
+            in
+            let () =
+              Printf.printf "neg:\n %s\n" (Synthesizer.Enum.layout_e ectx)
+            in
+            ()))
