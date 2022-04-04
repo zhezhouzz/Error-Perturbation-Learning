@@ -1,16 +1,4 @@
-let preds =
-  [|
-    "hd";
-    "last";
-    "left_adj";
-    "right_adj";
-    "label_is_true";
-    "rb_blance";
-    "rb_blance2";
-    "left";
-    "right";
-    "<";
-  |]
+let preds = [| "hd"; "last"; "mem"; "<" |]
 
 let op_pool =
   [|
