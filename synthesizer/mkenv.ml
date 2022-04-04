@@ -100,7 +100,7 @@ let mk_env_v2_ sigma_raw (sigma : V.t list -> bool)
     client;
     library_inspector = inspector;
     phi;
-    measure_cond = Primitive.Measure.mk_measure_cond i_err;
+    measure_cond = Primitive.Measure.mk_measure_cond_v2 i_err sampling_rounds;
     tps;
     op_pool;
     preds;
