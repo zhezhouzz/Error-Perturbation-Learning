@@ -19,6 +19,11 @@ let infer_ ctx =
   Specification.Spec.{ args = ctx.Cctx.args; qv = ctx.Cctx.qv; body }
 
 let pn_spec_infer ctx pos_values neg_values =
+  (* let _ = Printf.printf "%s\n" @@ Feature.layout_set ctx.Cctx.fset in *)
+  (* let get_size = function *)
+  (*   | [ _; V.T t ] -> Tree.deep t *)
+  (*   | _ -> raise @@ failwith "die" *)
+  (* in *)
   if List.length neg_values == 0 then
     Specification.Spec.
       {
@@ -36,6 +41,15 @@ let pn_spec_infer ctx pos_values neg_values =
         body = Specification.Specast.(Not True);
       })
   else (
+    (* let _ = *)
+    (*   Printf.printf "pos:\n%s\n" @@ IntList.to_string *)
+    (*   @@ List.map get_size pos_values *)
+    (* in *)
+    (* let _ = *)
+    (*   Printf.printf "neg:\n%s\n" @@ IntList.to_string *)
+    (*   @@ List.map get_size neg_values *)
+    (* in *)
+    (* let _ = raise @@ failwith "zz" in *)
     Gather.pos_gather ctx pos_values;
     Gather.neg_gather ctx neg_values;
     infer_ ctx)

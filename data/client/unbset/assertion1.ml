@@ -1,6 +1,15 @@
 let preds =
   [|
-    "hd"; "mem"; "last"; "left_mem"; "right_mem"; "<"; "empty"; "size1"; "size2";
+    "hd";
+    "mem";
+    "last";
+    "left_mem";
+    "right_mem";
+    "<";
+    "empty";
+    "size1";
+    "size2";
+    "size3";
   |]
 
 let op_pool = [| "theta_tree"; "theta_int" |]

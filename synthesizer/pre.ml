@@ -172,7 +172,7 @@ let infer_erroneous_pre_v3 env pos prog sigma =
   in
   let qv = [ (T.Int, "u"); (T.Int, "v") ] in
   let cctx = Cctx.mk_cctx args qv env.preds in
-  let pos_values = Primitive.Inpmap.get_inps pos inference_num_sampling in
+  let pos_values = Primitive.Inpmap.get_inps pos 100 in
   let neg_filter inp =
     if not @@ env.sigma inp then false
     else

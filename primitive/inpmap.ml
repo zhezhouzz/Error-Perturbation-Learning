@@ -143,21 +143,12 @@ let count_tab_analysis count_tab num_runs num_union idxs =
 let res_to_list x = List.of_seq @@ Hashtbl.to_seq x
 
 let get_inps t num =
-  if num > num_inps t then
+  let l =
     List.map (List.map (Bihashtab.i_to_v t.v_emb))
     @@ List.of_seq @@ Hashtbl.to_seq_keys t.m
-    (* raise @@ failwith "bad num ectx" *)
-  else
-    let l = ref (0, []) in
-    let () =
-      Hashtbl.iter
-        (fun k _ ->
-          let n = fst !l in
-          if n > num then () else l := (n, k :: snd !l))
-        t.m
-    in
-    let l = snd @@ !l in
-    List.map (List.map (Bihashtab.i_to_v t.v_emb)) l
+  in
+  if num > num_inps t then l (* raise @@ failwith "bad num ectx" *)
+  else List.sublist l (0, num)
 
 let test () =
   let v1 = Value.L [ 2; 3; 2; 23; 5 ] in
