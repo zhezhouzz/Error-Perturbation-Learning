@@ -35,11 +35,8 @@ let syn source_file meta_file max_length bound =
     Zlog.event_
       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
       (fun () ->
-        (* Synthesizer.Syn.synthesize_piecewise env max_length num_burn_in *)
-        (*   num_sampling *)
-        Synthesizer.Syn.synthesize_multi_core env
-          (fun _ -> true)
-          max_length bound)
+        (* Synthesizer.Syn.synthesize_multi_core env *)
+        Synthesizer.Syn.synthesize_multif env (fun _ -> true) max_length bound)
   in
   (env.i_err, result)
 
@@ -174,12 +171,17 @@ let synthesize_time =
       and source_file = anon ("source file" %: regular_file)
       and meta_file = anon ("meta file" %: regular_file)
       and max_length = anon ("maximal length of the pieces" %: int)
-      and bound_time = anon ("time in second" %: int) in
+      and bound_time = anon ("time in second" %: int)
+      and output_file = anon ("save result to..." %: string) in
       fun () ->
         Config.exec_main configfile (fun () ->
             let i_err, result =
               syn source_file meta_file max_length
                 (Synthesizer.Syn.TimeBound (float_of_int bound_time))
+            in
+            let () =
+              Core.Out_channel.write_all output_file
+                ~data:(Language.Piecewise.layout_with_i_err i_err result)
             in
             let () =
               Printf.printf "%s\n"

@@ -38,9 +38,9 @@ def invoc_cmd(cmd, output_file):
         except subprocess.CalledProcessError as e:
             print(e.output)
 
-def syn(p_setting, num, time, output_file):
+def syn(p_setting, num, time, file_to_save, output_file):
     target_file, assertion_file, _ = solve_tap(p_setting)
-    cmd = cmd_prefix + ["synthesize-time", config_file, target_file, assertion_file, num, time]
+    cmd = cmd_prefix + ["synthesize-time", config_file, target_file, assertion_file, num, time, file_to_save]
     invoc_cmd(cmd, output_file)
 
 def eval_pf_time(p_setting, pf_file, time, outfile):
@@ -182,7 +182,11 @@ if __name__ == "__main__":
                 exit()
     if action == "syn":
         for b in bs:
-            syn(b, "1", timebound, outfile)
+            if int(sizebound) > 6:
+                print("too many")
+                exit()
+            file_to_save = ".result/{}.prog".format(b['name'])
+            syn(b, sizebound, timebound, file_to_save, outfile)
     elif action == "evalpf":
         for b in bs:
             eval_pf_time(b, args.pffile, timebound, outfile)

@@ -317,7 +317,9 @@ let synthesize_multif env bias times bound =
     else if List.length fs + 1 >= times then (fs, default)
     else
       match synthesize_f bias [ env.Env.i_err ] bound env with
-      | None -> loop (fs, default)
+      | None ->
+          (* loop (fs, default) *)
+          raise @@ failwith "synthesize_multi_times fails"
       | Some (_, new_f) -> (
           match default with
           | None -> loop (fs, Some new_f)
