@@ -314,12 +314,15 @@ let synthesize_multi_core env bias max_length bound =
   | h :: t -> (List.map (fun f -> (Spec.dummy_pre env.tps, f)) t, h)
 
 let synthesize_multif env bias times bound =
+  let len (fs, default) =
+    match default with None -> List.length fs | Some _ -> 1 + List.length fs
+  in
   let counter = ref 0 in
   let rec loop (fs, default) =
     let () = counter := !counter + 1 in
     if !counter > (2 * times) + 1 then
       raise @@ failwith "synthesize_multi_times fails"
-    else if List.length fs + 1 >= times then (fs, default)
+    else if len (fs, default) >= times then (fs, default)
     else
       match synthesize_f bias [ env.Env.i_err ] bound env with
       | None ->

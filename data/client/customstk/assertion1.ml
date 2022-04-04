@@ -1,24 +1,6 @@
 let preds = [| "hd"; "mem"; "ord"; "<" |]
 
-let op_pool =
-  [|
-    "replace";
-    "insert";
-    "cons";
-    "append";
-    "list_destruct";
-    "list_last_destruct";
-    "list_mid_partition";
-    "list_alter_partition";
-    (* "list_lower_bound"; *)
-    (* "list_upper_bound"; *)
-    "max";
-    "min";
-    "plus1";
-    "minus1";
-    "const0";
-    "const1";
-  |]
+let op_pool = [| "theta_list"; "theta_int" |]
 
 let libs = [| "Customstk" |]
 

@@ -1,22 +1,6 @@
 let preds = [| "hd"; "mem"; "last"; "<" |]
 
-let op_pool =
-  [|
-    "pairinghp_node";
-    "pairinghp_destruct";
-    "pairinghp_append_to_left_most";
-    "pairinghp_append_to_right_most";
-    "pairinghp_max";
-    "pairinghp_min";
-    "pairinghp_upper_bound";
-    "pairinghp_lower_bound";
-    "pairinghp_drop_bottom";
-    "pairinghp_single";
-    "plus1";
-    "minus1";
-    "const0";
-    "const1";
-  |]
+let op_pool = [| "theta_pairinghp"; "theta_int" |]
 
 let libs = [| "Pairinghp" |]
 

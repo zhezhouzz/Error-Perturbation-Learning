@@ -1,6 +1,6 @@
 let preds = [| "hd"; "mem"; "<"; "ord" |]
 
-let op_pool =
+let raw_op_pool =
   [|
     "append";
     "cons";

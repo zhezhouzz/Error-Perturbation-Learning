@@ -4,6 +4,7 @@
  (modules_without_implementation imp)
  (libraries utils qcheck)
  (modules
+   theta
    tp
    value
    value_aux

@@ -1,22 +1,6 @@
 let preds = [| "hd"; "mem"; "last"; "<" |]
 
-let op_pool =
-  [|
-    "binomialhp_list_last_destruct";
-    "binomialhp_list_destruct";
-    "binomialhp_list_cons";
-    "binomialhp_list_append";
-    "binomialhp_single";
-    "binomialhp_top";
-    "binomialhp_lower_bound";
-    "binomialhp_upper_bound";
-    "binomialt_head";
-    "binomialt_head_update";
-    "plus1";
-    "minus1";
-    "const0";
-    "const1";
-  |]
+let op_pool = [| "theta_binomialhp"; "theta_int" |]
 
 let libs = [| "Binomialhp" |]
 

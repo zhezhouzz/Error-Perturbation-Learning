@@ -1,19 +1,6 @@
 let preds = [| "hd"; "ord"; "mem"; "<" |]
 
-let op_pool =
-  [|
-    (* "replace"; *)
-    (* "insert"; *)
-    "cons";
-    "append";
-    "list_destruct";
-    "list_last_destruct";
-    "list_upper_bound";
-    "list_lower_bound";
-    "list_single";
-    "plus1";
-    "minus1";
-  |]
+let op_pool = [| "theta_list"; "theta_int" |]
 
 let libs = [| "Realtimeq" |]
 

@@ -52,10 +52,12 @@ def load_res(filename):
     return steps, m
 
 def plot_v2 (x, m):
-    fig, ax = plt.subplots(1, 1, figsize=(9,2.2), constrained_layout=True, dpi=100)
+    print(m)
+    fig, ax = plt.subplots(1, 1, figsize=(9.5,2.2), constrained_layout=True, dpi=100)
     plt.axhline(y = 1.0, color = 'grey', linestyle = 'dotted')
-    for y in m:
-        ax.plot(x, y, color='black', linewidth=1.0, linestyle='dashed',  markersize=2, marker = 'o')
+    cm = ['red', 'blue', 'black', 'black', 'black', 'black']
+    for (idx, y) in enumerate(m):
+        ax.plot(x, y, color=cm[idx], linewidth=1.0, linestyle='solid',  markersize=2, marker = 'o')
     ax.set_xticks(np.arange(min(x), max(x)+1, 10))
     ax.set_yticks(np.arange(0.,1.05, 0.2))
     ax.set_yticklabels(['{:.0f}%'.format(100*x) for x in plt.gca().get_yticks()])

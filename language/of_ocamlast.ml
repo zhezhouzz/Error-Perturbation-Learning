@@ -403,7 +403,10 @@ let load_meta asts =
     aux @@ expr_of_ocamlexpr expr
   in
   let preds = get_strings @@ get_meta "preds" asts 0 in
-  let op_pool = get_strings @@ get_meta "op_pool" asts 1 in
+  let op_pool =
+    try Theta.find_theta @@ get_strings @@ get_meta "op_pool" asts 1
+    with _ -> get_strings @@ get_meta "raw_op_pool" asts 1
+  in
   let libs = get_strings @@ get_meta "libs" asts 2 in
   let i_err = get_lit @@ get_meta "i_err" asts 3 in
   let sampling_rounds = get_int @@ get_meta "sampling_rounds" asts 4 in

@@ -1,22 +1,6 @@
 let preds = [| "hd"; "last"; "mem"; "<" |]
 
-let op_pool =
-  [|
-    "skewhp_list_last_destruct";
-    "skewhp_list_destruct";
-    "skewhp_list_cons";
-    "skewhp_list_append";
-    "skewhp_single";
-    "skewhp_top";
-    "skewhp_lower_bound";
-    "skewhp_upper_bound";
-    "skewt_head";
-    "skewt_head_update";
-    "plus1";
-    "minus1";
-    "const0";
-    "const1";
-  |]
+let op_pool = [| "theta_skewhp"; "theta_int" |]
 
 let libs = [| "Skewhp" |]
 

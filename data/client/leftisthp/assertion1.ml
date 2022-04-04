@@ -1,25 +1,6 @@
 let preds = [| "hd"; "last"; "mem"; "<" |]
 
-let op_pool =
-  [|
-    "treei_node";
-    "treei_destruct";
-    "treei_flip";
-    "treei_rec_flip";
-    "treei_rotation_left";
-    "treei_rotation_right";
-    "treei_append_to_left_most";
-    "treei_append_to_right_most";
-    "treei_max";
-    "treei_min";
-    "treei_upper_bound";
-    "treei_lower_bound";
-    "treei_drop_bottom";
-    "plus1";
-    "minus1";
-    "const0";
-    "const1";
-  |]
+let op_pool = [| "theta_treei"; "theta_int" |]
 
 let libs = [| "Leftisthp" |]
 
