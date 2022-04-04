@@ -87,3 +87,17 @@ let sampling_pt_opt filter num state =
   (*   @@ Printf.sprintf "sampling_pt_opt: %i(%i)" (List.length x) batch_size *)
   (* in *)
   if List.length x < 1 then None else Some x
+
+let sampling_pt_opt_moti filter num state =
+  let batch_size =
+    match state with PerbState _ -> num | QCState _ -> raise @@ failwith "die"
+  in
+  let _, _, x = sampling batch_size state in
+  (* let _ = List.iter (fun v -> Zlog.log_write @@ Value.layout_l v) x in *)
+  let x = List.filter filter x in
+  let x = Value_aux.remove_duplicates_l x in
+  (* let _ = *)
+  (*   Zlog.log_write *)
+  (*   @@ Printf.sprintf "sampling_pt_opt: %i(%i)" (List.length x) batch_size *)
+  (* in *)
+  if List.length x < 5 then None else Some x

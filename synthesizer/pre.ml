@@ -249,7 +249,7 @@ let infer_erroneous_pre_moti env qc_conf prog sigma =
   let _, pos_values =
     E.sampling_num pos_filter inference_num_sampling pos_engine
   in
-  match E.sampling_pt_opt neg_filter inference_num_sampling neg_engine with
+  match E.sampling_pt_opt_moti neg_filter inference_num_sampling neg_engine with
   | None -> None
   | Some neg_values ->
       let spec = Infer.pn_spec_infer cctx pos_values neg_values in
