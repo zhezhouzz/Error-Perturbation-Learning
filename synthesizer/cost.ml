@@ -39,9 +39,10 @@ let identity_panalty len = 1.5 *. float_of_int len
 let duplicate_panalty = 2.0
 
 let duplicate_level prev i j =
-  (* let () = Zlog.log_write @@ spf "dupl: i: %i v.x. j: %i" i j in *)
+  (* let () = Zlog.log_write @@ spf "dupl: i: %i v.s. j: %i" i j in *)
   if i == j then Some (identity_panalty @@ (List.length prev + 1))
   else if j < i then
+    (* let () = Zlog.log_write @@ spf "%i == %i" i j in *)
     let dup = S.duplicate prev j in
     let dup_times =
       List.fold_left (fun sum x -> sum +. x) 0.0
@@ -217,6 +218,11 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
     | None -> empty_generation_penalty
   in
   let c = if !no_new then no_new_output_panalty *. c else c in
+  (* let () = *)
+  (*   Zlog.log_write *)
+  (*   @@ spf "\tno_new_output_panalty(%b): %f; c: %f" !no_new *)
+  (*        no_new_output_panalty c *)
+  (* in *)
   c
 
 let cost_duplicate_iter jump_entry =
@@ -266,48 +272,42 @@ let cal_cost (conds : S.conds) prog
   in
   aux 0.0 cache.gs /. float_of_int (List.length cache.gs)
 
+let biased_cost_ if_free bias (env : Env.t) prog =
+  let conds =
+    S.mk_conds
+      (if if_free then fun _ -> true else env.measure_cond)
+      env.sigma
+      (fun v -> snd @@ env.client env.library_inspector v)
+      env.phi bias
+  in
+  (* let () = Zlog.time_tick_init () in *)
+  let scache =
+    S.mk_generation !Config.conf.bias_method env.init_sampling_set conds prog
+      env.sampling_rounds
+  in
+  (* let () = Zlog.time_tick 0.002 in *)
+  (* let () = *)
+  (*   Zlog.log_write *)
+  (*     (Printf.sprintf "sample cache:\n%s\n" *)
+  (*        (Sampling.cache_layout scache)) *)
+  (* in *)
+  let cost =
+    cal_cost conds
+      (fun v -> env.client env.library_inspector v)
+      env.i_err_non_trivial_info scache
+  in
+  let () = Zlog.log_write (Printf.sprintf "cost = %f" cost) in
+  cost
+
 let biased_cost ?(if_free = false) bias (env : Env.t) =
-  let open Env in
-  Zlog.event_ (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-    (fun () ->
-      match env.cur_p with
-      | None ->
-          raise
-          @@ failwith
-               (spf "[%s:%i] the env is not initialized" __FILE__ __LINE__)
-      | Some cur_p ->
-          (* let () = *)
-          (*   Zlog.log_write *)
-          (*     (Printf.sprintf "[%s:%i] prog(non-det: %b):\n%s\n" __FILE__ *)
-          (*        __LINE__ *)
-          (*        (Language.Oplang.check_non_det cur_p.prog) *)
-          (*        (Language.Oplang.layout cur_p.prog)) *)
-          (* in *)
-          let conds =
-            S.mk_conds
-              (if if_free then fun _ -> true else env.measure_cond)
-              env.sigma
-              (fun v -> snd @@ env.client env.library_inspector v)
-              env.phi bias
-          in
-          (* let () = Zlog.time_tick_init () in *)
-          let scache =
-            S.mk_generation !Config.conf.bias_method env.init_sampling_set conds
-              cur_p.prog env.sampling_rounds
-          in
-          (* let () = Zlog.time_tick 0.002 in *)
-          (* let () = *)
-          (*   Zlog.log_write *)
-          (*     (Printf.sprintf "sample cache:\n%s\n" *)
-          (*        (Sampling.cache_layout scache)) *)
-          (* in *)
-          let cost =
-            cal_cost conds
-              (fun v -> env.client env.library_inspector v)
-              env.i_err_non_trivial_info scache
-          in
-          let () = Zlog.log_write (Printf.sprintf "cost = %f" cost) in
-          cost)
+  let prog =
+    match env.cur_p with
+    | None ->
+        raise
+        @@ failwith (spf "[%s:%i] the env is not initialized" __FILE__ __LINE__)
+    | Some cur_p -> cur_p.prog
+  in
+  biased_cost_ if_free bias env prog
 
 let test (env : Env.t) =
   let open Language.Oplang in

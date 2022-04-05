@@ -67,7 +67,10 @@ let mk_measure_cond_v2 input n =
   let s = measure_size input in
   let ws = List.map weight input in
   let w_sum = IntList.sum ws in
-  let w = min 1 (w_sum / List.length ws) in
+  let w = max 1 (w_sum / List.length ws) in
+  (* let () = *)
+  (*   Zlog.log_write @@ spf "w(%i) = min(%i, %i/%i)" w 1 w_sum (List.length ws) *)
+  (* in *)
   let bound = s + (w * n) in
   let () = Zlog.log_write @@ spf "mk_measure_cond(%i ~ %i) -> %i" s n bound in
   fun v -> measure_size v < bound

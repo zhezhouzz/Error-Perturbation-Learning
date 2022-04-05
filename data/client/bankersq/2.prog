@@ -1,0 +1,8 @@
+let i_err = (2, [ 1; 2 ], 1, [ 3 ], 4)
+Default
+IN: (x0: int, x1: int list, x2: int, x3: int list, x4: int) {
+(x5: int) = list_lower_bound(x1: int list);
+(x6: int list) = cons(x5: int, x1: int list);
+(x7: int list, x8: int) = list_last_destruct(x6: int list);
+(x9: int) = plus1(x0: int)}
+OUT: (x0: int, x7: int list, x2: int, x3: int list, x4: int)

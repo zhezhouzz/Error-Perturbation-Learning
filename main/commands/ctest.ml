@@ -293,11 +293,17 @@ let syn_simple_eval_ source_file meta_file prog_file =
   let fs = List.map snd (fst prog) @ [ snd prog ] in
   let n = env.sampling_rounds in
   let open Primitive in
+  let violate_phi x =
+    match Synthesizer.Env.(snd @@ env.client env.library_inspector x) with
+    | None -> false
+    | Some y -> not @@ env.phi (x @ y)
+  in
   let rec loop f (i, x) =
     if i > n then ()
     else
       let () =
-        Printf.printf "%i: measure(%i) %s\n" i (Measure.measure_size x)
+        Printf.printf "%i: measure(%i) in_pre(%b) out_phi(%b) %s\n" i
+          (Measure.measure_size x) (env.sigma x) (violate_phi x)
           (Value.layout_l x)
       in
       match Language.Oplang_interp.interp f x with
@@ -306,10 +312,13 @@ let syn_simple_eval_ source_file meta_file prog_file =
           ()
       | Some x' -> loop f (i + 1, x')
   in
+  let cost =
+    Synthesizer.Cost.biased_cost_ false (fun _ -> true) env (snd prog)
+  in
   let () =
     List.iteri
       (fun i f ->
-        Printf.printf "check f%i\n" i;
+        Printf.printf "check f%i(%f)\n" i cost;
         loop f (0, env.i_err))
       fs
   in
