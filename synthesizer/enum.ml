@@ -137,7 +137,7 @@ let next_state_ t =
   loop 0
 
 (* Stack overflow!! *)
-let counting_upper_bound = 30000
+let counting_upper_bound = 50000
 
 let next_state ectx =
   let n = num_inps ectx in
