@@ -214,19 +214,15 @@ module Naming = struct
     | IntTreeB ->
         ( name "itb" counter.itreebnum,
           { counter with itreebnum = counter.itreebnum + 1 } )
-    (* | IfcInstr -> *)
-    (*     ( name "instr" counter.instrnum, *)
-    (*       { counter with instrnum = counter.instrnum + 1 } ) *)
-    (* | IfcInstrList -> *)
-    (*     ( name "instr" counter.instrlnum, *)
-    (*       { counter with instrlnum = counter.instrlnum + 1 } ) *)
     | IntBoolList ->
         ( name "instr" counter.iblnum,
           { counter with iblnum = counter.iblnum + 1 } )
     | BoolIntBoolList ->
         ( name "instr" counter.biblnum,
           { counter with biblnum = counter.biblnum + 1 } )
-    | Uninterp _ -> raise @@ failwith "counter uninterp datatype"
+    | Uninterp name_ ->
+        ( name name_ counter.biblnum,
+          { counter with biblnum = counter.biblnum + 1 } )
 
   let universal_counter = ref (make_counter ())
 

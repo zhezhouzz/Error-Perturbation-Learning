@@ -38,6 +38,7 @@ let syn source_file meta_file max_length bound =
         (* Synthesizer.Syn.synthesize_multi_core env *)
         Synthesizer.Syn.synthesize_multif env (fun _ -> true) max_length bound)
   in
+  let () = Zlog.log_write "syn done" in
   (env.i_err, result)
 
 let pie_times = 60
@@ -179,6 +180,7 @@ let synthesize_time =
               syn source_file meta_file max_length
                 (Synthesizer.Syn.TimeBound (float_of_int bound_time))
             in
+            let () = Zlog.log_write "before write" in
             let () =
               Core.Out_channel.write_all output_file
                 ~data:(Language.Piecewise.layout_with_i_err i_err result)

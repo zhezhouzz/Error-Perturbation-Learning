@@ -339,7 +339,9 @@ let synthesize_multif env bias times bound =
   let fs, default = loop ([], None) in
   match default with
   | None -> raise @@ failwith "die"
-  | Some default -> (List.map (fun x -> (Spec.dummy_pre env.tps, x)) fs, default)
+  | Some default ->
+      let () = Zlog.log_write "synthesize_multif done" in
+      (List.map (fun x -> (Spec.dummy_pre env.tps, x)) fs, default)
 
 let synthesize_multi env max_length num_burn_in num_sampling =
   synthesize_multi_core env
