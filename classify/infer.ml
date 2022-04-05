@@ -40,20 +40,20 @@ let pn_spec_infer ctx pos_values neg_values =
         qv = ctx.Cctx.qv;
         body = Specification.Specast.(Not True);
       })
-  else
+  else (
     (* let _ = *)
     (*   Printf.printf "pos:\n%s\n" @@ IntList.to_string *)
     (*   @@ List.map get_size pos_values *)
     (* in *)
-    let _ =
-      Printf.printf "neg:\n%s\n"
-      @@ List.split_by_comma V.layout_l
-      @@ List.sublist neg_values (0, 5)
-    in
+    (* let _ = *)
+    (*   Printf.printf "neg:\n%s\n" *)
+    (*   @@ List.split_by_comma V.layout_l *)
+    (*   @@ List.sublist neg_values (0, 5) *)
+    (* in *)
     (* let _ = raise @@ failwith "zz" in *)
     Gather.pos_gather ctx pos_values;
     Gather.neg_gather ctx neg_values;
-    infer_ ctx
+    infer_ ctx)
 
 let spec_infer ctx (data : 'a list) (to_values : 'a -> V.t list)
     (judge : 'a -> bool) =
