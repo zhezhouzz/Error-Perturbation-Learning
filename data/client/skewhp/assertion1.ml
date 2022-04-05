@@ -1,6 +1,6 @@
 let preds = [| "hd"; "last"; "mem"; "<"; "empty"; "size1"; "size2"; "size3" |]
 
-let op_pool = [| "theta_skewhp"; "theta_int" |]
+let op_pool = [| "theta_skewhp" |]
 
 let libs = [| "Skewhp" |]
 
