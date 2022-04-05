@@ -89,7 +89,7 @@ let pre_infer_from_env env init_set qvnum =
 module E = Sampling.Engine
 module Spec = Specification.Spec
 
-let inference_num_sampling = 200
+let inference_num_sampling = 1000
 
 let infer_verified_pre env qc_conf prog sigma =
   let open Env in

@@ -159,6 +159,19 @@ let get_inps t num =
   in
   List.map (List.map (Bihashtab.i_to_v t.v_emb)) l
 
+let filter t cond =
+  let total = num_inps t in
+  let () =
+    Hashtbl.filter_map_inplace
+      (fun inp_idxs v ->
+        if cond (List.map (Bihashtab.i_to_v t.v_emb) inp_idxs) then Some v
+        else None)
+      t.m
+  in
+  let total' = num_inps t in
+  let () = Zlog.log_write @@ spf "Data Filter: %i ---> %i" total total' in
+  ()
+
 let test () =
   let v1 = Value.L [ 2; 3; 2; 23; 5 ] in
   let v1' = Value.L [ 2; 3; 2; 23; 5 ] in

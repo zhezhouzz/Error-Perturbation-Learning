@@ -260,13 +260,21 @@ let test_unbset =
       let%map_open configfile = anon ("configfile" %: regular_file) in
       fun () -> Config.exec_main configfile (fun () -> test_unbset_ ()))
 
-let zz ectx =
+let zz m =
+  let open Primitive in
   let dummy_pre = function
-    | [ _; _; _; Primitive.Value.L r; _ ] -> Int.equal 2 (List.length r)
+    | [ Value.I x; Value.L l ] -> (
+        (* let () = *)
+        (*   if List.length l <= 1 then *)
+        (*     Printf.printf "x: %i; l: %s\n" x (Basic_dt.IntList.to_string l) *)
+        (*   else () *)
+        (* in *)
+        (* List.length l <= 1 *)
+        match l with [] -> false | _ :: t -> List.mem x t)
     | _ -> raise @@ failwith "die"
   in
-  let total = Synthesizer.Enum.num_inps ectx in
-  let in_pre = Synthesizer.Enum.count_in_pre_raw ectx dummy_pre in
+  let total = Primitive.Inpmap.num_inps m in
+  let in_pre = Primitive.Inpmap.count_raw dummy_pre m in
   let () =
     Printf.printf "pre: %i/%i = %.2f\n" in_pre total
       (float_of_int in_pre /. float_of_int total *. 100.0)
@@ -292,7 +300,8 @@ let show_pos_neg =
             let () =
               Printf.printf "neg:\n %s\n" (Synthesizer.Enum.layout_e ectx)
             in
-            (* let () = zz ectx in *)
+            let () = zz ectx.m in
+            let () = zz pos in
             ()))
 
 let syn_simple_eval_ source_file meta_file prog_file =

@@ -42,6 +42,7 @@ let command =
       ("coverage-save-pos-b", Ccoverage.coverage_save_pos_b);
       ("coverage-save-pos", Ccoverage.coverage_save_pos);
       ("coverage-against-data", Ccoverage.coverage_against_data);
+      ("coverage-filter", Ccoverage.coverage_filter);
       ("show-pos-neg", Ctest.show_pos_neg);
       ("syn-simple-eval", Ctest.syn_simple_eval);
     ]

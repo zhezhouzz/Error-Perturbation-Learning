@@ -136,7 +136,13 @@ let next_state_ t =
   in
   loop 0
 
-let next_state ectx = next_state_ ectx.t
+(* Stack overflow!! *)
+let counting_upper_bound = 30000
+
+let next_state ectx =
+  let n = num_inps ectx in
+  let () = Zlog.log_write @@ spf "counted:%i\n" n in
+  if n > counting_upper_bound then false else next_state_ ectx.t
 
 let run f ectx =
   let rec loop () =
