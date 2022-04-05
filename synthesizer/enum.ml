@@ -157,6 +157,9 @@ let load filename = ectx_of_sexp @@ Sexplib.Sexp.load_sexp filename
 
 let count_init ectx = Inpmap.count_init ectx.m
 
+let count_in_pre_raw_bound ectx bound pre =
+  Inpmap.count_raw_bound bound pre ectx.m
+
 let count_in_pre_raw ectx pre = Inpmap.count_raw pre ectx.m
 
 let count_in_pre ct ectx pre = Inpmap.count ct pre ectx.m

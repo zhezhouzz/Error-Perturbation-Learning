@@ -4,7 +4,8 @@ let op_pool = [| "theta_list" |]
 
 let libs = [| "Physicistsq"; "Nat" |]
 
-let i_err = ([ 2 ], 2, [ 2; 3 ], 3, [ 6; 5; 4 ])
+(* let i_err = ([ 2 ], 2, [ 2; 3 ], 3, [ 6; 5; 4 ]) *)
+let i_err = ([ 2 ], 1, [ 2 ], 2, [ 6; 5 ])
 
 let sampling_rounds = 5
 

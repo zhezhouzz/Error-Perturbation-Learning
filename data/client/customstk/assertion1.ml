@@ -4,8 +4,8 @@ let op_pool = [| "theta_list"; "theta_int" |]
 
 let libs = [| "Customstk" |]
 
-let i_err = ([ -10; -5; -4; 0; 3 ], [ -8; -5; 4; 5 ])
-(* let i_err = ([ 1; 2 ], [ 3; 4 ]) *)
+(* let i_err = ([ -10; -5; -4; 0; 3 ], [ -8; -5; 4; 5 ]) *)
+let i_err = ([ 1; 2 ], [ 2; 4 ])
 
 let sampling_rounds = 14
 

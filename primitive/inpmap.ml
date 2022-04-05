@@ -47,6 +47,15 @@ let count_add_replace count_tab v i =
   | Some c -> Hashtbl.replace count_tab v (i :: c)
   | None -> Hashtbl.add count_tab v [ i ]
 
+let count_raw_bound bound f t =
+  Hashtbl.fold
+    (fun inp_idxs _ (total, n) ->
+      if total >= bound then (total, n)
+      else
+        let inp = List.map (Bihashtab.i_to_v t.v_emb) inp_idxs in
+        if f inp then (total + 1, n + 1) else (total + 1, n))
+    t.m (0, 0)
+
 let count_raw f t =
   Hashtbl.fold
     (fun inp_idxs _ n ->
@@ -143,12 +152,12 @@ let count_tab_analysis count_tab num_runs num_union idxs =
 let res_to_list x = List.of_seq @@ Hashtbl.to_seq x
 
 let get_inps t num =
+  let l = List.of_seq @@ Hashtbl.to_seq_keys t.m in
   let l =
-    List.map (List.map (Bihashtab.i_to_v t.v_emb))
-    @@ List.of_seq @@ Hashtbl.to_seq_keys t.m
+    if num > num_inps t then l (* raise @@ failwith "bad num ectx" *)
+    else List.sublist l (0, num)
   in
-  if num > num_inps t then l (* raise @@ failwith "bad num ectx" *)
-  else List.sublist l (0, num)
+  List.map (List.map (Bihashtab.i_to_v t.v_emb)) l
 
 let test () =
   let v1 = Value.L [ 2; 3; 2; 23; 5 ] in

@@ -17,6 +17,8 @@ let e_0 inputs =
       List.equal ( = ) [ 3; 4 ] s2 && List.length s1 >= 2 && inc 1 s1
   | _ -> false
 
+let enum_bound = 10000
+
 let c_eval env ectx total pos prog =
   let epre =
     Zlog.event_

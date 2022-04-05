@@ -1,0 +1,8 @@
+let i_err = (SkCons (SkNode (1, 0, [1], SkCons (SkNode (0, 2, [], SkNil), SkNil)), SkNil), SkCons (SkNode (1, 5, [6], SkCons (SkNode (0, 7, [], SkNil), SkNil)), SkNil))
+Default
+IN: (x0: skewhp, x1: skewhp) {
+(x2: int) = skewhp_upper_bound(x0: skewhp);
+(x3: skewhp, x4: skewt) = skewhp_list_last_destruct(x1: skewhp);
+(x5: skewt) = skewt_head_update(x4: skewt, x2: int);
+(x6: skewhp) = skewhp_list_append(x3: skewhp, x5: skewt)}
+OUT: (x6: skewhp, x0: skewhp)

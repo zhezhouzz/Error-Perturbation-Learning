@@ -4,7 +4,8 @@ let op_pool = [| "theta_list"; "theta_int" |]
 
 let libs = [| "Batchedq" |]
 
-let i_err = ([ -7 ], [ -5; 6; 1; 0; 8 ])
+(* let i_err = ([ -7 ], [ -5; 6; 1; 0; 8 ]) *)
+let i_err = ([ -7 ], [ -5; 6 ])
 
 let sampling_rounds = 6
 
