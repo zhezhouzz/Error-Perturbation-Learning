@@ -62,11 +62,9 @@ let instantization = function
 let mk_set args qv mps =
   let dtargs, eargs = List.partition (fun (tp, _) -> T.is_dt tp) args in
   let eargs =
-    List.map
+    List.filter_map
       (fun (a, b) ->
-        match a with
-        | T.Int | T.Nat -> (T.Int, b)
-        | _ -> raise @@ failwith @@ spf "not imp tp %s" (T.layout a))
+        match a with T.Int | T.Nat -> Some (T.Int, b) | _ -> None)
       eargs
   in
   let mk_feature mp =
