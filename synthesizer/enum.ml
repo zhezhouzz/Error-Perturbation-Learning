@@ -155,7 +155,7 @@ let run client ectx =
     if next_state ectx then loop () else ()
   in
   let () = loop () in
-  let () = Inpmap.filter ectx.m client.sigma in
+  (* let () = Inpmap.filter ectx.m client.sigma in *)
   let _ = Zlog.log_write (layout_e ectx) in
   ()
 
