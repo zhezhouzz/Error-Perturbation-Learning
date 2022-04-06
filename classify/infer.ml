@@ -6,6 +6,15 @@ open Basic_dt
 
 let infer_ ctx =
   (* let () = Zlog.log_write @@ spf "fvctx:\n%s\n" @@ Cctx.layout_fvctx ctx in *)
+  (* let _ = *)
+  (*   Hashtbl.iter *)
+  (*     (fun a b -> *)
+  (*       Printf.printf "[%s]:%s\n" *)
+  (*         (List.split_by_comma Cctx.layout_bool (Array.to_list a)) *)
+  (*       @@ Label.layout_label b) *)
+  (*     ctx.Cctx.fvtab *)
+  (* in *)
+  (* let _ = raise @@ failwith "zz" in *)
   let dt, _ = Dtree.classify ctx in
   let body = Specification.Simplify.simplify_ite @@ Dtree.to_prop dt in
   (* let _ = *)

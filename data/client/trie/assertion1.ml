@@ -1,4 +1,4 @@
-let preds = [| "hd"; "mem"; "last"; "<"; "empty"; "size1"; "size2"; "size3" |]
+let preds = [| "hd"; "mem"; "last"; "<"; "=="; "empty"; "size1"; "size2" |]
 
 let op_pool = [| "theta_list"; "theta_tree"; "theta_int" |]
 

@@ -60,7 +60,7 @@ let instantization = function
 
 (* TODO: make feature set *)
 let mk_set args qv mps =
-  let dtargs, _ = List.partition (fun (tp, _) -> T.is_dt tp) args in
+  let dtargs, eargs = List.partition (fun (tp, _) -> T.is_dt tp) args in
   let mk_feature mp =
     match mp with
     | "empty" | "size1" | "size2" | "size3" | "size4" | "size5" ->
@@ -74,11 +74,11 @@ let mk_set args qv mps =
     | "==" ->
         List.map (fun args -> Pr (mp, args))
         @@ (* (List.map (fun (a, b) -> [ a; b ]) @@ List.cross elemargs qv)@ *)
-        List.combination_l qv 2
+        List.combination_l (eargs @ qv) 2
     | "<" ->
         List.map (fun args -> Pr (mp, args))
         @@ (* (List.map (fun (a, b) -> [ a; b ]) @@ List.cross elemargs qv)@ *)
-        List.combination_l qv 2
+        List.combination_l (eargs @ qv) 2
     | _ -> raise @@ failwith (spf "undef feature(%s)" mp)
   in
   List.map instantization @@ List.flatten @@ List.map mk_feature mps

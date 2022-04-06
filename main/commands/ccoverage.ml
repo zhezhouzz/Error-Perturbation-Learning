@@ -19,18 +19,21 @@ let e_0 inputs =
 
 let enum_bound = 10000
 
-let c_eval env ectx total pos prog =
-  let epre =
-    Zlog.event_
-      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
-      (fun () -> Synthesizer.Syn.synthesize_erroneous_pre_v3 env pos prog)
-  in
+let c_eval_ env ectx total epre =
   let in_pre = Synthesizer.Enum.count_in_pre_raw ectx epre in
   let () =
     Printf.printf "pre: %i/%i = %.2f\n" in_pre total
       (float_of_int in_pre /. float_of_int total *. 100.0)
   in
   ()
+
+let c_eval env ectx total pos prog =
+  let epre =
+    Zlog.event_
+      (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+      (fun () -> Synthesizer.Syn.synthesize_erroneous_pre_v3 env pos prog)
+  in
+  c_eval_ env ectx total epre
 
 let gen_from_target_data source_file meta_file data_file prog_file pos_file =
   let env =
