@@ -10,11 +10,11 @@ let sampling_rounds = 6
 
 let p_size = 4
 
-let pre (lenf : int) (f : Bankersq.t) (lenr : int) (r : Bankersq.t) (x : int) =
+let pre (lenf : nat) (f : Bankersq.t) (lenr : nat) (r : Bankersq.t) (x : int) =
   lenr < lenf && size f lenf && size r lenr
 
-let post (lenf : int) (f : Bankersq.t) (lenr : int) (r : Bankersq.t) (x : int)
-    (lenf' : int) (f' : Bankersq.t) (lenr' : int) (r' : Bankersq.t) (u : int) =
+let post (lenf : nat) (f : Bankersq.t) (lenr : nat) (r : Bankersq.t) (x : int)
+    (lenf' : nat) (f' : Bankersq.t) (lenr' : nat) (r' : Bankersq.t) (u : int) =
   lenr' < lenf' && size f' lenf' && size r' lenr'
   && iff (mem f u || mem r u || u == x) (mem f' u && mem r' u)
   && iff
