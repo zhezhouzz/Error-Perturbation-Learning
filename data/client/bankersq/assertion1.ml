@@ -4,7 +4,8 @@ let op_pool = [| "theta_list"; "theta_int" |]
 
 let libs = [| "Bankersq" |]
 
-let i_err = (2, [ 1; 2 ], 1, [ 3 ], 4)
+(* let i_err = (2, [ 1; 2 ], 1, [ 3 ], 4) *)
+let i_err = (1, [ 1 ], 0, [], 4)
 
 let sampling_rounds = 6
 

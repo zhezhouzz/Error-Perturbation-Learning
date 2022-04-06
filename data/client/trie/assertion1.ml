@@ -4,11 +4,13 @@ let op_pool = [| "theta_list"; "theta_tree"; "theta_int" |]
 
 let libs = [| "Trie" |]
 
-let i_err =
-  ( 0,
-    [ 1; 0 ],
-    3,
-    Node (0, NodeS 0, Node (1, Node (0, NodeS 0, NodeS 1), NodeS 1)) )
+(* let i_err = *)
+(*   ( 0, *)
+(*     [ 1; 0 ], *)
+(*     3, *)
+(*     Node (0, NodeS 0, Node (1, Node (0, NodeS 0, NodeS 1), NodeS 1)) ) *)
+
+let i_err = (0, [ 0 ], 2, Node (1, Node (0, NodeS 0, NodeS 1), NodeS 1))
 
 let sampling_rounds = 6
 

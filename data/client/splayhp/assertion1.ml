@@ -11,8 +11,10 @@ let libs = [| "Splayhp" |]
 (*         Node (6, Node (3, NodeS 1, NodeS 4), NodeS 7), *)
 (*         Node (13, Node (11, NodeS 10, NodeS 12), NodeS 14) ) ) *)
 
-let i_err =
-  (9, Node (8, NodeS 6, Node (13, Node (11, NodeS 10, NodeS 12), NodeS 14)))
+(* let i_err = *)
+(*   (9, Node (8, NodeS 6, Node (13, Node (11, NodeS 10, NodeS 12), NodeS 14))) *)
+
+let i_err = (9, Node (8, NodeS 6, Node (13, NodeS 11, NodeS 14)))
 
 let sampling_rounds = 6
 
