@@ -144,7 +144,8 @@ let next_state ectx =
   let () = Zlog.log_write @@ spf "counted:%i\n" n in
   if n > counting_upper_bound then false else next_state_ ectx.t
 
-let run f ectx =
+let run client ectx =
+  let f = explore_state client in
   let rec loop () =
     (* Zlog.log_write *)
     (* @@ spf "explore_state: [%s]" *)
@@ -154,6 +155,7 @@ let run f ectx =
     if next_state ectx then loop () else ()
   in
   let () = loop () in
+  let () = Inpmap.filter ectx.m client.sigma in
   let _ = Zlog.log_write (layout_e ectx) in
   ()
 
@@ -179,4 +181,4 @@ let test client =
     init statement_num op_pool [ Tp.IntList; Tp.IntList ]
       [ Value.L [ 1; 2 ]; Value.L [ 3; 4 ] ]
   in
-  run (explore_state client) ectx
+  run client ectx

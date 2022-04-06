@@ -199,7 +199,7 @@ let test =
                       Enum.init env.p_size env.op_pool env.tps env.i_err
                     in
                     Printf.printf "test!\n";
-                    Enum.run (Enum.explore_state client) ectx)
+                    Enum.run client ectx)
             (* | "ifc" -> *)
             (*     Zlog.event_ *)
             (*       (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ *)

@@ -289,7 +289,7 @@ let coverage_all_save =
                     ~iter_bound:num_sampling env.p_size env.op_pool env.tps
                     env.i_err
                 in
-                let () = Enum.run (Enum.explore_state client) ectx in
+                let () = Enum.run client ectx in
                 let () =
                   Zlog.event_
                     (Printf.sprintf "save time %s:%i[%s]-%s" __FILE__ __LINE__
