@@ -454,8 +454,8 @@ let slipt_args argtps assertionargs =
     in
     let tp_eq a b =
       match (a, b) with
-      | T.Nat, b -> Tp.eq T.Nat b
-      | a, T.Nat -> Tp.eq a T.Nat
+      | T.Nat, b -> Tp.eq T.Int b
+      | a, T.Nat -> Tp.eq a T.Int
       | _, _ -> Tp.eq a b
     in
     let _ =
