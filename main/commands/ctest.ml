@@ -260,21 +260,10 @@ let test_unbset =
       let%map_open configfile = anon ("configfile" %: regular_file) in
       fun () -> Config.exec_main configfile (fun () -> test_unbset_ ()))
 
-let zz m =
+let zz pre m =
   let open Primitive in
-  let dummy_pre = function
-    | [ Value.I x; Value.L l ] -> (
-        (* let () = *)
-        (*   if List.length l <= 1 then *)
-        (*     Printf.printf "x: %i; l: %s\n" x (Basic_dt.IntList.to_string l) *)
-        (*   else () *)
-        (* in *)
-        (* List.length l <= 1 *)
-        match l with [] -> false | _ :: t -> List.mem x t)
-    | _ -> raise @@ failwith "die"
-  in
   let total = Primitive.Inpmap.num_inps m in
-  let in_pre = Primitive.Inpmap.count_raw dummy_pre m in
+  let in_pre = Primitive.Inpmap.count_raw pre m in
   let () =
     Printf.printf "pre: %i/%i = %.2f\n" in_pre total
       (float_of_int in_pre /. float_of_int total *. 100.0)
@@ -300,8 +289,36 @@ let show_pos_neg =
             let () =
               Printf.printf "neg:\n %s\n" (Synthesizer.Enum.layout_e ectx)
             in
-            let () = zz ectx.m in
-            let () = zz pos in
+            ()))
+
+let show_pos_neg_sigma =
+  Command.basic ~summary:"show pos neg sigma."
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and name = anon ("name" %: string) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let pos_file = ".result/" ^ name ^ ".pos" in
+            let neg_file = ".result/" ^ name ^ ".data" in
+            let pos =
+              Primitive.Inpmap.t_of_sexp @@ Sexplib.Sexp.load_sexp pos_file
+            in
+            let env =
+              Zlog.event_
+                (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+                (fun () -> mk_env_from_files source_file meta_file)
+            in
+            let ectx = Synthesizer.Enum.load neg_file in
+            let () =
+              Printf.printf "pos:\n %s\n" (Primitive.Inpmap.layout pos)
+            in
+            let () =
+              Printf.printf "neg:\n %s\n" (Synthesizer.Enum.layout_e ectx)
+            in
+            let () = zz env.Synthesizer.Env.sigma ectx.m in
+            let () = zz env.Synthesizer.Env.sigma pos in
             ()))
 
 let syn_simple_eval_ source_file meta_file prog_file =

@@ -44,6 +44,7 @@ let command =
       ("coverage-against-data", Ccoverage.coverage_against_data);
       ("coverage-filter", Ccoverage.coverage_filter);
       ("show-pos-neg", Ctest.show_pos_neg);
+      ("show-pos-neg-sigma", Ctest.show_pos_neg_sigma);
       ("syn-simple-eval", Ctest.syn_simple_eval);
     ]
 
