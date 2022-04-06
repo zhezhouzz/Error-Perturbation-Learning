@@ -123,19 +123,23 @@ let of_fastdt dt feature_set =
   in
   aux dt
 
+let if_appr = true
+
 let of_fastdt_idx dt =
   let rec aux = function
     | FastDT.Leaf { c_t; c_f } ->
-        let res =
-          if Float.abs c_t < 1e-6 then F
-          else if Float.abs c_f < 1e-6 then T
-          else (
-            FastDT.print_tree' dt;
-            raise @@ failwith (sprintf "Bad Dt Result(%f, %f)" c_t c_f))
-        in
-        (* let _ = Printf.printf "leaf(%f,%f) ->(%f,%f,%f) = %s\n" c_t c_f
-         *     (Float.abs c_t) (Float.abs c_f) (1e-3) (layout res) in *)
-        res
+        if if_appr then if c_t > c_f then T else F
+        else
+          let res =
+            if Float.abs c_t < 1e-6 then F
+            else if Float.abs c_f < 1e-6 then T
+            else (
+              FastDT.print_tree' dt;
+              raise @@ failwith (sprintf "Bad Dt Result(%f, %f)" c_t c_f))
+          in
+          (* let _ = Printf.printf "leaf(%f,%f) ->(%f,%f,%f) = %s\n" c_t c_f
+           *     (Float.abs c_t) (Float.abs c_f) (1e-3) (layout res) in *)
+          res
     | FastDT.Node { split; if_t; if_f } -> Node (split, aux if_t, aux if_f)
   in
   aux dt
