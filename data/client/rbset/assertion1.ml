@@ -4,21 +4,21 @@ let op_pool = [| "theta_treeb"; "theta_int" |]
 
 let libs = [| "Rbset" |]
 
-(* let i_err = *)
-(*   ( false, *)
-(*     1, *)
-(*     LNodeS (false, 0), *)
-(*     LNode *)
-(*       ( true, *)
-(*         5, *)
-(*         LNode (true, 3, LNodeS (false, 2), LNodeS (false, 4)), *)
-(*         LNodeS (false, 6) ) ) *)
-
 let i_err =
   ( false,
     1,
     LNodeS (false, 0),
-    LNode (true, 5, LNodeS (false, 3), LNodeS (false, 6)) )
+    LNode
+      ( true,
+        5,
+        LNode (true, 3, LNodeS (false, 2), LNodeS (false, 4)),
+        LNodeS (false, 6) ) )
+
+(* let i_err = *)
+(*   ( false, *)
+(*     1, *)
+(*     LNodeS (false, 0), *)
+(*     LNode (true, 5, LNodeS (false, 3), LNodeS (false, 6)) ) *)
 
 let sampling_rounds = 6
 

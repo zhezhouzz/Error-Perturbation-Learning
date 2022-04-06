@@ -325,9 +325,10 @@ let syn_simple_eval_ source_file meta_file prog_file =
     if i > n then ()
     else
       let () =
-        Printf.printf "%i: measure(%i) in_pre(%b) out_phi(%b) %s\n" i
-          (Measure.measure_size x) (env.sigma x) (violate_phi x)
-          (Value.layout_l x)
+        Zlog.log_write
+        @@ spf "%i: measure(%i) in_pre(%b) out_phi(%b) %s\n" i
+             (Measure.measure_size x) (env.sigma x) (violate_phi x)
+             (Value.layout_l x)
       in
       match Language.Oplang_interp.interp f x with
       | None ->
@@ -344,6 +345,12 @@ let syn_simple_eval_ source_file meta_file prog_file =
         Printf.printf "check f%i(%f)\n" i cost;
         loop f (0, env.i_err))
       fs
+  in
+  let () =
+    Zlog.log_write @@ spf "fvctx:\n%s\n" @@ Classify.Feature.layout_set
+    @@ Classify.Feature.mk_set env.sigma_raw.args
+         [ (Primitive.Tp.Int, "u"); (Primitive.Tp.Int, "v") ]
+         env.preds
   in
   ()
 

@@ -61,6 +61,14 @@ let instantization = function
 (* TODO: make feature set *)
 let mk_set args qv mps =
   let dtargs, eargs = List.partition (fun (tp, _) -> T.is_dt tp) args in
+  let eargs =
+    List.map
+      (fun (a, b) ->
+        match a with
+        | T.Int | T.Nat -> (T.Int, b)
+        | _ -> raise @@ failwith @@ spf "not imp tp %s" (T.layout a))
+      eargs
+  in
   let mk_feature mp =
     match mp with
     | "empty" | "size1" | "size2" | "size3" | "size4" | "size5" ->
