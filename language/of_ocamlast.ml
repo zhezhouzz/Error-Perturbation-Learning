@@ -452,9 +452,15 @@ let slipt_args argtps assertionargs =
     let rest =
       List.sublist assertionargs (List.length argtps, List.length assertionargs)
     in
+    let tp_eq a b =
+      match (a, b) with
+      | T.Nat, b -> Tp.eq T.Nat b
+      | a, T.Nat -> Tp.eq a T.Nat
+      | _, _ -> Tp.eq a b
+    in
     let _ =
       if
-        List.exists (fun ((tp, _), tp') -> not (Tp.eq tp tp'))
+        List.exists (fun ((tp, _), tp') -> not (tp_eq tp tp'))
         @@ List.combine args' argtps
       then
         raise
