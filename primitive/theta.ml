@@ -10,6 +10,20 @@ let theta_list =
     "list_alter_partition";
     "list_head";
     "list_last";
+    "list_upper_bound";
+    "list_lower_bound";
+  ]
+
+let theta_stream =
+  [
+    "cons";
+    "append";
+    "list_destruct";
+    "list_last_destruct";
+    "list_mid_partition";
+    "list_alter_partition";
+    "list_head";
+    "list_last";
     "list_single";
     "list_upper_bound";
     "list_lower_bound";
@@ -113,6 +127,7 @@ let theta_table =
   [
     ("theta_int", theta_int);
     ("theta_list", theta_list);
+    ("theta_stream", theta_stream);
     ("theta_tree", theta_tree);
     ("theta_treeb", theta_treeb);
     ("theta_treei", theta_treei);

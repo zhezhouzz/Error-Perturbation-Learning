@@ -1,6 +1,6 @@
 let preds = [| "hd"; "ord"; "mem"; "<"; "==" |]
 
-let op_pool = [| "theta_list"; "theta_int" |]
+let op_pool = [| "theta_stream"; "theta_int" |]
 
 let libs = [| "Realtimeq" |]
 

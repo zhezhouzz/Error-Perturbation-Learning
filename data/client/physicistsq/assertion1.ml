@@ -1,6 +1,6 @@
 let preds = [| "hd"; "ord"; "mem"; "<"; "==" |]
 
-let op_pool = [| "theta_list" |]
+let op_pool = [| "theta_stream" |]
 
 let libs = [| "Physicistsq"; "Nat" |]
 
