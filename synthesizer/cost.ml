@@ -189,9 +189,10 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
                   (* in *)
                   if phi (v @ v') then alpha_out_pre_not_err
                   else if sigma v then
-                    let k_non_trivial =
-                      non_trival_v2 i_err_non_trivial_info invocation_record
-                    in
+                    (* let k_non_trivial = *)
+                    (*   non_trival_v2 i_err_non_trivial_info invocation_record *)
+                    (* in *)
+                    let k_non_trivial = 1.0 in
                     (* let () = *)
                     (*   Zlog.log_write *)
                     (*   @@ spf *)
