@@ -14,7 +14,7 @@ let type_weight tp = if Tp.is_dt tp then 3.0 else 1.0
 let op_weight name =
   let a, b = Operator.get_tp_one name in
   let c x = list_sum @@ List.map type_weight x in
-  min 1.2 (max 0.5 (c b /. c a))
+  min 1.2 (max 0.5 (c a /. c b))
 
 let distance num_args a trace =
   let d_2 = 1.0 /. float_of_int num_args in
