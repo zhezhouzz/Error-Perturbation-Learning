@@ -9,33 +9,24 @@ let w_other = 2.0
 
 let list_sum = List.fold_left (fun sum x -> sum +. x) 0.0
 
+let type_weight tp = if Tp.is_dt tp then 3.0 else 1.0
+
+let op_weight name =
+  let a, b = Operator.get_tp_one name in
+  let c x = list_sum @@ List.map type_weight x in
+  min 1.2 (max 0.5 (c b /. c a))
+
 let distance num_args a trace =
   let d_2 = 1.0 /. float_of_int num_args in
-  let m = IntMap.empty in
-  let m =
-    List.fold_left
-      (fun m name ->
-        match IntMap.find_opt m name with
-        | None -> IntMap.add name 1 m
-        | Some n -> IntMap.add name (n + 1) m)
-      m trace
-  in
   let d_a =
-    min 1.0
-      (match IntMap.find_opt m a with
-      | None -> 0.6
-      | Some n -> 0.5 *. d_2 *. float_of_int (n - 1))
+    min 1.0 (if trace.(a) < 0.01 then 0.6 else (0.5 *. d_2 *. trace.(a)) -. 1.0)
   in
   let d =
     if num_args == 1 then d_a
     else
-      let m =
-        IntMap.filter_map (fun name v -> if name == a then None else Some v) m
-      in
       let d_others =
-        list_sum
-        @@ List.map (fun (_, n) -> float_of_int n)
-        @@ IntMap.to_kv_list m
+        list_sum @@ Array.to_list
+        @@ Array.mapi (fun i x -> if i == a then 0.0 else x) trace
       in
       let d_others = min 1.0 (d_others /. float_of_int num_args *. d_2) in
       ((w_other *. d_others) +. d_a) /. (w_other +. 1.0)
@@ -43,26 +34,40 @@ let distance num_args a trace =
   (* let _ = Zlog.log_write @@ spf "x_%i: %f" a d in *)
   d
 
-let distance_n fout m =
+let distance_n fin fout m =
   let len = List.length fout in
-  let aux (_, name) =
-    let trace = IntMap.find "distance_n" m name in
-    distance len name trace
+  let aux ((_, iname), (_, oname)) =
+    let trace = Hashtbl.find m oname in
+    distance len iname trace
   in
-  (list_sum @@ List.map aux fout) /. float_of_int len
+  (list_sum @@ List.map aux (List.combine fin fout)) /. float_of_int len
 
 let insteresting { fin; body; fout } =
-  let m = IntMap.empty in
-  let m =
-    List.fold_left (fun m (_, name) -> IntMap.add name [ name ] m) m fin
+  let len = List.length fin in
+  let m = Hashtbl.create 10 in
+  let () =
+    List.iter
+      (fun (_, name) ->
+        let arr =
+          Array.init (len + 2) (fun i -> if i == name then 1.0 else 0.0)
+        in
+        Hashtbl.add m name arr)
+      fin
   in
-  let aux m { args; res; _ } =
-    let news =
-      List.flatten
-      @@ List.map (fun (_, name) -> IntMap.find "trace" m name) args
-    in
-    let m = List.fold_left (fun m (_, name) -> IntMap.add name news m) m res in
-    m
+  let arr_add_to w a b =
+    Array.iteri (fun i v -> b.(i) <- b.(i) +. (w *. v)) a
   in
-  let m = List.fold_left aux m body in
-  distance_n fout m
+  let add_to w a b =
+    let a = Hashtbl.find m a in
+    let b = Hashtbl.find m b in
+    arr_add_to w a b
+  in
+  let aux { op; args; res } =
+    List.iter
+      (fun (_, r) ->
+        let () = Hashtbl.add m r (Array.init (len + 2) (fun _ -> 0.0)) in
+        List.iter (fun (_, arg) -> add_to (op_weight op) arg r) args)
+      res
+  in
+  let () = List.iter aux body in
+  min 1.0 @@ max 0.0 @@ distance_n fin fout m
