@@ -5,6 +5,7 @@
  (modules
    tinyocaml
    oplang
+   oplang_ana
    oplang_interp
    oplang_serialization
    piecewise

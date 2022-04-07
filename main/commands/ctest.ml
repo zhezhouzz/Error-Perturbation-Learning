@@ -343,7 +343,7 @@ let syn_simple_eval_ source_file meta_file prog_file =
     else
       let () =
         Zlog.log_write
-        @@ spf "%i: measure(%i) in_pre(%b) out_phi(%b) %s\n" i
+        @@ spf "%i: measure(%i) in_pre(%b) out_phi(%b) %s" i
              (Measure.measure_size x) (env.sigma x) (violate_phi x)
              (Value.layout_l x)
       in
@@ -353,13 +353,12 @@ let syn_simple_eval_ source_file meta_file prog_file =
           ()
       | Some x' -> loop f (i + 1, x')
   in
-  let cost =
-    Synthesizer.Cost.biased_cost_ false (fun _ -> true) env (snd prog)
-  in
+  let cost f = Synthesizer.Cost.biased_cost_ false (fun _ -> true) env f in
   let () =
     List.iteri
       (fun i f ->
-        Printf.printf "check f%i(%f)\n" i cost;
+        Printf.printf "interetsing: %f\n" (Language.Oplang_ana.insteresting f);
+        Printf.printf "check f%i(%f)\n" i (cost f);
         loop f (0, env.i_err))
       fs
   in

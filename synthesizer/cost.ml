@@ -146,8 +146,7 @@ let cost_count_error _ (sigma : V.t list -> bool)
 
 let cost_weighted_valid_iter (bias : V.t list -> bool)
     (sigma : V.t list -> bool) (prog : V.t list -> int list * V.t list option)
-    (phi : V.t list -> bool) (i_err_non_trivial_info : Env.non_trivial_info)
-    prev g mem =
+    (phi : V.t list -> bool) (_ : Env.non_trivial_info) prev g mem =
   let k_bias_penalty =
     match !Config.conf.bias_method with
     | Config.SamplingCutOff | Config.Correct | Config.MeasureOnly ->
@@ -176,7 +175,7 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
           (* let () = Zlog.log_write @@ spf "\tk_dupliate: %f" k_dupliate in *)
           let v = S.Mem.itov mem j in
           let delta =
-            let invocation_record, result = prog v in
+            let _, result = prog v in
             let alpha =
               match result with
               | None -> alpha_none
@@ -243,7 +242,7 @@ let k_duplicate = 0.5
 let k_valid = 0.5
 
 let cal_cost (conds : S.conds) prog
-    (i_err_non_trivial_info : Env.non_trivial_info) (cache : S.t) =
+    (i_err_non_trivial_info : Env.non_trivial_info) (cache : S.t) pf =
   let rec aux sum = function
     | [] -> sum
     | g :: prev ->
@@ -271,7 +270,11 @@ let cal_cost (conds : S.conds) prog
         (* let () = Zlog.log_write (Printf.sprintf "cost-: %f" cost) in *)
         aux (sum +. cost) prev
   in
-  aux 0.0 cache.gs /. float_of_int (List.length cache.gs)
+  let c = aux 0.0 cache.gs /. float_of_int (List.length cache.gs) in
+  let c =
+    if c < 0.1 then c -. (0.05 *. Language.Oplang_ana.insteresting pf) else c
+  in
+  c
 
 let biased_cost_ if_free bias (env : Env.t) prog =
   let conds =
@@ -295,7 +298,7 @@ let biased_cost_ if_free bias (env : Env.t) prog =
   let cost =
     cal_cost conds
       (fun v -> env.client env.library_inspector v)
-      env.i_err_non_trivial_info scache
+      env.i_err_non_trivial_info scache prog
   in
   let () = Zlog.log_write (Printf.sprintf "cost = %f" cost) in
   cost
@@ -443,7 +446,7 @@ let test (env : Env.t) =
     let cost =
       cal_cost conds
         (fun v -> env.client env.library_inspector v)
-        env.i_err_non_trivial_info scache
+        env.i_err_non_trivial_info scache f
     in
     let () = Zlog.log_write (Printf.sprintf "cost = %f\n" cost) in
     cost

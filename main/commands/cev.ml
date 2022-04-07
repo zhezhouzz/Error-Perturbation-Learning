@@ -239,7 +239,7 @@ let run_cost env progs =
     let cost =
       Synthesizer.Cost.cal_cost conds
         (fun v -> env.client env.library_inspector v)
-        env.i_err_non_trivial_info scache
+        env.i_err_non_trivial_info scache prog
     in
     cost
   in
