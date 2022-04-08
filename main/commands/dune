@@ -2,7 +2,7 @@
  (name commands)
  (libraries utils core language synthesizer parser classify ocaml_parser evaluation zquickcheck analysis
             ; ifc
-            LoopInvGen zpie)
+            LoopInvGen zpie elrond)
  (modules
    caux
    ctest

@@ -1,6 +1,6 @@
 (library
  (name elrond)
- (libraries utils primitive)
+ (libraries utils primitive specification)
  (modules
    evalue
    espec

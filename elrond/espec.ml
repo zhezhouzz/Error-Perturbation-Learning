@@ -55,6 +55,16 @@ module T = struct
       let name = json |> member "n" |> to_string in
       (tp, name)
     else raise @@ failwith (Printf.sprintf "%s::decode wrong type" "tpedvar")
+
+  module Tp = Primitive.Tp
+
+  let to_tp = function
+    | Bool -> Tp.Bool
+    | Int -> Tp.Int
+    | IntList -> Tp.IntList
+    | IntTree -> Tp.IntTree
+    | IntTreeI -> Tp.IntTreeI
+    | IntTreeB -> Tp.IntTreeB
 end
 
 module L = struct
@@ -299,3 +309,60 @@ let spectable_decode = function
           StrMap.add name spec r)
         StrMap.empty l
   | _ -> raise @@ failwith (Printf.sprintf "%s::decode wrong type" "spec table")
+
+module S = Specification.Specast
+
+let elrond_tv_to_tv (tp, name) = (T.to_tp tp, name)
+
+let elrond_epr_to_body x =
+  let open E in
+  let rec aux = function
+    | True -> S.True
+    | Atom (SE.Op (_, op, args)) ->
+        let se_to_v = function
+          | SE.Var (t, name) -> (T.to_tp t, name)
+          | _ -> raise @@ failwith "die"
+        in
+        S.MethodPredicate (op, List.map se_to_v args)
+    | Atom _ -> raise @@ failwith "die"
+    | Implies (e1, e2) -> S.Implies (aux e1, aux e2)
+    | Ite (e1, e2, e3) -> S.Ite (aux e1, aux e2, aux e3)
+    | Not e -> S.Not (aux e)
+    | And l -> S.And (List.map aux l)
+    | Or l -> S.Or (List.map aux l)
+    | Iff (e1, e2) -> S.Iff (aux e1, aux e2)
+  in
+  aux x
+
+let elrond_spec_to_spec (args, (qv, x)) =
+  Specification.Spec.
+    {
+      args = List.map elrond_tv_to_tv args;
+      qv = List.map elrond_tv_to_tv qv;
+      body = elrond_epr_to_body x;
+    }
+
+let elrond_spectab_to_spectab m = StrMap.map elrond_spec_to_spec m
+
+let load_spectab filename =
+  elrond_spectab_to_spectab @@ spectable_decode
+  @@ Yojson.Basic.from_file filename
+
+let load_all spectabfile alphafile =
+  let spectab = load_spectab spectabfile in
+  let alphas = Evalue.load_alpha alphafile in
+  StrMap.mapi
+    (fun k v ->
+      match List.find_opt (fun (name, _) -> String.equal k name) alphas with
+      | None -> raise @@ failwith "die"
+      | Some (_, alphas) -> (v, alphas))
+    spectab
+
+let show_all x =
+  StrMap.iter
+    (fun name (spec, alphas) ->
+      Zlog.log_write
+      @@ spf "%s:\n%s\n%s\n" name
+           (Specification.Spec.layout spec)
+           (List.split_by "\n" Primitive.Value.layout_l alphas))
+    x

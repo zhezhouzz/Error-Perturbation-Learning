@@ -381,3 +381,15 @@ let syn_simple_eval =
         Config.exec_main configfile (fun () ->
             let () = syn_simple_eval_ source_file meta_file prog_file in
             ()))
+
+let show_elrond_input =
+  Command.basic ~summary:"show-elrond-input"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and spectab_file = anon ("spectab file" %: regular_file)
+      and alpha_file = anon ("alpha file" %: regular_file) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let goals = Elrond.Espec.load_all spectab_file alpha_file in
+            let () = Elrond.Espec.show_all goals in
+            ()))

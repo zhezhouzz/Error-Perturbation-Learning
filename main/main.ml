@@ -45,6 +45,7 @@ let command =
       ("coverage-filter", Ccoverage.coverage_filter);
       ("show-pos-neg", Ctest.show_pos_neg);
       ("show-pos-neg-sigma", Ctest.show_pos_neg_sigma);
+      ("show-elrond-input", Ctest.show_elrond_input);
       ("syn-simple-eval", Ctest.syn_simple_eval);
     ]
 
