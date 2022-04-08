@@ -403,34 +403,40 @@ let elrond =
       fun () ->
         Config.exec_main configfile (fun () ->
             let goals = Elrond.Espec.load_all spectab_file alpha_file in
-            let nss =
-              StrMap.filter_map
+            let () =
+              StrMap.iter
                 (fun name (spec, a) ->
-                  match Elrond.Tasks.make_env_from_elrond spec name a with
-                  | None -> None
-                  | Some (env, a) ->
-                      let env = Synthesizer.Mkenv.random_init_prog env in
-                      let result =
-                        Zlog.event_
-                          (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
-                             __FUNCTION__ "") (fun () ->
-                            (* Synthesizer.Syn.synthesize_multi_core env *)
-                            Synthesizer.Syn.synthesize_multif env
-                              (fun _ -> true)
-                              2 (TimeBound 100.0))
-                      in
-                      let () =
-                        Core.Out_channel.write_all (name ^ ".prog")
-                          ~data:
-                            (Language.Piecewise.layout_with_i_err env.i_err
-                               result)
-                      in
-                      let ss = Elrond.Tasks.pfs_to_sampless env result a in
-                      Some ss)
+                  Elrond.Tasks.make_env_from_elrond spec name a)
                 goals
             in
-            let () =
-              Elrond.Evalue.save_alpha (alpha_file ^ ".murphy")
-              @@ StrMap.to_kv_list nss
-            in
+            (* let nss = *)
+            (*   StrMap.filter_map *)
+            (*     (fun name (spec, a) -> *)
+            (*       match Elrond.Tasks.make_env_from_elrond spec name a with *)
+            (*       | None -> None *)
+            (*       | Some (env, a) -> *)
+            (*           let env = Synthesizer.Mkenv.random_init_prog env in *)
+            (*           let result = *)
+            (*             Zlog.event_ *)
+            (*               (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ *)
+            (*                  __FUNCTION__ "") (fun () -> *)
+            (*                 (\* Synthesizer.Syn.synthesize_multi_core env *\) *)
+            (*                 Synthesizer.Syn.synthesize_multif env *)
+            (*                   (fun _ -> true) *)
+            (*                   2 (TimeBound 100.0)) *)
+            (*           in *)
+            (*           let () = *)
+            (*             Core.Out_channel.write_all (name ^ ".prog") *)
+            (*               ~data: *)
+            (*                 (Language.Piecewise.layout_with_i_err env.i_err *)
+            (*                    result) *)
+            (*           in *)
+            (*           let ss = Elrond.Tasks.pfs_to_sampless env result a in *)
+            (*           Some ss) *)
+            (*     goals *)
+            (* in *)
+            (* let () = *)
+            (*   Elrond.Evalue.save_alpha (alpha_file ^ ".murphy") *)
+            (*   @@ StrMap.to_kv_list nss *)
+            (* in *)
             ()))
