@@ -311,7 +311,7 @@ let spectable_decode = function
         (fun r json ->
           let open Yojson.Basic in
           let name = json |> Util.member "name" |> Util.to_string in
-          let _ = Printf.printf "spectable_decode find name:%s\n" name in
+          (* let _ = Printf.printf "spectable_decode find name:%s\n" name in *)
           let spec_j = json |> Util.member "spec" in
           (* let _ = Printf.printf "%s\n" @@ to_string spec_j in *)
           let spec = spec_decode spec_j in
@@ -371,12 +371,17 @@ let load_spectab filename =
 let load_all spectabfile alphafile =
   let spectab = load_spectab spectabfile in
   let alphas = Evalue.load_alpha alphafile in
-  StrMap.mapi
-    (fun k v ->
-      match List.find_opt (fun (name, _) -> String.equal k name) alphas with
-      | None -> raise @@ Failure "die"
-      | Some (_, alphas) -> (v, alphas))
-    spectab
+  let m =
+    StrMap.mapi
+      (fun k v ->
+        match List.find_opt (fun (name, _) -> String.equal k name) alphas with
+        | None -> raise @@ Failure "die"
+        | Some (_, alphas) -> (v, alphas))
+      spectab
+  in
+  StrMap.filter_map
+    (fun name x -> match name with "Batchedq.nil" -> None | _ -> Some x)
+    m
 
 let show_all x =
   StrMap.iter
