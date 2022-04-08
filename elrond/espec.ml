@@ -379,9 +379,11 @@ let load_all spectabfile alphafile =
         | Some (_, alphas) -> (v, alphas))
       spectab
   in
-  StrMap.filter_map
-    (fun name x -> match name with "Batchedq.nil" -> None | _ -> Some x)
-    m
+  m
+
+(* StrMap.filter_map *)
+(*   (fun name x -> match name with "Batchedq.nil" -> None | _ -> Some x) *)
+(*   m *)
 
 let show_all x =
   StrMap.iter

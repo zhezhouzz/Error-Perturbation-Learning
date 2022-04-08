@@ -35,13 +35,26 @@ let make_op_pool _ =
     "const1";
   ]
 
-let make_env_from_elrond spec name i_err =
+let filter c phi samples =
+  List.filter
+    (fun d -> match c d with None -> false | Some x -> not @@ phi (d @ x))
+    samples
+
+let make_env_from_elrond spec name a =
   let tps, imp = make_client name in
-  let sigma_raw = Spec.dummy_pre tps in
-  Mkenv.mk_env_v2_ sigma_raw
-    (fun _ -> true)
-    (fun _ x -> ([], imp x))
-    Env.BB.dummy_inspector (Spec.eval spec) tps i_err (make_op_pool name) [] 6 4
+  let phi = Spec.eval spec in
+  let a = filter imp phi a in
+  match a with
+  | [] -> None
+  | i_err :: _ ->
+      let sigma_raw = Spec.dummy_pre tps in
+      let env =
+        Mkenv.mk_env_v2_ sigma_raw
+          (fun _ -> true)
+          (fun _ x -> ([], imp x))
+          Env.BB.dummy_inspector phi tps i_err (make_op_pool name) [] 6 4
+      in
+      Some (env, a)
 
 let snum = 10
 
@@ -55,12 +68,7 @@ let pf_to_sampless env pf samples =
       aux (i + 1) (s', s' @ res)
   in
   let d = aux 0 (samples, samples) in
-  List.filter
-    (fun d ->
-      match Mkenv.to_c env d with
-      | None -> false
-      | Some x -> not @@ env.Env.phi (d @ x))
-    d
+  filter (Mkenv.to_c env) env.phi d
 
 let pfs_to_sampless env pfs samples =
   Value_aux.remove_duplicates_l @@ List.flatten
