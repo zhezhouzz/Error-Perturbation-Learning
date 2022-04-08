@@ -189,10 +189,10 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
                   (* in *)
                   if phi (v @ v') then alpha_out_pre_not_err
                   else if sigma v then
-                    let k_non_trivial =
+                    let _ =
                       non_trival_v2 i_err_non_trivial_info invocation_record
                     in
-                    (* let k_non_trivial = 1.0 in *)
+                    let k_non_trivial = 1.0 in
                     (* let () = *)
                     (*   Zlog.log_write *)
                     (*   @@ spf *)
@@ -272,9 +272,9 @@ let cal_cost (conds : S.conds) prog
         aux (sum +. cost) prev
   in
   let c = aux 0.0 cache.gs /. float_of_int (List.length cache.gs) in
-  (* let c = *)
-  (*   if c < 0.1 then c -. (0.05 *. Language.Oplang_ana.insteresting pf) else c *)
-  (* in *)
+  let c =
+    if c < 0.1 then c -. (0.05 *. Language.Oplang_ana.insteresting pf) else c
+  in
   c
 
 let biased_cost_ if_free bias (env : Env.t) prog =
