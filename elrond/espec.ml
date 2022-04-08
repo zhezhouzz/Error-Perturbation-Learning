@@ -11,12 +11,12 @@ let decode_field_ treetp_name (json : Yojson.Basic.t) =
     let field = json |> member "f" |> to_string in
     let value = json |> member "v" in
     (field, value)
-  else raise @@ failwith (Printf.sprintf "%s::decode wrong type" treetp_name)
+  else raise @@ Failure (Printf.sprintf "%s::decode wrong type" treetp_name)
 
 let decode_list err decoder json =
   match json with
   | `List l -> List.map decoder l
-  | _ -> raise @@ failwith (Printf.sprintf "decode_list:%s" err)
+  | _ -> raise @@ Failure (Printf.sprintf "decode_list:%s" err)
 
 module T = struct
   type t = Bool | Int | IntList | IntTree | IntTreeI | IntTreeB
@@ -42,7 +42,7 @@ module T = struct
     else if String.equal "IT" tp then IntTree
     else if String.equal "ITI" tp then IntTreeI
     else if String.equal "ITB" tp then IntTreeB
-    else raise @@ failwith "Lit.Tree::decode wrong type"
+    else raise @@ Failure "Lit.Tree::decode wrong type"
 
   let tpedvar_encode (tp, name) =
     `Assoc [ ("t", `String "tpv"); ("tp", encode tp); ("n", `String name) ]
@@ -54,7 +54,7 @@ module T = struct
       let tp = json |> member "tp" |> decode in
       let name = json |> member "n" |> to_string in
       (tp, name)
-    else raise @@ failwith (Printf.sprintf "%s::decode wrong type" "tpedvar")
+    else raise @@ Failure (Printf.sprintf "%s::decode wrong type" "tpedvar")
 
   module Tp = Primitive.Tp
 
@@ -83,10 +83,10 @@ module L = struct
   let encode = function
     | Int i -> encode_field "Int" (`Int i)
     | Bool b -> encode_field "Bool" (`Bool b)
-    | _ -> raise @@ failwith "Lit::encode"
+    | _ -> raise @@ Failure "Lit::encode"
 
   let decode (json : Yojson.Basic.t) : t =
-    let e = failwith (Printf.sprintf "%s::decode wrong field" treetp_name) in
+    let e = Failure (Printf.sprintf "%s::decode wrong field" treetp_name) in
     let open Yojson.Basic in
     let open Util in
     let field, value = decode_field json in
@@ -118,7 +118,7 @@ module SE = struct
           (`List [ T.encode tp; `String op; `List (List.map encode args) ])
 
   let rec decode json =
-    let e = failwith (Printf.sprintf "%s::decode wrong field" treetp_name) in
+    let e = Failure (Printf.sprintf "%s::decode wrong field" treetp_name) in
     let open Yojson.Basic in
     let open Util in
     let field, value = decode_field json in
@@ -166,7 +166,7 @@ module E = struct
         encode_field "EIte" (`List [ encode p1; encode p2; encode p3 ])
 
   let rec decode json =
-    let e = failwith (Printf.sprintf "%s::decode wrong field" treetp_name) in
+    let e = Failure (Printf.sprintf "%s::decode wrong field" treetp_name) in
     let field, value = decode_field json in
     match (field, value) with
     | field, `List [] when String.equal "ETrue" field -> True
@@ -194,8 +194,8 @@ module E = struct
       ]
 
   let forallformula_decode json =
-    let e =
-      failwith (Printf.sprintf "%s::decode wrong type" forallformula_tpname)
+    let e () =
+      Failure (Printf.sprintf "%s::decode wrong type" forallformula_tpname)
     in
     let open Yojson.Basic in
     let open Util in
@@ -204,11 +204,11 @@ module E = struct
       let qv =
         match json |> member "qv" with
         | `List qv -> List.map T.tpedvar_decode qv
-        | _ -> raise e
+        | _ -> raise (e ())
       in
       let body = json |> member "body" |> decode in
       (qv, body)
-    else raise e
+    else raise (e ())
 end
 
 type t =
@@ -232,7 +232,7 @@ let encode_field = encode_field_ treetp_name
 let decode_field = decode_field_ treetp_name
 
 let rec encode = function
-  | ForAll _ -> raise @@ failwith "never happen ast encode"
+  | ForAll _ -> raise @@ Failure "never happen ast encode"
   | Implies (p1, p2) -> encode_field "AImplies" (`List [ encode p1; encode p2 ])
   | And ps -> encode_field "AAnd" (`List (List.map encode ps))
   | Or ps -> encode_field "AOr" (`List (List.map encode ps))
@@ -245,7 +245,7 @@ let rec encode = function
         (`List [ `String specname; `List (List.map SE.encode args) ])
 
 let rec decode json =
-  let e = failwith (Printf.sprintf "%s::decode wrong field" treetp_name) in
+  let e () = Failure (Printf.sprintf "%s::decode wrong field" treetp_name) in
   let field, value = decode_field json in
   match (field, value) with
   (* | field, _ when String.equal "Forall" field -> True *)
@@ -261,7 +261,7 @@ let rec decode json =
   | field, `List [ `String specname; `List args ]
     when String.equal "ASpecApply" field ->
       SpecApply (specname, List.map SE.decode args)
-  | _ -> raise e
+  | _ -> raise (e ())
 
 let spec_tpname = "spec"
 
@@ -274,19 +274,26 @@ let spec_encode (args, specbody) =
     ]
 
 let spec_decode json =
-  let e = failwith (Printf.sprintf "%s::decode wrong type" spec_tpname) in
   let open Yojson.Basic in
   let open Util in
   let treetp = json |> member "treetp" |> to_string in
+  (* let e = Failure (Printf.sprintf "%s::decode wrong type" spec_tpname) in *)
+  let e () =
+    Failure (Printf.sprintf "%s|%s::decode wrong type" spec_tpname treetp)
+  in
   if String.equal spec_tpname treetp then
     let qv =
       match json |> member "args" with
       | `List qv -> List.map T.tpedvar_decode qv
-      | _ -> raise e
+      | x ->
+          let _ = Printf.printf "BAD: %s\n" @@ to_string x in
+          raise (e ())
     in
     let body = json |> member "specbody" |> E.forallformula_decode in
     (qv, body)
-  else raise e
+  else
+    let _ = Printf.printf "treetp: %s\n" treetp in
+    raise (e ())
 
 let spectable_encode tab =
   let j =
@@ -304,15 +311,23 @@ let spectable_decode = function
         (fun r json ->
           let open Yojson.Basic in
           let name = json |> Util.member "name" |> Util.to_string in
-          (* let _ = printf "spectable_decode find name:%s\n" name in *)
-          let spec = json |> Util.member "spec" |> spec_decode in
+          let _ = Printf.printf "spectable_decode find name:%s\n" name in
+          let spec_j = json |> Util.member "spec" in
+          (* let _ = Printf.printf "%s\n" @@ to_string spec_j in *)
+          let spec = spec_decode spec_j in
           StrMap.add name spec r)
         StrMap.empty l
-  | _ -> raise @@ failwith (Printf.sprintf "%s::decode wrong type" "spec table")
+  | _ -> raise @@ Failure (Printf.sprintf "%s::decode wrong type" "spec table")
 
 module S = Specification.Specast
 
 let elrond_tv_to_tv (tp, name) = (T.to_tp tp, name)
+
+let mp_convert = function
+  | "list_order" -> "list_ord"
+  | "list_member" -> "list_mem"
+  | "list_head" -> "list_hd"
+  | x -> x
 
 let elrond_epr_to_body x =
   let open E in
@@ -321,10 +336,14 @@ let elrond_epr_to_body x =
     | Atom (SE.Op (_, op, args)) ->
         let se_to_v = function
           | SE.Var (t, name) -> (T.to_tp t, name)
-          | _ -> raise @@ failwith "die"
+          | _ -> raise @@ Failure "die"
         in
-        S.MethodPredicate (op, List.map se_to_v args)
-    | Atom _ -> raise @@ failwith "die"
+        S.MethodPredicate (mp_convert op, List.map se_to_v args)
+    (* | Atom (SE.Literal (_, L.Bool b)) -> if b then S.True else S.Not S.True *)
+    | Atom (SE.Var (T.Bool, name)) -> S.Bvar (Primitive.Tp.Bool, name)
+    | Atom x ->
+        let j = SE.encode x in
+        raise @@ Failure (Yojson.Basic.to_string j)
     | Implies (e1, e2) -> S.Implies (aux e1, aux e2)
     | Ite (e1, e2, e3) -> S.Ite (aux e1, aux e2, aux e3)
     | Not e -> S.Not (aux e)
@@ -346,6 +365,7 @@ let elrond_spectab_to_spectab m = StrMap.map elrond_spec_to_spec m
 
 let load_spectab filename =
   elrond_spectab_to_spectab @@ spectable_decode
+  @@ Yojson.Basic.Util.member "spectab"
   @@ Yojson.Basic.from_file filename
 
 let load_all spectabfile alphafile =
@@ -354,7 +374,7 @@ let load_all spectabfile alphafile =
   StrMap.mapi
     (fun k v ->
       match List.find_opt (fun (name, _) -> String.equal k name) alphas with
-      | None -> raise @@ failwith "die"
+      | None -> raise @@ Failure "die"
       | Some (_, alphas) -> (v, alphas))
     spectab
 

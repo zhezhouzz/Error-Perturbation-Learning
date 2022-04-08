@@ -1,9 +1,10 @@
 (library
  (name elrond)
- (libraries utils primitive specification)
+ (libraries utils primitive specification synthesizer)
  (modules
    evalue
    espec
+   tasks
  )
  (preprocess (pps ppx_optcomp ppx_compare ppx_sexp_conv))
 )
