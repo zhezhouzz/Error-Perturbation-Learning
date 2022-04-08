@@ -146,7 +146,8 @@ let cost_count_error _ (sigma : V.t list -> bool)
 
 let cost_weighted_valid_iter (bias : V.t list -> bool)
     (sigma : V.t list -> bool) (prog : V.t list -> int list * V.t list option)
-    (phi : V.t list -> bool) (_ : Env.non_trivial_info) prev g mem =
+    (phi : V.t list -> bool) (i_err_non_trivial_info : Env.non_trivial_info)
+    prev g mem =
   let k_bias_penalty =
     match !Config.conf.bias_method with
     | Config.SamplingCutOff | Config.Correct | Config.MeasureOnly ->
@@ -175,7 +176,7 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
           (* let () = Zlog.log_write @@ spf "\tk_dupliate: %f" k_dupliate in *)
           let v = S.Mem.itov mem j in
           let delta =
-            let _, result = prog v in
+            let invocation_record, result = prog v in
             let alpha =
               match result with
               | None -> alpha_none
@@ -188,10 +189,10 @@ let cost_weighted_valid_iter (bias : V.t list -> bool)
                   (* in *)
                   if phi (v @ v') then alpha_out_pre_not_err
                   else if sigma v then
-                    (* let k_non_trivial = *)
-                    (*   non_trival_v2 i_err_non_trivial_info invocation_record *)
-                    (* in *)
-                    let k_non_trivial = 1.0 in
+                    let k_non_trivial =
+                      non_trival_v2 i_err_non_trivial_info invocation_record
+                    in
+                    (* let k_non_trivial = 1.0 in *)
                     (* let () = *)
                     (*   Zlog.log_write *)
                     (*   @@ spf *)
@@ -271,9 +272,9 @@ let cal_cost (conds : S.conds) prog
         aux (sum +. cost) prev
   in
   let c = aux 0.0 cache.gs /. float_of_int (List.length cache.gs) in
-  let c =
-    if c < 0.1 then c -. (0.05 *. Language.Oplang_ana.insteresting pf) else c
-  in
+  (* let c = *)
+  (*   if c < 0.1 then c -. (0.05 *. Language.Oplang_ana.insteresting pf) else c *)
+  (* in *)
   c
 
 let biased_cost_ if_free bias (env : Env.t) prog =

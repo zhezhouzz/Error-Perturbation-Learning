@@ -21,7 +21,7 @@ let op_weight name =
 let distance num_args a trace =
   let d_2 = 1.0 /. float_of_int num_args in
   let d_a =
-    min 1.0 (if trace.(a) < 0.01 then 0.6 else (0.5 *. d_2 *. trace.(a)) -. 1.0)
+    min 1.0 (if trace.(a) < 0.01 then 0.4 else (0.5 *. d_2 *. trace.(a)) -. 1.0)
   in
   let d =
     if num_args == 1 then d_a
