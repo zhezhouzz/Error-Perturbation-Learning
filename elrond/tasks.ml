@@ -42,3 +42,28 @@ let make_env_from_elrond spec name i_err =
     (fun _ -> true)
     (fun _ x -> ([], imp x))
     Env.BB.dummy_inspector (Spec.eval spec) tps i_err (make_op_pool name) [] 6 4
+
+let snum = 10
+
+let pf_to_sampless env pf samples =
+  let rec aux i (s, res) =
+    if i >= snum then res
+    else
+      let s' =
+        List.filter_map (fun x -> Language.Oplang_interp.interp pf x) s
+      in
+      aux (i + 1) (s', s' @ res)
+  in
+  let d = aux 0 (samples, samples) in
+  List.filter
+    (fun d ->
+      match Mkenv.to_c env d with
+      | None -> false
+      | Some x -> not @@ env.Env.phi (d @ x))
+    d
+
+let pfs_to_sampless env pfs samples =
+  Value_aux.remove_duplicates_l @@ List.flatten
+  @@ List.map
+       (fun pf -> pf_to_sampless env pf samples)
+       (snd pfs :: List.map snd (fst pfs))

@@ -403,8 +403,8 @@ let elrond =
       fun () ->
         Config.exec_main configfile (fun () ->
             let goals = Elrond.Espec.load_all spectab_file alpha_file in
-            let () =
-              StrMap.iter
+            let nss =
+              StrMap.mapi
                 (fun name (spec, a) ->
                   let i_err = List.nth a 0 in
                   let env =
@@ -424,11 +424,12 @@ let elrond =
                     Core.Out_channel.write_all (name ^ ".prog")
                       ~data:(Language.Piecewise.layout_with_i_err i_err result)
                   in
-                  let () =
-                    Printf.printf "%s\n%s\n" name
-                    @@ Language.Piecewise.layout_with_i_err i_err result
-                  in
-                  ())
+                  let ss = Elrond.Tasks.pfs_to_sampless env result a in
+                  ss)
                 goals
+            in
+            let () =
+              Elrond.Evalue.save_alpha (alpha_file ^ ".murphy")
+              @@ StrMap.to_kv_list nss
             in
             ()))
