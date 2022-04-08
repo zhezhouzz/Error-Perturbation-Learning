@@ -49,7 +49,7 @@ let make_env_from_elrond spec name _ =
   let _ = Zlog.log_write @@ spf "%s len(d): %i" name (List.length d) in
   let a = filter imp phi d in
   let _ = Zlog.log_write @@ spf "%s len(a): %i" name (List.length a) in
-  ()
+  a
 
 (* let rec aux = function *)
 (*   | [] -> None *)

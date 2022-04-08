@@ -403,8 +403,8 @@ let elrond =
       fun () ->
         Config.exec_main configfile (fun () ->
             let goals = Elrond.Espec.load_all spectab_file alpha_file in
-            let () =
-              StrMap.iter
+            let nss =
+              StrMap.mapi
                 (fun name (spec, a) ->
                   Elrond.Tasks.make_env_from_elrond spec name a)
                 goals
@@ -435,8 +435,8 @@ let elrond =
             (*           Some ss) *)
             (*     goals *)
             (* in *)
-            (* let () = *)
-            (*   Elrond.Evalue.save_alpha (alpha_file ^ ".murphy") *)
-            (*   @@ StrMap.to_kv_list nss *)
-            (* in *)
+            let () =
+              Elrond.Evalue.save_alpha (alpha_file ^ ".murphy")
+              @@ StrMap.to_kv_list nss
+            in
             ()))
