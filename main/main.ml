@@ -47,6 +47,7 @@ let command =
       ("show-pos-neg-sigma", Ctest.show_pos_neg_sigma);
       ("show-elrond-input", Ctest.show_elrond_input);
       ("syn-simple-eval", Ctest.syn_simple_eval);
+      ("elrond", Ctest.elrond);
     ]
 
 let () = Command.run command

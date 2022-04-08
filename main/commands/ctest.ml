@@ -392,6 +392,17 @@ let show_elrond_input =
         Config.exec_main configfile (fun () ->
             let goals = Elrond.Espec.load_all spectab_file alpha_file in
             let () = Elrond.Espec.show_all goals in
+            ()))
+
+let elrond =
+  Command.basic ~summary:"elrond"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and spectab_file = anon ("spectab file" %: regular_file)
+      and alpha_file = anon ("alpha file" %: regular_file) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let goals = Elrond.Espec.load_all spectab_file alpha_file in
             let () =
               StrMap.iter
                 (fun name (spec, a) ->

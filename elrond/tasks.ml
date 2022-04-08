@@ -1,6 +1,7 @@
 open Synthesizer
 open Specification
 open Primitive
+open Basic_dt
 
 let make_client name =
   let aux = function
@@ -11,8 +12,10 @@ let make_client name =
     | name -> failwith name
   in
   let name = aux name in
-  let open Operator in
-  (fst @@ get_tp_one name, get_imp name)
+  let info =
+    List.find "imp" (fun info -> String.equal name info.Imp.imp_name) Imps.imps
+  in
+  (info.Imp.imp_itps, info.Imp.imp_exec)
 
 let make_op_pool _ =
   [
