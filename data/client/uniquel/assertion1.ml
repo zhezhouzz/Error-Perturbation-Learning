@@ -7,7 +7,7 @@ let libs = [| "Uniquel" |]
 (* let i_err = (2, [ 1; 2; 3; 4 ]) *)
 
 (* let i_err = (2, [ 1; 2 ]) *)
-let i_err = (2, [ 2 ])
+let i_err = (1, [ 2; 3 ])
 
 let sampling_rounds = 6
 
