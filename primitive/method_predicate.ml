@@ -1098,6 +1098,31 @@ let pre_post_info =
     };
   ]
 
+let elrond_info =
+  [
+    {
+      poly_name = "ancestor";
+      name = "tree_ancestor";
+      tps = [ T.IntTree; T.Int; T.Int ];
+      permu = false;
+      imp = (fun x -> left_apply x || right_apply x);
+    };
+    {
+      poly_name = "ancestor";
+      name = "treei_ancestor";
+      tps = [ T.IntTreeI; T.Int; T.Int ];
+      permu = false;
+      imp = (fun x -> left_apply x || right_apply x);
+    };
+    {
+      poly_name = "ancestor";
+      name = "treeb_ancestor";
+      tps = [ T.IntTreeB; T.Int; T.Int ];
+      permu = false;
+      imp = (fun x -> left_apply x || right_apply x);
+    };
+  ]
+
 let mp_table =
   empty_info @ mem_info @ hd_info @ lt_info @ eq_info @ ord_info
   @ (left_info @ right_info @ para_info)
@@ -1106,6 +1131,7 @@ let mp_table =
   @ leftist_info @ binomialhp_info @ skewhp_info @ pairinghp_info
   @ strict_sort_info @ strict_sort_rev_info @ uniq_info @ pre_post_info
   @ sizen_info 1 @ sizen_info 2 @ sizen_info 3 @ sizen_info 4 @ sizen_info 5
+  @ elrond_info
 
 let imp_map =
   List.fold_left (fun m r -> StrMap.add r.name r.imp m) StrMap.empty mp_table
