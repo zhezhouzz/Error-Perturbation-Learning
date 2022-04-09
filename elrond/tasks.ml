@@ -40,7 +40,7 @@ let filter c phi samples =
     (fun d -> match c d with None -> false | Some x -> not @@ phi (d @ x))
     samples
 
-let chosen = [ -1; 0; 1; 2; 3; 4; 5 ]
+let chosen = [ -1; 0; 1; 2; 3; 4 ]
 
 let make_env_from_elrond spec name _ =
   let tps, imp = make_client name in
