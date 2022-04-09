@@ -17,10 +17,10 @@ let make_client name =
     | "Leftisthp.make_tree" -> "treei_make_tree"
     | "Leftisthp.tree" -> "treei_node"
     | "Splayhp.leaf" -> "tree_leaf"
-    | "Splayhp.node" -> "tree_node"
+    | "Splayhp.node" -> "tree_node_elrond"
     | "Unbset.leaf" -> "tree_leaf"
-    | "Unbset.node" -> "tree_node"
-    | "Rbset.node" -> "treeb_node"
+    | "Unbset.node" -> "tree_node_elrond"
+    | "Rbset.node" -> "treeb_node_elrond"
     | name -> failwith name
   in
   let name = aux name in

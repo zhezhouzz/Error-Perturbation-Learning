@@ -26,6 +26,16 @@ let table =
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
+      imp_name = "tree_node_elrond";
+      imp_itps = [ IntTree; Int; IntTree ];
+      imp_otps = [ IntTree ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ T b; I a; T c ] -> Some [ T (Tree.Node (a, b, c)) ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
       imp_name = "tree_leaf_rev";
       imp_itps = [ IntTree ];
       imp_otps = [];

@@ -28,6 +28,17 @@ let table =
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
+      imp_name = "treeb_node_elrond";
+      imp_itps = [ Bool; IntTreeB; Int; IntTreeB ];
+      imp_otps = [ IntTreeB ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ B label; TB b; I a; TB c ] ->
+            Some [ TB (LabeledTree.Node (label, a, b, c)) ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
       imp_name = "treeb_leaf_rev";
       imp_itps = [ IntTreeB ];
       imp_otps = [];

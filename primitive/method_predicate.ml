@@ -160,16 +160,13 @@ let lt_apply = function
   | [ V.I a; V.I b ] -> a < b
   | _ -> raise @@ failwith "lt_apply"
 
-(* TODO: fix this *)
 let eq_apply = function
   | [ V.I a; V.I b ] -> a == b
   | [ V.B a; V.B b ] -> a == b
-  | _ -> false
-
-(* | args -> *)
-(*     raise @@ failwith *)
-(*     @@ spf "eq_apply: (==) {%s} tps:%s" (V.layout_l args) *)
-(*          (T.layout_l @@ V.get_tp_l args) *)
+  | args ->
+      raise @@ failwith
+      @@ spf "eq_apply: (==) {%s} tps:%s" (V.layout_l args)
+           (T.layout_l @@ V.get_tp_l args)
 
 let label_is_apply b = function
   | [ V.TB t; V.I x ] ->

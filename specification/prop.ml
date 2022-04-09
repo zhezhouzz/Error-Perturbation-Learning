@@ -28,6 +28,10 @@ let eval e env =
         | Value.B false -> false
         | _ -> raise @@ failwith "wrong type in prop::eval")
     | MethodPredicate (mp, args) ->
+        let _ =
+          Zlog.log_write
+          @@ spf "eval: %s(%s)" mp (List.to_string Tp.layouttvar args)
+        in
         MP.apply mp @@ List.map (fun (_, name) -> get_val name) args
     | Implies (e1, e2) -> if aux e1 then aux e2 else true
     | Ite (e1, e2, e3) -> if aux e1 then aux e2 else aux e3
@@ -105,8 +109,8 @@ let rec layout = function
         | [ a; b ] -> sprintf "(%s %s %s)" (snd a) mp (snd b)
         | _ -> sprintf "%s(%s)" mp (List.split_by_comma snd args)
       else
-        sprintf "(%s %s)"
-          (Method_predicate.poly_name mp)
+        sprintf "(%s %s)" mp
+          (* (Method_predicate.poly_name mp) *)
           (List.split_by " " snd args)
   | Implies (p1, p2) -> sprintf "(%s %s %s)" sym_implies (layout p1) (layout p2)
   | And ps -> sprintf "(%s)" @@ List.split_by sym_and layout ps
