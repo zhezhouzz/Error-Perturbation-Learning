@@ -20,7 +20,7 @@ let make_client name =
     | "Splayhp.node" -> "tree_node_elrond"
     | "Unbset.leaf" -> "tree_leaf"
     | "Unbset.node" -> "tree_node_elrond"
-    | "Rbset.node" -> "treeb_node_elrond"
+    | "Rbset.tree" -> "treeb_node_elrond"
     | name -> failwith name
   in
   let name = aux name in
