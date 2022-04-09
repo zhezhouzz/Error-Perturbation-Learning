@@ -315,9 +315,25 @@ let mem_info =
   let imp = mem_apply in
   [
     { poly_name; name = "list_mem"; tps = [ T.IntList; T.Int ]; permu; imp };
+    { poly_name; name = "list_member"; tps = [ T.IntList; T.Int ]; permu; imp };
     { poly_name; name = "tree_mem"; tps = [ T.IntTree; T.Int ]; permu; imp };
+    { poly_name; name = "tree_member"; tps = [ T.IntTree; T.Int ]; permu; imp };
     { poly_name; name = "treei_mem"; tps = [ T.IntTreeI; T.Int ]; permu; imp };
+    {
+      poly_name;
+      name = "treei_member";
+      tps = [ T.IntTreeI; T.Int ];
+      permu;
+      imp;
+    };
     { poly_name; name = "treeb_mem"; tps = [ T.IntTreeB; T.Int ]; permu; imp };
+    {
+      poly_name;
+      name = "treeb_member";
+      tps = [ T.IntTreeB; T.Int ];
+      permu;
+      imp;
+    };
     {
       poly_name;
       name = "binomialhp_mem";
@@ -350,6 +366,10 @@ let hd_info =
     { poly_name; name = "tree_hd"; tps = [ T.IntTree; T.Int ]; permu; imp };
     { poly_name; name = "treei_hd"; tps = [ T.IntTreeI; T.Int ]; permu; imp };
     { poly_name; name = "treeb_hd"; tps = [ T.IntTreeB; T.Int ]; permu; imp };
+    { poly_name; name = "list_head"; tps = [ T.IntList; T.Int ]; permu; imp };
+    { poly_name; name = "tree_head"; tps = [ T.IntTree; T.Int ]; permu; imp };
+    { poly_name; name = "treei_head"; tps = [ T.IntTreeI; T.Int ]; permu; imp };
+    { poly_name; name = "treeb_head"; tps = [ T.IntTreeB; T.Int ]; permu; imp };
     {
       poly_name;
       name = "binomialhp_hd";
@@ -562,6 +582,13 @@ let ord_info =
     {
       poly_name;
       name = "list_ord";
+      tps = [ T.IntList; T.Int; T.Int ];
+      permu = false;
+      imp = ord_apply;
+    };
+    {
+      poly_name;
+      name = "list_order";
       tps = [ T.IntList; T.Int; T.Int ];
       permu = false;
       imp = ord_apply;
