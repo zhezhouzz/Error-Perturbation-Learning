@@ -162,7 +162,10 @@ let lt_apply = function
 
 let eq_apply = function
   | [ V.I a; V.I b ] -> a == b
-  | args -> raise @@ failwith @@ spf "eq_apply: (==) %s" (V.layout_l args)
+  | [ V.B a; V.B b ] -> a == b
+  | args ->
+      raise @@ failwith
+      @@ spf "eq_apply: (==) {%s} len:%i" (V.layout_l args) (List.length args)
 
 let label_is_apply b = function
   | [ V.TB t; V.I x ] ->
