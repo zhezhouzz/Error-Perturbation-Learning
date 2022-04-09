@@ -342,6 +342,9 @@ let mp_convert = function
   | "tree_right" -> "tree_right"
   | "treei_right" -> "treei_right"
   | "treeb_right" -> "treeb_right"
+  | "tree_parallel" -> "tree_para"
+  | "treei_parallel" -> "treei_para"
+  | "treeb_parallel" -> "treeb_para"
   | "==" -> "=="
   | x -> raise @@ failwith x
 
