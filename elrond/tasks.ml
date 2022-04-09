@@ -40,32 +40,26 @@ let filter c phi samples =
     (fun d -> match c d with None -> false | Some x -> not @@ phi (d @ x))
     samples
 
-let chosen = [ -1; 0; 1; 2; 3; 4 ]
+let chosen = [ -1; 0; 1; 2; 3 ]
 
 let make_env_from_elrond spec name _ =
   let tps, imp = make_client name in
   let phi = Spec.eval spec in
-  let d = Randomgen.gens ~chooses:chosen ~num:2000 ~tps ~bound:4 in
+  let d = Randomgen.gens ~chooses:chosen ~num:20000 ~tps ~bound:4 in
   let _ = Zlog.log_write @@ spf "%s len(d): %i" name (List.length d) in
   let a = filter imp phi d in
   let _ = Zlog.log_write @@ spf "%s len(a): %i" name (List.length a) in
-  a
-
-(* let rec aux = function *)
-(*   | [] -> None *)
-(*   | i_err :: t -> ( *)
-(*       let sigma_raw = Spec.dummy_pre tps in *)
-(*       try *)
-(*         let env = *)
-(*           Mkenv.mk_env_v2_ sigma_raw *)
-(*             (fun _ -> true) *)
-(*             (fun _ x -> ([], imp x)) *)
-(*             Env.BB.dummy_inspector phi tps i_err (make_op_pool name) [] 6 4 *)
-(*         in *)
-(*         Some (env, a) *)
-(*       with _ -> aux t) *)
-(* in *)
-(* aux a *)
+  let sigma_raw = Spec.dummy_pre tps in
+  match a with
+  | [] -> None
+  | i_err :: _ ->
+      let env =
+        Mkenv.mk_env_v2_ sigma_raw
+          (fun _ -> true)
+          (fun _ x -> ([], imp x))
+          Env.BB.dummy_inspector phi tps i_err (make_op_pool name) [] 6 4
+      in
+      Some (env, a)
 
 let snum = 10
 
