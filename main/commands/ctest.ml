@@ -408,27 +408,29 @@ let elrond =
                 (fun name (spec, a) ->
                   match Elrond.Tasks.make_env_from_elrond spec name a with
                   | None -> None
-                  | Some (env, a) ->
-                      let env = Synthesizer.Mkenv.random_init_prog env in
-                      let result =
-                        Zlog.event_
-                          (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
-                             __FUNCTION__ "") (fun () ->
-                            (* Synthesizer.Syn.synthesize_multi_core env *)
-                            Synthesizer.Syn.synthesize_multif env
-                              (fun _ -> true)
-                              2 (TimeBound 100.0))
-                      in
-                      let () =
-                        Core.Out_channel.write_all (name ^ ".prog")
-                          ~data:
-                            (Language.Piecewise.layout_with_i_err env.i_err
-                               result)
-                      in
-                      let ss =
-                        Elrond.Tasks.pfs_to_sampless env result [ env.i_err ]
-                      in
-                      Some (ss @ a))
+                  | Some (env, a) -> (
+                      try
+                        let env = Synthesizer.Mkenv.random_init_prog env in
+                        let result =
+                          Zlog.event_
+                            (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__
+                               __FUNCTION__ "") (fun () ->
+                              (* Synthesizer.Syn.synthesize_multi_core env *)
+                              Synthesizer.Syn.synthesize_multif env
+                                (fun _ -> true)
+                                2 (TimeBound 100.0))
+                        in
+                        let () =
+                          Core.Out_channel.write_all (name ^ ".prog")
+                            ~data:
+                              (Language.Piecewise.layout_with_i_err env.i_err
+                                 result)
+                        in
+                        let ss =
+                          Elrond.Tasks.pfs_to_sampless env result [ env.i_err ]
+                        in
+                        Some (ss @ a)
+                      with _ -> Some a))
                 goals
             in
             let () =
