@@ -12,7 +12,7 @@ let sampling_rounds = 6
 let p_size = 4
 
 let pre (f : Batchedq.t) (r : Batchedq.t) =
-  uniq f && uniq r && (not (empty f)) && not (size1 r)
+  uniq f && implies (empty f) (empty r)
 
 let post (f : Batchedq.t) (r : Batchedq.t) (f' : Batchedq.t) (r' : Batchedq.t)
     (u : int) =
