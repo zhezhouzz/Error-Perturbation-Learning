@@ -327,7 +327,23 @@ let mp_convert = function
   | "list_order" -> "list_ord"
   | "list_member" -> "list_mem"
   | "list_head" -> "list_hd"
-  | x -> x
+  | "tree_head" -> "tree_hd"
+  | "tree_member" -> "tree_mem"
+  | "treei_head" -> "treei_hd"
+  | "treei_member" -> "treei_mem"
+  | "treeb_head" -> "treeb_hd"
+  | "treeb_member" -> "treeb_mem"
+  | "tree_ancestor" -> "tree_ancestor"
+  | "treei_ancestor" -> "treei_ancestor"
+  | "treeb_ancestor" -> "treeb_ancestor"
+  | "tree_left" -> "tree_left"
+  | "treei_left" -> "treei_left"
+  | "treeb_left" -> "treeb_left"
+  | "tree_right" -> "tree_right"
+  | "treei_right" -> "treei_right"
+  | "treeb_right" -> "treeb_right"
+  | "==" -> "=="
+  | x -> raise @@ failwith x
 
 let elrond_epr_to_body x =
   let open E in
