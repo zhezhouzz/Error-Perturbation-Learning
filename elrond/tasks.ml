@@ -5,10 +5,22 @@ open Basic_dt
 
 let make_client name =
   let aux = function
+    | "Customstk.push" -> "cons"
+    | "Customstk.top" -> "top"
+    | "Customstk.is_empty" -> "is_empty"
+    | "Customstk.tail" -> "list_tail"
     | "Batchedq.rev" -> "rev"
     | "Batchedq.nil" -> "nil"
     | "Batchedq.is_empty" -> "is_empty"
     | "Batchedq.cons" -> "cons"
+    | "Leftisthp.leaf" -> "treei_leaf"
+    | "Leftisthp.make_tree" -> "treei_make_tree"
+    | "Leftisthp.tree" -> "treei_node"
+    | "Splayhp.leaf" -> "tree_leaf"
+    | "Splayhp.node" -> "tree_node"
+    | "Unbset.leaf" -> "tree_leaf"
+    | "Unbset.node" -> "tree_node"
+    | "Rbset.node" -> "treeb_node"
     | name -> failwith name
   in
   let name = aux name in

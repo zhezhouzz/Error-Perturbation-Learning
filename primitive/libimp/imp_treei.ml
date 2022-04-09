@@ -50,6 +50,16 @@ let table =
         | [ TI _ ] -> None
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
+    {
+      imp_name = "treei_make_tree";
+      imp_itps = [ Int; IntTreeI; IntTreeI ];
+      imp_otps = [ IntTreeI ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ I a; TI b; TI c ] -> Some [ TI (LabeledTree.Node (0, a, b, c)) ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
     (* tree manipulation *)
     {
       imp_name = "treei_left_right_subtree";
