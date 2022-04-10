@@ -29,23 +29,16 @@ let make_client name =
   in
   (info.Imp.imp_itps, info.Imp.imp_exec)
 
-let make_op_pool _ =
-  [
-    "cons";
-    "append";
-    "list_destruct";
-    "list_last_destruct";
-    "list_mid_partition";
-    "list_alter_partition";
-    "list_lower_bound";
-    "list_upper_bound";
-    "max";
-    "min";
-    "plus1";
-    "minus1";
-    "const0";
-    "const1";
-  ]
+let make_op_pool = function
+  | "Customstk.push" | "Customstk.top" | "Customstk.is_empty" | "Customstk.tail"
+  | "Batchedq.rev" | "Batchedq.nil" | "Batchedq.is_empty" | "Batchedq.cons" ->
+      Theta.theta_int @ Theta.theta_list
+  | "Leftisthp.leaf" | "Leftisthp.make_tree" | "Leftisthp.tree" ->
+      Theta.theta_int @ Theta.theta_treei
+  | "Splayhp.leaf" | "Splayhp.node" | "Unbset.leaf" | "Unbset.node" ->
+      Theta.theta_int @ Theta.theta_tree
+  | "Rbset.tree" -> Theta.theta_int @ Theta.theta_treeb
+  | _ -> raise @@ failwith "die"
 
 let filter c phi samples =
   List.filter

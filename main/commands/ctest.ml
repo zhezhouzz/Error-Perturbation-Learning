@@ -422,12 +422,6 @@ let elrond =
                                 (fun _ -> true)
                                 2 (TimeBound 200.0))
                         in
-                        let () =
-                          Core.Out_channel.write_all (name ^ ".prog")
-                            ~data:
-                              (Language.Piecewise.layout_with_i_err env.i_err
-                                 result)
-                        in
                         let ss =
                           Elrond.Tasks.pfs_to_sampless env result [ env.i_err ]
                         in
