@@ -411,7 +411,7 @@ let elrond =
                   | Some (env, a) -> (
                       try
                         let env =
-                          Synthesizer.Mkenv.random_init_prog ~numinit:5000 env
+                          Synthesizer.Mkenv.random_init_prog ~numinit:10000 env
                         in
                         let result =
                           Zlog.event_

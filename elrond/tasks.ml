@@ -57,11 +57,8 @@ let chosen = [ -1; 0; 1; 2; 3 ]
 let make_env_from_elrond spec name _ =
   let tps, imp = make_client name in
   let phi = Spec.eval spec in
-  let d = Randomgen.gens ~chooses:chosen ~num:20000 ~tps ~bound:4 in
+  let d = Randomgen.gens ~chooses:chosen ~num:10000 ~tps ~bound:4 in
   let a = filter imp phi d in
-  let a =
-    if List.length a > 200 then Randomgen.choose_n_from_list 100 a else a
-  in
   let sigma_raw = Spec.dummy_pre tps in
   match a with
   | [] -> None
@@ -74,7 +71,7 @@ let make_env_from_elrond spec name _ =
       in
       Some (env, a)
 
-let snum = 10
+let snum = 5
 
 let pf_to_sampless env pf samples =
   let rec aux i (s, res) =
