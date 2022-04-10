@@ -410,7 +410,9 @@ let elrond =
                   | None -> None
                   | Some (env, a) -> (
                       try
-                        let env = Synthesizer.Mkenv.random_init_prog env in
+                        let env =
+                          Synthesizer.Mkenv.random_init_prog ~numinit:5000 env
+                        in
                         let result =
                           Zlog.event_
                             (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__

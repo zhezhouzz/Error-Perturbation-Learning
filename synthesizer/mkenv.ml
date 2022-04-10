@@ -65,14 +65,14 @@ let update_prog env prog =
 let update_init_sampling_set env init_sampling_set =
   { env with init_sampling_set }
 
-let random_init_prog env =
+let random_init_prog ?(numinit = 200) env =
   let gen =
     QCheck.Gen.flatten_l
     @@ List.init env.p_size (fun _ -> QCheck.Gen.oneofl env.op_pool)
   in
   let counter = ref 0 in
   let rec loop () =
-    if !counter > 200 then raise InitializationError
+    if !counter > numinit then raise InitializationError
     else
       let ops = QCheck.Gen.generate1 gen in
       let _ =
