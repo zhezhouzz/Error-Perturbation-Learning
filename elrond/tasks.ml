@@ -58,9 +58,10 @@ let make_env_from_elrond spec name _ =
   let tps, imp = make_client name in
   let phi = Spec.eval spec in
   let d = Randomgen.gens ~chooses:chosen ~num:20000 ~tps ~bound:4 in
-  let _ = Zlog.log_write @@ spf "%s len(d): %i" name (List.length d) in
   let a = filter imp phi d in
-  let _ = Zlog.log_write @@ spf "%s len(a): %i" name (List.length a) in
+  let a =
+    if List.length a > 200 then Randomgen.choose_n_from_list 100 a else a
+  in
   let sigma_raw = Spec.dummy_pre tps in
   match a with
   | [] -> None
