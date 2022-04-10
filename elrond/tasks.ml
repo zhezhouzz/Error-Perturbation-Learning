@@ -52,7 +52,7 @@ let make_env_from_elrond spec name _ =
   let phi = Spec.eval spec in
   let d = Randomgen.gens ~chooses:chosen ~num:10000 ~tps ~bound:4 in
   let a = filter imp phi d in
-  let a = if List.length a > 100 then List.sublist a (0, 100) else a in
+  let a = if List.length a > 300 then List.sublist a (0, 300) else a in
   let sigma_raw = Spec.dummy_pre tps in
   match a with
   | [] -> None
