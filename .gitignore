@@ -1,3 +1,4 @@
 .result/*
 .pyc
 script/__pycache__/*
+nohup.out
