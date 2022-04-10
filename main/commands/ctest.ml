@@ -418,7 +418,7 @@ let elrond =
                               (* Synthesizer.Syn.synthesize_multi_core env *)
                               Synthesizer.Syn.synthesize_multif env
                                 (fun _ -> true)
-                                2 (TimeBound 100.0))
+                                2 (TimeBound 200.0))
                         in
                         let () =
                           Core.Out_channel.write_all (name ^ ".prog")
@@ -433,8 +433,16 @@ let elrond =
                       with _ -> Some a))
                 goals
             in
-            let () =
-              Elrond.Evalue.save_alpha (alpha_file ^ ".murphy")
+            let nss =
+              List.map (fun (name, ss) ->
+                  (name, Primitive.Value_aux.remove_duplicates_l ss))
               @@ StrMap.to_kv_list nss
             in
+            let total_pos =
+              List.fold_left (fun sum x -> sum + x) 0
+              @@ List.map (fun (_, ss) -> List.length ss) nss
+            in
+            let () = Printf.printf "total samples: %i\n" total_pos in
+            let () = Zlog.log_write @@ spf "total samples: %i" total_pos in
+            let () = Elrond.Evalue.save_alpha (alpha_file ^ ".murphy") nss in
             ()))
