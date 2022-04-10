@@ -80,6 +80,9 @@ let pf_to_sampless env pf samples =
   filter (Mkenv.to_c env) env.phi d
 
 let pfs_to_sampless env pfs samples =
+  let samples =
+    if List.length samples > 100 then List.sublist samples (0, 100) else samples
+  in
   Value_aux.remove_duplicates_l @@ List.flatten
   @@ List.map
        (fun pf -> pf_to_sampless env pf samples)

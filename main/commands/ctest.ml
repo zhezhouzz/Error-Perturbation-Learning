@@ -422,9 +422,7 @@ let elrond =
                                 (fun _ -> true)
                                 2 (TimeBound 200.0))
                         in
-                        let ss =
-                          Elrond.Tasks.pfs_to_sampless env result [ env.i_err ]
-                        in
+                        let ss = Elrond.Tasks.pfs_to_sampless env result a in
                         Some (ss @ a)
                       with _ -> Some a))
                 goals
