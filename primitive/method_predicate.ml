@@ -1100,6 +1100,78 @@ let pre_post_info =
                 | Node (_, _, r) -> mem_apply [ V.T r; V.I x ]))
           | _ -> raise @@ failwith "right_mem");
     };
+    {
+      poly_name = "ll_mem";
+      name = "tree_ll_mem";
+      tps = [ T.IntTree; T.Int ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.T t; V.I x ] -> (
+              Tree.(
+                match t with
+                | Leaf -> false
+                | Node (_, l, _) -> (
+                    match l with
+                    | Leaf -> false
+                    | Node (_, l, _) -> mem_apply [ V.T l; V.I x ])))
+          | _ -> raise @@ failwith "ll_mem");
+    };
+    {
+      poly_name = "lr_mem";
+      name = "tree_lr_mem";
+      tps = [ T.IntTree; T.Int ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.T t; V.I x ] -> (
+              Tree.(
+                match t with
+                | Leaf -> false
+                | Node (_, l, _) -> (
+                    match l with
+                    | Leaf -> false
+                    | Node (_, _, r) -> mem_apply [ V.T r; V.I x ])))
+          | _ -> raise @@ failwith "lr_mem");
+    };
+    {
+      poly_name = "rl_mem";
+      name = "tree_rl_mem";
+      tps = [ T.IntTree; T.Int ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.T t; V.I x ] -> (
+              Tree.(
+                match t with
+                | Leaf -> false
+                | Node (_, _, r) -> (
+                    match r with
+                    | Leaf -> false
+                    | Node (_, l, _) -> mem_apply [ V.T l; V.I x ])))
+          | _ -> raise @@ failwith "rl_mem");
+    };
+    {
+      poly_name = "rr_mem";
+      name = "tree_rr_mem";
+      tps = [ T.IntTree; T.Int ];
+      permu = false;
+      imp =
+        (fun inp ->
+          match inp with
+          | [ V.T t; V.I x ] -> (
+              Tree.(
+                match t with
+                | Leaf -> false
+                | Node (_, _, r) -> (
+                    match r with
+                    | Leaf -> false
+                    | Node (_, _, r) -> mem_apply [ V.T r; V.I x ])))
+          | _ -> raise @@ failwith "rr_mem");
+    };
   ]
 
 let elrond_info =

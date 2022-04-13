@@ -260,16 +260,6 @@ let test_unbset =
       let%map_open configfile = anon ("configfile" %: regular_file) in
       fun () -> Config.exec_main configfile (fun () -> test_unbset_ ()))
 
-let zz pre m =
-  let open Primitive in
-  let total = Primitive.Inpmap.num_inps m in
-  let in_pre = Primitive.Inpmap.count_raw pre m in
-  let () =
-    Printf.printf "pre: %i/%i = %.2f\n" in_pre total
-      (float_of_int in_pre /. float_of_int total *. 100.0)
-  in
-  ()
-
 let show_pos_neg =
   Command.basic ~summary:"show pos neg."
     Command.Let_syntax.(
@@ -290,6 +280,32 @@ let show_pos_neg =
               Printf.printf "neg:\n %s\n" (Synthesizer.Enum.layout_e ectx)
             in
             ()))
+
+let zz env m =
+  let pre = env.Synthesizer.Env.sigma in
+  let post inp =
+    match Synthesizer.Mkenv.to_c env inp with
+    | None -> false
+    | Some outp -> not @@ env.Synthesizer.Env.phi (inp @ outp)
+  in
+  let open Primitive in
+  let total = Primitive.Inpmap.num_inps m in
+  let in_pre = Primitive.Inpmap.count_raw pre m in
+  let out_post = Primitive.Inpmap.count_raw post m in
+  let buggy = Primitive.Inpmap.count_raw (fun x -> pre x && post x) m in
+  let () =
+    Printf.printf "in pre: %i/%i = %.2f\n" in_pre total
+      (float_of_int in_pre /. float_of_int total *. 100.0)
+  in
+  let () =
+    Printf.printf "out post: %i/%i = %.2f\n" out_post total
+      (float_of_int out_post /. float_of_int total *. 100.0)
+  in
+  let () =
+    Printf.printf "buggy: %i/%i = %.2f\n" buggy total
+      (float_of_int buggy /. float_of_int total *. 100.0)
+  in
+  ()
 
 let show_pos_neg_sigma =
   Command.basic ~summary:"show pos neg sigma."
@@ -312,13 +328,13 @@ let show_pos_neg_sigma =
             in
             let ectx = Synthesizer.Enum.load neg_file in
             let () =
-              Printf.printf "pos:\n %s\n" (Primitive.Inpmap.layout pos)
+              Printf.printf "pos:\n %s\n" (Primitive.Inpmap.layout_dirty pos)
             in
+            let () = zz env pos in
             let () =
-              Printf.printf "neg:\n %s\n" (Synthesizer.Enum.layout_e ectx)
+              Printf.printf "neg:\n %s\n" (Primitive.Inpmap.layout_dirty ectx.m)
             in
-            let () = zz env.Synthesizer.Env.sigma ectx.m in
-            let () = zz env.Synthesizer.Env.sigma pos in
+            let () = zz env ectx.m in
             ()))
 
 let syn_simple_eval_ source_file meta_file prog_file =

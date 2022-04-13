@@ -6,6 +6,33 @@ type t = { v_emb : (int, Value.t) Bihashtab.t; m : (int list, int) Hashtbl.t }
 
 type count_tab = int * (int list, (int * int) list) Hashtbl.t [@@deriving sexp]
 
+let layout_dirty t =
+  let count0 = ref 0 in
+  let count1 = ref 0 in
+  let count2 = ref 0 in
+  let count3 = ref 0 in
+  let countmore = ref 0 in
+  let count = function
+    | [ _; Value.T t ] ->
+        let n = Tree.deep t in
+        if n == 0 then count0 := !count0 + 1
+        else if n == 1 then count1 := !count1 + 1
+        else if n == 2 then count2 := !count2 + 1
+        else if n == 3 then count3 := !count3 + 1
+        else countmore := !countmore + 1
+    | _ -> ()
+  in
+  let _ =
+    Hashtbl.iter
+      (fun inp_idxs _ ->
+        let inp = List.map (Bihashtab.i_to_v t.v_emb) inp_idxs in
+        count inp)
+      t.m
+  in
+  spf "v_emb size: %i; m size: %i {0: %i; 1: %i; 2: %i; 3: %i; more: %i}"
+    (Bihashtab.length t.v_emb) (Hashtbl.length t.m) !count0 !count1 !count2
+    !count3 !countmore
+
 let layout t =
   spf "v_emb size: %i; m size: %i" (Bihashtab.length t.v_emb)
     (Hashtbl.length t.m)
