@@ -1,4 +1,17 @@
-let preds = [| "mem"; "hd"; "last"; "<"; "==" |]
+let preds =
+  [|
+    "mem";
+    "hd";
+    "last";
+    "<";
+    "==";
+    "left_mem";
+    "right_mem";
+    "ll_mem";
+    "lr_mem";
+    "rl_mem";
+    "rr_mem";
+  |]
 
 let op_pool = [| "theta_tree"; "theta_int" |]
 
@@ -20,8 +33,7 @@ let sampling_rounds = 6
 
 let p_size = 4
 
-let pre (x : int) (tree1 : Splayhp.t) =
-  strict_sort tree1 && (not (empty tree1)) && not (size1 tree1)
+let pre (x : int) (tree1 : Splayhp.t) = strict_sort tree1
 
 let post (x : int) (tree1 : Splayhp.t) (tree2 : Splayhp.t) (tree3 : Splayhp.t)
     (u : int) =
