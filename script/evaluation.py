@@ -194,7 +194,8 @@ if __name__ == "__main__":
             syn(b, sizebound, timebound, file_to_save, outfile)
     elif action == "evalpf":
         for b in bs:
-            eval_pf_time(b, args.pffile, timebound, outfile)
+            pffile = ".result/{}.prog".format(b['name'])
+            eval_pf_time(b, pffile, timebound, outfile)
     elif action == "syneval":
         for b in bs:
             subprocess.run(["rm", ".prog"])
