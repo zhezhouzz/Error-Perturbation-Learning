@@ -79,7 +79,7 @@ let layout_eval benchname stat cost_time =
           (cost_time *. 1000.0 /. float_of_int n)
           (cost_time *. 5000.0 /. float_of_int n)
   in
-  Printf.sprintf "%s:\ncost time:%f(s)\navg time:%s(us/instance)\n%s\n"
+  Printf.sprintf "%s:\ncost time:%f(s)\navg time:%s(ms/instance)\n%s\n"
     benchname cost_time avg_time
   @@ layout stat
 
