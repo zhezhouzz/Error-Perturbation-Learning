@@ -18,7 +18,7 @@ let op_pool = [| "theta_tree"; "theta_int" |]
 let libs = [| "Splayhp" |]
 
 let i_err =
-  ( 9,
+  ( 15,
     Node
       ( 8,
         Node (6, Node (3, NodeS 1, NodeS 4), NodeS 7),
@@ -33,7 +33,8 @@ let sampling_rounds = 6
 
 let p_size = 4
 
-let pre (x : int) (tree1 : Splayhp.t) = strict_sort tree1 && not (size1 tree1)
+let pre (x : int) (tree1 : Splayhp.t) (u : int) =
+  strict_sort tree1 && (not (size1 tree1)) && implies (mem tree1 u) (u < x)
 
 let post (x : int) (tree1 : Splayhp.t) (tree2 : Splayhp.t) (tree3 : Splayhp.t)
     (u : int) =
