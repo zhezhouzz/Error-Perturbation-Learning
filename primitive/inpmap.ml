@@ -6,6 +6,40 @@ type t = { v_emb : (int, Value.t) Bihashtab.t; m : (int list, int) Hashtbl.t }
 
 type count_tab = int * (int list, (int * int) list) Hashtbl.t [@@deriving sexp]
 
+let dirty2 t extract =
+  let count0 = ref 0 in
+  let count1 = ref 0 in
+  let count2 = ref 0 in
+  let count3 = ref 0 in
+  let countmore = ref 0 in
+  let count = function
+    | Value.L l ->
+        let n = List.length l in
+        if n == 0 then count0 := !count0 + 1
+        else if n == 1 then count1 := !count1 + 1
+        else if n == 2 then count2 := !count2 + 1
+        else if n == 3 then count3 := !count3 + 1
+        else countmore := !countmore + 1
+    | _ -> ()
+  in
+  let _ =
+    Hashtbl.iter
+      (fun inp_idxs _ ->
+        let inp = List.map (Bihashtab.i_to_v t.v_emb) inp_idxs in
+        count (extract inp))
+      t.m
+  in
+  (!count0, !count1, !count2, !count3, !countmore)
+
+let layout_dirty2 t =
+  let a0, a1, a2, a3, amore = dirty2 t (fun l -> List.nth l 0) in
+  let b0, b1, b2, b3, bmore = dirty2 t (fun l -> List.nth l 1) in
+  spf
+    "v_emb size: %i; m size: %i {0: %i; 1: %i; 2: %i; 3: %i; more: %i} {0: %i; \
+     1: %i; 2: %i; 3: %i; more: %i}"
+    (Bihashtab.length t.v_emb) (Hashtbl.length t.m) a0 a1 a2 a3 amore b0 b1 b2
+    b3 bmore
+
 let layout_dirty t =
   let count0 = ref 0 in
   let count1 = ref 0 in
