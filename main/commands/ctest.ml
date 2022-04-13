@@ -332,6 +332,7 @@ let show_pos_neg_sigma =
                 (match name with
                 | "splayhp" -> Primitive.Inpmap.layout_dirty pos
                 | "batchedq" -> Primitive.Inpmap.layout_dirty_rev pos
+                | "uniquel" -> Primitive.Inpmap.layout_dirty_u pos
                 | _ -> "none")
             in
             let () = zz env pos in
@@ -340,6 +341,7 @@ let show_pos_neg_sigma =
                 (match name with
                 | "splayhp" -> Primitive.Inpmap.layout_dirty ectx.m
                 | "batchedq" -> Primitive.Inpmap.layout_dirty_rev ectx.m
+                | "uniquel" -> Primitive.Inpmap.layout_dirty_u ectx.m
                 | _ -> "none")
             in
             let () = zz env ectx.m in

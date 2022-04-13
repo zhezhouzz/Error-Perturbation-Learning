@@ -31,6 +31,11 @@ let dirty2 t extract =
   in
   (!count0, !count1, !count2, !count3, !countmore)
 
+let layout_dirty_u t =
+  let b0, b1, b2, b3, bmore = dirty2 t (fun l -> List.nth l 1) in
+  spf "v_emb size: %i; m size: %i {0: %i; 1: %i; 2: %i; 3: %i; more: %i}"
+    (Bihashtab.length t.v_emb) (Hashtbl.length t.m) b0 b1 b2 b3 bmore
+
 let layout_dirty2 t =
   let a0, a1, a2, a3, amore = dirty2 t (fun l -> List.nth l 0) in
   let b0, b1, b2, b3, bmore = dirty2 t (fun l -> List.nth l 1) in
