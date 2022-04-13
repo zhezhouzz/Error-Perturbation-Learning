@@ -63,7 +63,7 @@ let sampling_time =
             let env = mk_env_from_files source_file meta_file in
             let i_err, prog = Parse.parse_piecewise prog_file in
             let env = Synthesizer.Mkenv.update_i_err env i_err in
-            let engine = mk_perb_engine_from_env env prog in
+            let engine = mk_perb_engine_from_env env ([], snd prog) in
             run_time env time_in_second engine))
 
 let run_time_all source_configfile time_in_second test_output_dir gen_engine =

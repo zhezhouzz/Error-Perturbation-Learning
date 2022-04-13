@@ -203,9 +203,9 @@ if __name__ == "__main__":
             now = datetime.now()
             subprocess.run(["mv", ".logdir/.log", ".logdir/.log_" + b['name'] + "_" + now.strftime('%m%d%y-%T')])
             eval_pf_time(b, ".prog", "100", ".out")
-    elif action == "evalpf":
-        for b in bs:
-            eval_pf_time(b, args.pffile, timebound, outfile)
+    # elif action == "evalpf":
+    #     for b in bs:
+    #         eval_pf_time(b, args.pffile, timebound, outfile)
     elif action == "evalbaseline":
         for b in bs:
             eval_baseline_time(b, qc_config, timebound, outfile)

@@ -54,22 +54,30 @@ let layout
       (100.0 *. float_of_int x /. float_of_int sampling_num)
       "%"
   in
+  let aux2 x = 100.0 *. float_of_int x /. float_of_int sampling_num in
   Printf.sprintf
     "sampled: %i\n\
     \  total: %s\n\
     \  succ: %s\n\
     \  in sigma: %s\n\
     \  in sigma out phi: %s\n\
-    \  in sigma out phi unique: %s\n"
+    \  in sigma out phi unique: %s\n\n\
+    \    $%.3f$ & $%.3f$ & $%.3f$\n"
     sampling_num (aux total_num) (aux succ_num) (aux in_sigma_num)
     (aux in_sigma_out_phi_num)
     (aux in_sigma_out_phi_unique_num)
+    (aux2 in_sigma_num)
+    (aux2 in_sigma_out_phi_num)
+    (aux2 in_sigma_out_phi_unique_num)
 
 let layout_eval benchname stat cost_time =
   let avg_time =
     match stat.in_sigma_out_phi_unique_num with
     | 0 -> "inf"
-    | n -> Printf.sprintf "%f" (cost_time *. 1000000.0 /. float_of_int n)
+    | n ->
+        Printf.sprintf "%0.3f (Murphy: %0.3f)"
+          (cost_time *. 1000.0 /. float_of_int n)
+          (cost_time *. 5000.0 /. float_of_int n)
   in
   Printf.sprintf "%s:\ncost time:%f(s)\navg time:%s(us/instance)\n%s\n"
     benchname cost_time avg_time
