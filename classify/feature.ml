@@ -71,7 +71,8 @@ let mk_set args qv mps =
     match mp with
     | "empty" | "size1" | "size2" | "size3" | "size4" | "size5" ->
         List.map (fun dt -> Pr (mp, [ dt ])) dtargs
-    | "mem" | "hd" | "last" | "left_mem" | "right_mem" ->
+    | "mem" | "hd" | "last" | "left_mem" | "right_mem" | "ll_mem" | "lr_mem"
+    | "rl_mem" | "rr_mem" ->
         List.map (fun (dt, elem) -> Pr (mp, [ dt; elem ]))
         @@ List.cross dtargs qv
     | "left" | "right" | "para" | "ord" ->
