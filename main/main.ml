@@ -43,6 +43,7 @@ let command =
       ("coverage-save-pos", Ccoverage.coverage_save_pos);
       ("coverage-against-data", Ccoverage.coverage_against_data);
       ("coverage-filter", Ccoverage.coverage_filter);
+      ("coverage-filter-pre", Ccoverage.coverage_filter_pre);
       ("show-pos-neg", Ctest.show_pos_neg);
       ("show-pos-neg-sigma", Ctest.show_pos_neg_sigma);
       ("show-elrond-input", Ctest.show_elrond_input);

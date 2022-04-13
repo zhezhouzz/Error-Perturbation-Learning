@@ -33,7 +33,7 @@ let sampling_rounds = 6
 
 let p_size = 4
 
-let pre (x : int) (tree1 : Splayhp.t) = strict_sort tree1
+let pre (x : int) (tree1 : Splayhp.t) = strict_sort tree1 && not (size1 tree1)
 
 let post (x : int) (tree1 : Splayhp.t) (tree2 : Splayhp.t) (tree3 : Splayhp.t)
     (u : int) =

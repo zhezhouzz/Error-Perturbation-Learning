@@ -334,3 +334,34 @@ let coverage_filter =
                       Enum.save ectx (database_name ^ ".new"))
                 in
                 ())))
+
+let coverage_filter_pre =
+  Command.basic ~summary:"coverage-filter"
+    Command.Let_syntax.(
+      let%map_open configfile = anon ("configfile" %: regular_file)
+      and source_file = anon ("source file" %: regular_file)
+      and meta_file = anon ("meta file" %: regular_file)
+      and database_name = anon ("database name" %: string) in
+      fun () ->
+        Config.exec_main configfile (fun () ->
+            let env =
+              Zlog.event_
+                (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+                (fun () -> mk_env_from_files source_file meta_file)
+            in
+            Zlog.event_
+              (Printf.sprintf "%s:%i[%s]-%s" __FILE__ __LINE__ __FUNCTION__ "")
+              (fun () ->
+                let open Synthesizer in
+                let client =
+                  Enum.make_client env.sigma (Mkenv.to_c env) env.phi
+                in
+                let ectx = Synthesizer.Enum.load database_name in
+                let () = Primitive.Inpmap.filter ectx.m env.sigma in
+                let () =
+                  Zlog.event_
+                    (Printf.sprintf "save time %s:%i[%s]-%s" __FILE__ __LINE__
+                       __FUNCTION__ "") (fun () ->
+                      Enum.save ectx (database_name ^ ".new"))
+                in
+                ())))
