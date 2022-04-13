@@ -67,6 +67,23 @@ let layout_dirty t =
     (Bihashtab.length t.v_emb) (Hashtbl.length t.m) !count0 !count1 !count2
     !count3 !countmore
 
+let layout_dirty_rev t =
+  let countrev = ref 0 in
+  let count = function
+    | [ _; Value.L l ] ->
+        if IntList.eq l @@ List.rev l then countrev := !countrev + 1 else ()
+    | _ -> ()
+  in
+  let _ =
+    Hashtbl.iter
+      (fun inp_idxs _ ->
+        let inp = List.map (Bihashtab.i_to_v t.v_emb) inp_idxs in
+        count inp)
+      t.m
+  in
+  spf "v_emb size: %i; m size: %i {rev: %i}" (Bihashtab.length t.v_emb)
+    (Hashtbl.length t.m) !countrev
+
 let layout t =
   spf "v_emb size: %i; m size: %i" (Bihashtab.length t.v_emb)
     (Hashtbl.length t.m)

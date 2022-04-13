@@ -328,12 +328,19 @@ let show_pos_neg_sigma =
             in
             let ectx = Synthesizer.Enum.load neg_file in
             let () =
-              Printf.printf "pos:\n %s\n" (Primitive.Inpmap.layout_dirty2 pos)
+              Printf.printf "pos:\n %s\n"
+                (match name with
+                | "splayhp" -> Primitive.Inpmap.layout_dirty pos
+                | "batchedq" -> Primitive.Inpmap.layout_dirty_rev pos
+                | _ -> "none")
             in
             let () = zz env pos in
             let () =
               Printf.printf "neg:\n %s\n"
-                (Primitive.Inpmap.layout_dirty2 ectx.m)
+                (match name with
+                | "splayhp" -> Primitive.Inpmap.layout_dirty ectx.m
+                | "batchedq" -> Primitive.Inpmap.layout_dirty_rev ectx.m
+                | _ -> "none")
             in
             let () = zz env ectx.m in
             ()))
