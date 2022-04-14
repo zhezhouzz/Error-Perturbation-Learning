@@ -66,11 +66,11 @@ let layout
     sampling_num (aux total_num) (aux succ_num) (aux in_sigma_num)
     (aux in_sigma_out_phi_num)
     (aux in_sigma_out_phi_unique_num)
-    (aux2 in_sigma_num) "\%"
+    (aux2 in_sigma_num) "\\%"
     (aux2 in_sigma_out_phi_num)
-    "\%"
+    "\\%"
     (aux2 in_sigma_out_phi_unique_num)
-    "\%"
+    "\\%"
 
 let layout_eval benchname stat cost_time =
   let avg_time =
