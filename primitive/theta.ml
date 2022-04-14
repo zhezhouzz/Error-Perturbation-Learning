@@ -92,7 +92,7 @@ let theta_binomialhp =
     "binomialhp_lower_bound";
     "binomialhp_upper_bound";
     "binomialt_head";
-    "binomialt_head_update";
+    "binomialhp_head_update";
   ]
 
 let theta_pairinghp =
