@@ -1,7 +1,8 @@
 let i_err = (false, 1, LNodeS (false, 0), LNode (true, 5, LNode (true, 3, LNodeS (false, 2), LNodeS (false, 4)), LNodeS (false, 6)))
 Default
 IN: (x0: bool, x1: int, x2: int treeb, x3: int treeb) {
-(x4: int) = treeb_lower_bound(x3: int treeb);
-(x5: int) = minus1(x4: int);
-(x6: int treeb) = treeb_head_update(x3: int treeb, x5: int)}
-OUT: (x6: bool, x1: int, x2: int treeb, x6: int treeb)
+(x4: bool, x5: int) = treeb_lower_bound(x2: int treeb);
+(x6: int treeb) = treeb_append_to_left_most(x0: bool, x5: int, x2: int treeb);
+(x7: int treeb) = treeb_rotation_right(x6: int treeb);
+(x8: int treeb) = treeb_drop_bottom(x7: int treeb)}
+OUT: (x0: bool, x1: int, x8: int treeb, x3: int treeb)

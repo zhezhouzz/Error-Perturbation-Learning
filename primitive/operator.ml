@@ -120,6 +120,7 @@ let treeb_ops =
     "treeb_lower_bound";
     "treeb_destruct";
     "treeb_drop_bottom";
+    "treeb_single";
   ]
 
 let binomialhp_ops =

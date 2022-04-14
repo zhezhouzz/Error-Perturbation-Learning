@@ -181,27 +181,27 @@ let table =
     {
       imp_name = "treeb_upper_bound";
       imp_itps = [ IntTreeB ];
-      imp_otps = [ Bool; Int ];
+      imp_otps = [ Int ];
       nondet = false;
       imp_exec =
         (function
         | [ TB tr ] -> (
             match LabeledTree.max_opt Stdlib.compare tr with
-            | None -> Some [ B false; I 0 ]
-            | Some (label, m) -> Some [ B label; I (m + 1) ])
+            | None -> Some [ I 0 ]
+            | Some (_, m) -> Some [ I (m + 1) ])
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
       imp_name = "treeb_lower_bound";
       imp_itps = [ IntTreeB ];
-      imp_otps = [ Bool; Int ];
+      imp_otps = [ Int ];
       nondet = false;
       imp_exec =
         (function
         | [ TB tr ] -> (
             match LabeledTree.min_opt Stdlib.compare tr with
-            | None -> Some [ B false; I 0 ]
-            | Some (label, m) -> Some [ B label; I (m - 1) ])
+            | None -> Some [ I 0 ]
+            | Some (_, m) -> Some [ I (m - 1) ])
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
     {
@@ -217,15 +217,28 @@ let table =
     {
       imp_name = "treeb_destruct";
       imp_itps = [ IntTreeB ];
-      imp_otps = [ Bool; Int; IntTreeB; IntTreeB ];
+      imp_otps = [ Int; IntTreeB; IntTreeB ];
       nondet = false;
       imp_exec =
         (function
         | [ TB tr ] -> (
             match tr with
             | LabeledTree.Leaf -> None
-            | LabeledTree.Node (label, x, a, b) ->
-                Some [ B label; I x; TB a; TB b ])
+            | LabeledTree.Node (_, x, a, b) -> Some [ I x; TB a; TB b ])
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
+    {
+      imp_name = "treeb_single";
+      imp_itps = [ Bool; Int ];
+      imp_otps = [ IntTreeB ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ B b; I i ] ->
+            Some
+              [
+                TB (LabeledTree.Node (b, i, LabeledTree.Leaf, LabeledTree.Leaf));
+              ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
   ]

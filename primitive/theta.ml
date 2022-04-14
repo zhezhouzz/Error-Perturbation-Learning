@@ -62,6 +62,7 @@ let theta_treeb =
     "treeb_upper_bound";
     "treeb_lower_bound";
     "treeb_drop_bottom";
+    "treeb_single";
   ]
 
 let theta_treei =

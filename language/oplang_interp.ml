@@ -6,7 +6,9 @@ module V = Value
 let build_env_list tvars values =
   try List.map (fun ((_, idx), v) -> (idx, v)) @@ List.combine tvars values
   with _ ->
-    raise @@ failwith "runtime error: argsment mismatch during interpret..."
+    failwith
+    @@ spf "runtime error: argsment mismatch during interpret... (%s)"
+         (List.split_by_comma (fun (a, b) -> spf "%s:%i" (Tp.layout a) b) tvars)
 
 let interp { fin; body; fout } (input : V.t list) =
   (* let _ = *)
