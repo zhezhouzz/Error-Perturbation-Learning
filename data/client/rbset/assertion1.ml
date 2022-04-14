@@ -20,7 +20,7 @@ let i_err =
 (*     LNodeS (false, 0), *)
 (*     LNode (true, 5, LNodeS (false, 3), LNodeS (false, 6)) ) *)
 
-let sampling_rounds = 6
+let sampling_rounds = 4
 
 let p_size = 4
 
