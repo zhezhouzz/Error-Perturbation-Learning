@@ -240,6 +240,20 @@ let t_head = function Node (r, x, _) -> (r, x)
 
 let t_head_update t x = match t with Node (r, _, l) -> Node (r, x, l)
 
+let l_head_update l x =
+  match l with [] -> [] | h :: t -> t_head_update h x :: t
+
+let rec t_last_most_update t a =
+  match t with
+  | Node (r, _, []) -> Node (r, a, [])
+  | Node (r, x, l) -> Node (r, x, t_last_most_updatel l a)
+
+and t_last_most_updatel l a =
+  match l with
+  | [] -> []
+  | [ x ] -> [ t_last_most_update x a ]
+  | h :: t -> h :: t_last_most_updatel t a
+
 let binomialhp ts =
   let rec to_binary res = function
     | 0 -> res

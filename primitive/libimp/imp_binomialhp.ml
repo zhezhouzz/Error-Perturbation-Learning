@@ -315,4 +315,22 @@ let table =
             Some [ Binomialt t' ]
         | _ -> raise @@ exn __FILE__ __LINE__);
     };
+    {
+      imp_name = "binomialhp_head_update";
+      imp_itps = [ Uninterp "binomialhp"; Int ];
+      imp_otps = [ Uninterp "binomialhp" ];
+      nondet = false;
+      imp_exec =
+        (function
+        | [ Binomialhp l; I x ] ->
+            let t' = BinomialHeap.l_head_update l x in
+            (* let _ = *)
+            (*   Printf.printf "input: %s; %s\n output: %s\n" *)
+            (*     (Value.layout (Binomialhp l)) *)
+            (*     (Value.layout (I x)) *)
+            (*     (Value.layout (Binomialhp t')) *)
+            (* in *)
+            Some [ Binomialhp t' ]
+        | _ -> raise @@ exn __FILE__ __LINE__);
+    };
   ]
