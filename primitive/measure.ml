@@ -71,6 +71,6 @@ let mk_measure_cond_v2 input n =
   (* let () = *)
   (*   Zlog.log_write @@ spf "w(%i) = min(%i, %i/%i)" w 1 w_sum (List.length ws) *)
   (* in *)
-  let bound = s + min 1 (w * n / 2) in
+  let bound = s + min 1 ((w * n) - 1) in
   let () = Zlog.log_write @@ spf "mk_measure_cond(%i ~ %i) -> %i" s n bound in
   fun v -> measure_size v < bound
