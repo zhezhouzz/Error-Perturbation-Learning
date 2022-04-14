@@ -51,14 +51,10 @@ let theta_treeb =
   [
     "treeb_node";
     "treeb_destruct";
-    "treeb_flip";
-    "treeb_rec_flip";
     "treeb_rotation_left";
     "treeb_rotation_right";
     "treeb_append_to_left_most";
     "treeb_append_to_right_most";
-    "treeb_max";
-    "treeb_min";
     "treeb_upper_bound";
     "treeb_lower_bound";
     "treeb_drop_bottom";
