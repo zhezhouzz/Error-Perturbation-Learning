@@ -62,13 +62,15 @@ let layout
     \  in sigma: %s\n\
     \  in sigma out phi: %s\n\
     \  in sigma out phi unique: %s\n\n\
-    \    $%.3f$ & $%.3f$ & $%.3f$\n"
+    \    $%.3f%s$ & $%.3f%s$ & $%.3f%s$\n"
     sampling_num (aux total_num) (aux succ_num) (aux in_sigma_num)
     (aux in_sigma_out_phi_num)
     (aux in_sigma_out_phi_unique_num)
-    (aux2 in_sigma_num)
+    (aux2 in_sigma_num) "\%"
     (aux2 in_sigma_out_phi_num)
+    "\%"
     (aux2 in_sigma_out_phi_unique_num)
+    "\%"
 
 let layout_eval benchname stat cost_time =
   let avg_time =
